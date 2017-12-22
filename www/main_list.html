@@ -1,0 +1,50 @@
+<ons-page>
+    <ons-toolbar>
+        <div class="left" style="font-size:larger; font-weight: bold; margin-left:10px;">
+            CliniCoin
+        </div>
+        <div class="right">
+            <ons-toolbar-button id="btnSettings">
+                <ons-icon icon="fa-cog"></ons-icon>
+            </ons-toolbar-button>
+        </div>
+    </ons-toolbar>
+        
+    <ons-pull-hook id="pull-hook">
+        (Pull To Refresh)
+    </ons-pull-hook>
+    
+    <ons-list id="servicelist">
+        <ons-list-item modifier="chevron tappable" tappable>
+            <div style="width:90%">
+            <div style="float:left; margin-top:5px;">Service Item 1</div>
+            <div class="badge">3</div>
+            </div>
+            <div style="font-size:x-small;">Service Type</div>
+        </ons-list-item>
+        <ons-list-item modifier="chevron tappable" tappable>
+            <div style="width:90%">
+            <div style="float:left; margin-top:5px;">Service Item 2</div>
+            <div class="badge">5</div>
+            </div>
+            <div style="font-size:x-small;">Service Type</div>
+        </ons-list-item>
+        <ons-list-item modifier="chevron tappable" tappable>
+            <div style="width:90%">
+            <div style="float:left; margin-top:5px;">Service Item 3</div>
+            <div class="badge">7</div>
+            </div>
+            <div style="font-size:x-small;">Service Type</div>
+        </ons-list-item>
+    </ons-list>
+        
+    <ons-fab id="btnAddProvider" position="bottom right">
+        <ons-icon icon="md-plus"></ons-icon>
+    </ons-fab>
+    
+    <script>
+    $(function(){
+        bindMainList();
+    });
+    </script>
+</ons-page>

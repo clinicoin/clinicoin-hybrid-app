@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+  <script src="components/loader.js"></script>
+  <script src="lib/onsenui/js/onsenui.min.js"></script>
+  <script src="components/monaca-jquery/jquery.js"></script>
+  
+  <script src="bindings.js"></script>
+  
+
+  <link rel="stylesheet" href="components/loader.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsenui.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsen-css-components.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script>
+    $(function(){
+        //console.log('base function');
+    });
+  </script>
+</head>
+<body>
+    <ons-tabbar id="tabbar" animation="slide" hide-tabs>
+        <ons-tab page="login.html" active></ons-tab>
+        <ons-tab page="register.html"></ons-tab>
+        <ons-tab page="main_list.html"></ons-tab>
+        <ons-tab page="messaging.html"></ons-tab>
+        <ons-tab page="add_provider.html"></ons-tab>
+        <ons-tab page="settings.html"></ons-tab>
+    </ons-tabbar>
+</body>
+</html>

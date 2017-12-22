@@ -1,0 +1,27 @@
+<ons-page>
+    <ons-toolbar>
+        <div class="left">
+            <ons-toolbar-button id="btnBackRegister">
+                <ons-icon icon="fa-chevron-left"></ons-icon>
+            </ons-toolbar-button>
+        </div>
+        <div class="center" style="font-size:larger; font-weight: bold; margin-left:10px;">
+            Clinicoin Register
+        </div>
+    </ons-toolbar>
+            
+    <div style="text-align:center;">
+        <div style="margin-top:40%;">
+            <ons-input id="username" placeholder="Username" modifier="underbar" min="0" max="50"></ons-input>
+            <ons-input id="password" type="password" placeholder="Password" modifier="underbar" min="0" max="50"></ons-input>
+            <ons-input id="confirm" type="password" placeholder="Confirm" modifier="underbar" min="0" max="50"></ons-input>
+            <div style="margin-top:20px;"><ons-button id="btnRegister">Register</ons-button></div>
+        </div>
+    </div>
+    
+    <script>
+    $(function(){
+        bindRegister();
+    });
+  </script>
+</ons-page>
