@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Mocha Tests</title>
+    <title>Clinicoin Tests</title>
     <link href="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css" rel="stylesheet" />
 </head>
 <body>
@@ -14,14 +14,33 @@
 
 <script>mocha.setup('bdd')</script>
 
+<!-- library files -->
+<script src="../www/lib/minilog3.1.0.js"></script>
+<script src="../www/lib/lodash-4.17.4.js"></script>
+<script src="../www/lib/openpgp.js"></script>
+<script src="../www/lib/aws-cognito-sdk.min.js"></script>
+<script src="../www/lib/amazon-cognito-identity.min.js"></script>
+<script src="../www/lib/aws-sdk-2.171.0.js"></script>
+<script src="../www/lib/axios-0.17.1.min.js"></script>
+
 <!-- source files -->
-<script src="../www/bindings.js"></script>
+<script src="../www/src/bindings.js"></script>
+<script src="../www/src/user.js"></script>
+
+<!-- test settings/utilities files -->
+<script src="passwords.js"></script>
+<script src="test_utilities.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 <!-- test files -->
-<script src="bindings_Test.js"></script>
+<script src="user_test.js"></script>
 
 
 <script>
+	var logger = Minilog('app');
+	Minilog.pipe(Minilog.backends.array);
+	Minilog.enable();
+
     mocha.checkLeaks();
     mocha.globals(['jQuery']);
     mocha.run();
