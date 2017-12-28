@@ -27,6 +27,16 @@ MessageList.prototype.sendMessage = async function(message)
 
 MessageList.prototype.encryptMessage = async function(data_to_encrypt, signed)
 {
+	if (_.isEmpty(data_to_encrypt)) {
+		logger.error('nothing to encrypt');
+		return false;
+	}
+
+	if (_.isEmpty(this.recipient_public_key)) {
+		logger.error('no destination public key');
+		return false;
+	}
+
 	options = {
 		data: data_to_encrypt,    // input as String (or Uint8Array)
 		publicKeys: openpgp.key.readArmored(this.recipient_public_key).keys,

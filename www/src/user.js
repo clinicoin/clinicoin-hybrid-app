@@ -645,6 +645,11 @@ User.prototype.createUserQueue = async function()
 {
 	logger.info('calling createUserQueue');
 
+	if (_.isEmpty(this.username)) {
+		logger.error('username is blank');
+		return false;
+	}
+
 	return await this.callLambda({
 		FunctionName : 'cloud9-Clinicoin-createQueue-O14FSFTX9EGF',
 		InvocationType : 'RequestResponse',

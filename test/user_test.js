@@ -6,7 +6,7 @@ user.username = 'test'+_.random(1111,9999); // random username
 user.email = user.username+"@mailsac.com";
 user.phone = '+12125551217';
 user.setPassphrase('aGreatPhrase321!');
-/*
+
 describe('generateKey', function() {
 	beforeEach(function() {
 		Minilog.backends.array.empty();
@@ -426,7 +426,6 @@ describe('forgotPasswordReset', function() {
 		assert.match(getLastConsoleMessage(), /^CodeMismatchException/, "error messages do not match");
 	});
 });
-*/
 
 describe('createUserQueue', function() {
 	this.slow(30000);
@@ -447,9 +446,9 @@ describe('createUserQueue', function() {
 		done();
 	});
 
-	it('should require a complex password', async function () {
+	it('should require a user', async function () {
 		const test_user = new User();
-		const result = await test_user.changeUserPassword('insufficient');
+		const result = await test_user.createUserQueue();
 		assert.isFalse(result, "result is true");
 	});
 });
