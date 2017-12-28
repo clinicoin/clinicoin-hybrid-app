@@ -648,7 +648,7 @@ User.prototype.createUserQueue = async function()
 	return await this.callLambda({
 		FunctionName : 'cloud9-Clinicoin-createQueue-O14FSFTX9EGF',
 		InvocationType : 'RequestResponse',
-		queueName: this.username,
+		Payload: JSON.stringify({queueName: this.username}),
 		LogType : 'None'
 	});
 };

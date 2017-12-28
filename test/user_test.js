@@ -364,7 +364,6 @@ describe('userForgotPassword', function() {
 		assert.isFalse(result, "result is true");
 	});
 });
-*/
 
 describe('forgotPasswordReset', function() {
 	this.slow(30000);
@@ -424,5 +423,33 @@ describe('forgotPasswordReset', function() {
 
 		const reset_result = await test_user.forgotPasswordReset('000000', 'Ch@^ge1234');
 		assert.isFalse(reset_result, "result is true\n\n" + getLastConsoleMessage());
+		assert.match(getLastConsoleMessage(), /^CodeMismatchException/, "error messages do not match");
+	});
+});
+*/
+
+describe('createUserQueue', function() {
+	this.slow(30000);
+	this.timeout(30000); // A very long environment setup.
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should create a queue', async function (done) {
+		setTimeout(done, 30000);
+		const test_user = await createAndConfirmUser();
+		await sleep(3000);
+		await test_user.login();
+		await sleep(1000);
+		const result = await test_user.createUserQueue();
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+		done();
+	});
+
+	it('should require a complex password', async function () {
+		const test_user = new User();
+		const result = await test_user.changeUserPassword('insufficient');
+		assert.isFalse(result, "result is true");
 	});
 });
