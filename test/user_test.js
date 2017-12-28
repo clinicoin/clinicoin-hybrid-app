@@ -1,12 +1,11 @@
 const assert = chai.assert;
 
 let user = new User();
-user.name = 'joe';
-user.username = 'joe2125551217';
-user.email = 'me@them.com';
+user.name = 'test';
+user.username = 'test'+_.random(1111,9999); // random username
+user.email = user.username+"@mailsac.com";
 user.phone = '+12125551217';
 user.setPassphrase('aGreatPhrase321!');
-
 /*
 describe('generateKey', function() {
 	beforeEach(function() {
@@ -23,7 +22,7 @@ describe('generateKey', function() {
 	it('should require a passphrase', async function() {
 		user.setPassphrase('');
 		const result = await user.generateKey();
-		user.setPassphrase('aGreatPhrase321');
+		user.setPassphrase('aGreatPhrase321!');
 		assert.isFalse(result, "result is true");
 		assert.equal(getLastConsoleMessage(), "passphrase is empty", "error messages do not match");
 	});
@@ -39,7 +38,7 @@ describe('generateKey', function() {
 	it('should require an email', async function() {
 		user.email = '';
 		const result = await user.generateKey();
-		user.email = 'me@them.com';
+		user.email = user.username+"@mailsac.com";
 		assert.isFalse(result, "result is true");
 		assert.equal(getLastConsoleMessage(), "email is empty", "error messages do not match");
 	});
@@ -51,9 +50,9 @@ describe('registerUser', function() {
 	});
 
 	it('should create a user', async function() {
-		user.name = 'joe';
-		user.username = 'joe'+_.random(1111,9999); // random username
-		user.email = 'me@them.com';
+		user.name = 'test';
+		user.username = 'test'+_.random(1111,9999); // random username
+		user.email = user.username+"@mailsac.com";
 		user.phone = '+12125551216';
 		user.setPassphrase('aGreatPhrase321!');
 
@@ -62,9 +61,10 @@ describe('registerUser', function() {
 	});
 
 	it('should require a username', async function() {
+		const previous_username = user.username;
 		user.username = '';
 		const result = await user.registerUser();
-		user.username = 'joe2125551216';
+		user.username = previous_username;
 		assert.isFalse(result, "result is true");
 		assert.equal(getLastConsoleMessage(), "username is empty", "error messages do not match");
 	});
@@ -72,7 +72,7 @@ describe('registerUser', function() {
 	it('should require a passphrase', async function() {
 		user.setPassphrase('');
 		const result = await user.registerUser();
-		user.setPassphrase('aGreatPhrase321');
+		user.setPassphrase('aGreatPhrase321!');
 		assert.isFalse(result, "result is true");
 		assert.equal(getLastConsoleMessage(), "passphrase is empty", "error messages do not match");
 	});
@@ -80,7 +80,7 @@ describe('registerUser', function() {
 	it('should catch aws failure', async function() {
 		user.setPassphrase('insufficient');
 		const result = await user.registerUser();
-		user.setPassphrase('aGreatPhrase321');
+		user.setPassphrase('aGreatPhrase321!');
 		assert.isFalse(result, "result is true");
 		assert.match(getLastConsoleMessage(), /^InvalidPasswordException/, "error messages do not match");
 	});
@@ -96,7 +96,7 @@ describe('registerUser', function() {
 	it('should require an email', async function() {
 		user.email = '';
 		const result = await user.registerUser();
-		user.email = 'me@them.com';
+		user.email = user.username+"@mailsac.com";
 		assert.isFalse(result, "result is true");
 		assert.equal(getLastConsoleMessage(), "email is empty", "error messages do not match");
 	});
@@ -109,37 +109,48 @@ describe('registerUser', function() {
 });
 
 describe('login', function() {
+	this.slow(30000);
+	this.timeout(30000); // A very long environment setup.
+
 	beforeEach(function () {
 		Minilog.backends.array.empty();
 	});
 
-	it('should login user', async function () {
-		const result = await user.login();
+	it('should login user', async function (done) {
+		setTimeout(done, 30000);
+		const test_user = await createAndConfirmUser();
+		await sleep(1000); // sometimes the login comes too quick for the shard to see it
+		const result = await test_user.login();
 		assert.isTrue(result, "result is false\n\n"+getLastConsoleMessage());
+		done();
 	});
 
 	it('should require a username', async function() {
+		const old_username = user.username;
 		user.username = '';
 		const result = await user.login();
-		user.username = 'joe2125551216';
+		user.username = old_username;
 		assert.isFalse(result, "result is true");
 		assert.equal(getLastConsoleMessage(), "username is empty", "error messages do not match");
 	});
 
 	it('should require a passphrase', async function() {
+		const old_pw = user.getPassphrase();
 		user.setPassphrase('');
 		const result = await user.login();
-		user.setPassphrase('aGreatPhrase321');
+		user.setPassphrase(old_pw);
 		assert.isFalse(result, "result is true");
 		assert.equal(getLastConsoleMessage(), "passphrase is empty", "error messages do not match");
 	});
 
-	it('should catch bad login', async function() {
-		user.setPassphrase('wrong_password!123');
+	it('should catch bad login', async function(done) {
+		const old_pw = user.getPassphrase();
+		user.setPassphrase('aFakedLogin1234!');
 		const result = await user.login();
-		user.setPassphrase('aGreatPhrase321');
+		user.setPassphrase(old_pw);
 		assert.isFalse(result, "result is true");
 		assert.match(getLastConsoleMessage(), /^NotAuthorizedException/, "error messages do not match\n\n"+getLastConsoleMessage());
+		done();
 	});
 });
 
@@ -155,47 +166,21 @@ describe('verifyConfirmationCode', function() {
 
 	it('should confirm new user', async function (done) {
 		setTimeout(done, 30000);
-
-		// create a user
-		user.name = 'joe';
-		user.username = 'joe'+_.random(111111,999999); // random username
-		user.email = user.username+'@mailsac.com';
-		user.phone = '+12125551216';
-		user.setPassphrase('aGreatPhrase321!');
-		const register_result = await user.registerUser();
-		assert.isTrue(register_result, "user create failed\n\n"+getLastConsoleMessage());
-
-		let code = '';
-		for(let i=0; i < 29; i++) {
-			await sleep(1000);
-
-			// get the code
-			const msg = await getLastMailsacEmail(user.email);
-			if (msg != null) {
-				code = msg.body;
-				const myregexp = /(\d{6})/i;
-				let match = myregexp.exec(code);
-				if (match != null) {
-					code = match[1];
-					break;
-				}
-			}
-		}
-
-		const result = await user.verifyConfirmationCode(code);
-		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+		await createAndConfirmUser();
 		done();
 	});
 
 	it('should fail on random user', async function() {
-		user.username = 'fake_username';
-		const result = await user.verifyConfirmationCode('1234');
+		const random_user = new User();
+		random_user.username = 'fake_username';
+		const result = await random_user.verifyConfirmationCode('1234');
 		assert.isFalse(result, "result is true");
 		assert.match(getLastConsoleMessage(), /^UserNotFoundException/, "error messages do not match");
 	});
 
 	it('should fail on already confirmed user', async function() {
-		user.username = 'a101';  // some confirmed user
+		const test_user = new User();
+		test_user.username = 'a101';  // some confirmed user
 		const result = await user.verifyConfirmationCode('1234');
 		assert.isFalse(result, "result is true");
 		assert.match(getLastConsoleMessage(), /user status is not UNCONFIRMED/, "error messages do not match");
@@ -203,15 +188,16 @@ describe('verifyConfirmationCode', function() {
 
 	it('should fail on wrong confirmation', async function() {
 		// create a user
-		user.name = 'joe';
-		user.username = 'joe'+_.random(111111,999999); // random username
-		user.email = user.username+'@mailsac.com';
-		user.phone = '+12125551216';
-		user.setPassphrase('aGreatPhrase321!');
-		const register_result = await user.registerUser();
+		const test_user = new User();
+		test_user.name = 'test';
+		test_user.username = 'test'+_.random(111111,999999); // random username
+		test_user.email = user.username+'@mailsac.com';
+		test_user.phone = '+12125551216';
+		test_user.setPassphrase('aGreatPhrase321!');
+		const register_result = await test_user.registerUser();
 		assert.isTrue(register_result, "user create failed\n\n"+getLastConsoleMessage());
 
-		const result = await user.verifyConfirmationCode('111');
+		const result = await test_user.verifyConfirmationCode('111');
 		assert.isFalse(result, "result is true");
 		assert.match(getLastConsoleMessage(), /^CodeMismatchException/, "error messages do not match");
 	});
@@ -227,27 +213,27 @@ describe('resendConfirmationCode', function() {
 		Minilog.backends.array.empty();
 	});
 
-	/*
 	it('should re-send confirmation', async function (done) {
 		setTimeout(done, 30000);
 
 		// create a user
-		user.name = 'joe';
-		user.username = 'joe' + _.random(111111, 999999); // random username
-		user.email = user.username + '@mailsac.com';
-		user.phone = '+12125551216';
-		user.setPassphrase('aGreatPhrase321!');
-		const register_result = await user.registerUser();
+		const test_user = new User();
+		test_user.name = 'test';
+		test_user.username = 'test' + _.random(111111, 999999); // random username
+		test_user.email = user.username + '@mailsac.com';
+		test_user.phone = '+12125551216';
+		test_user.setPassphrase('aGreatPhrase321!');
+		const register_result = await test_user.registerUser();
 		assert.isTrue(register_result, "user create failed\n\n" + getLastConsoleMessage());
 
-		user.resendConfirmationCode();
+		test_user.resendConfirmationCode();
 
 		let list = null;
 		for (let i = 0; i < 29; i++) {
 			await sleep(1000);
 
 			// wait for 2 emails
-			list = await getMailsacEmailList(user.email);
+			list = await getMailsacEmailList(test_user.email);
 			if (list.length == 2) {
 				logger.debug('2 emails found');
 				break;
@@ -258,21 +244,185 @@ describe('resendConfirmationCode', function() {
 		}
 
 		assert(list.length==2, "list length not 2\n\n" + getLastConsoleMessage());
+
 		done();
 	});
 
 	it('should fail on random user', async function() {
-		user.username = 'fake_username';
+		const test_user = new User();
+		test_user.username = 'fake_username';
 		const result = await user.resendConfirmationCode();
 		assert.isFalse(result, "result is true");
 		assert.match(getLastConsoleMessage(), /^UserNotFoundException/, "error messages do not match");
 	});
 
 	it('should fail on already confirmed user', async function() {
-		user.username = 'a101';  // some confirmed user
-		const result = await user.resendConfirmationCode();
+		const test_user = new User();
+		test_user.username = 'a101';  // some confirmed user
+		const result = await test_user.resendConfirmationCode();
 		assert.isFalse(result, "result is true");
 		assert.match(getLastConsoleMessage(), /User is already confirmed/, "error messages do not match");
 	});
 });
-	*/
+
+describe('changeUserPassword', function() {
+	this.slow(30000);
+	this.timeout(30000); // A very long environment setup.
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should change a password', async function (done) {
+		setTimeout(done, 30000);
+		const test_user = await createAndConfirmUser();
+		await sleep(3000);
+		await test_user.login();
+		await sleep(1000);
+		const result = await test_user.changeUserPassword('aN#wPa$$12345?');
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+		done();
+	});
+
+	it('should require a complex password', async function () {
+		const test_user = new User();
+		const result = await test_user.changeUserPassword('insufficient');
+		assert.isFalse(result, "result is true");
+	});
+});
+
+describe('updateUserAttribute', function() {
+	this.slow(30000);
+	this.timeout(30000); // A very long environment setup.
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should update an attribute', async function (done) {
+		setTimeout(done, 30000);
+		const test_user = await createAndConfirmUser();
+		await sleep(3000);
+		await test_user.login();
+		await sleep(1000);
+
+		const test_phone = '+1415222'+_.random(1111,9999);
+		const result = await test_user.updateUserAttribute('phone_number',test_phone);
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+		const actual = await test_user.getAwsUserAttributes();
+		assert.equal(test_user.phone, test_phone);
+		done();
+	});
+
+	it('should require a name', async function () {
+		const test_user = new User();
+		const result = await test_user.updateUserAttribute('','value');
+		assert.isFalse(result, "result is true");
+	});
+});
+
+describe('userForgotPassword', function() {
+	this.slow(30000);
+	this.timeout(30000); // A very long environment setup.
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should trigger a forgot pw email', async function (done) {
+		setTimeout(done, 30000);
+		const test_user = await createAndConfirmUser();
+		await sleep(3000);
+		const mail_count = await getMailsacEmailList(test_user.email);
+		logger.debug('current mail count = '+mail_count);
+		const result = await test_user.userForgotPassword();
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+
+		let list = null;
+		for (let i = 0; i < 29; i++) {
+			await sleep(1000);
+
+			// wait for 2 emails
+			list = await getMailsacEmailList(test_user.email);
+			if (list.length > mail_count.length) {
+				logger.debug('new email found');
+				break;
+			}
+			else {
+				logger.debug('List length = '+list.length);
+			}
+		}
+
+		assert(list.length > mail_count.length, "list doesn't have new mail\n\n" + getLastConsoleMessage());
+
+		done();
+	});
+
+	it('should require a name', async function () {
+		const test_user = new User();
+		const result = await test_user.updateUserAttribute('','value');
+		assert.isFalse(result, "result is true");
+	});
+});
+*/
+
+describe('forgotPasswordReset', function() {
+	this.slow(30000);
+	this.timeout(30000); // A very long environment setup.
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should reset from forgot pw email', async function (done) {
+		setTimeout(done, 30000);
+		const test_user = await createAndConfirmUser();
+		await sleep(3000);
+		const mail_count = await getMailsacEmailList(test_user.email);
+		logger.debug('current mail count = '+mail_count);
+		const forgot_result = await test_user.userForgotPassword();
+		assert.isTrue(forgot_result, "result is false\n\n" + getLastConsoleMessage());
+
+		let list = null;
+		for (let i = 0; i < 29; i++) {
+			await sleep(1000);
+
+			// wait for 2 emails
+			list = await getMailsacEmailList(test_user.email);
+			if (list.length > mail_count.length) {
+				logger.debug('new email found');
+				break;
+			}
+			else {
+				logger.debug('List length = '+list.length);
+			}
+		}
+
+		assert(list.length > mail_count.length, "list doesn't have new mail\n\n" + getLastConsoleMessage());
+
+		const msg = await getLastMailsacEmail(test_user.email);
+		let code = msg.body;
+		const myregexp = /(\d{6})/i;
+		let match = myregexp.exec(code);
+		if (match != null) {
+			code = match[1];
+		}
+
+		assert.equal(code.length, 6, 'cannot find 6 digit code');
+
+		const reset_result = await test_user.forgotPasswordReset(code, 'Ch@^ge1234');
+		assert.isTrue(reset_result, "result is false\n\n" + getLastConsoleMessage());
+
+		done();
+	});
+
+	it('should catch from wrong number', async function () {
+		const test_user = await createAndConfirmUser();
+
+		const forgot_result = await test_user.userForgotPassword();
+		assert.isTrue(forgot_result, "result is false\n\n" + getLastConsoleMessage());
+
+		const reset_result = await test_user.forgotPasswordReset('000000', 'Ch@^ge1234');
+		assert.isFalse(reset_result, "result is true\n\n" + getLastConsoleMessage());
+	});
+});

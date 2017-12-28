@@ -69,3 +69,46 @@ const getLastMailsacEmail = async function(email_address)
 
 	return message;
 };
+
+
+const createAndConfirmUser = async function()
+{
+	// create a user
+	let user = new User();
+	user.name = 'test';
+	user.username = 'test'+_.random(111111,999999); // random username
+	user.email = user.username+'@mailsac.com';
+	user.phone = '+12125551216';
+	user.setPassphrase('aGreatPhrase321!');
+	const register_result = await user.registerUser();
+	assert.isTrue(register_result, "user create failed\n\n"+getLastConsoleMessage());
+
+	let code = '';
+	for(let i=0; i < 29; i++) {
+		await sleep(1000);
+
+		// get the code
+		const msg = await getLastMailsacEmail(user.email);
+		if (msg != null) {
+			code = msg.body;
+			const myregexp = /(\d{6})/i;
+			let match = myregexp.exec(code);
+			if (match != null) {
+				code = match[1];
+				break;
+			}
+		}
+	}
+
+	const result = await user.verifyConfirmationCode(code);
+	assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+
+	return user;
+};
+
+const createConfirmLoginUser = async function()
+{
+	let user = await createAndConfirmUser();
+	await sleep(1000); // sometimes the login comes too quick for the shard to see it
+	return await user.login();
+};

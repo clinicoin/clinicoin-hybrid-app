@@ -98,7 +98,7 @@ const retrieveMessages = async function()
 		// decrypt
 		const plaintext = msg_list.decryptMessage(element.body);
 
-		// save message
+		// save message = encrypting message and appending it to some file
 	});
 };
 

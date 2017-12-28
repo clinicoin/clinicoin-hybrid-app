@@ -3,12 +3,16 @@ const USER_POOL_ID = 'us-east-1_QCQ5kVlpW';
 
 function User() {
     this.username = '';
-    this.user_id = '';
+    this.awsSub = '';
 	this.email = '';
+	this.email_verified = false;
 	this.phone = '';
+	this.phone_verified = false;
 	this.name = '';
 	this.last_error_code = '';
 	this.last_error_message = '';
+
+	this.cognitoUser = null;
 
 	let passphrase = '';
     let private_key = '';
@@ -111,7 +115,8 @@ User.prototype.registerUser = async function()
 		// assume it's a NADP number
 		this.phone = '+1'+this.phone;
 	}
-	else if (this.phone.length == 11 && ! _.startsWith(this.phone, '+')) {
+	else if ( ! _.startsWith(this.phone, '+')) {
+		// add a + if it does not already have one
 		this.phone = '+'+this.phone;
 	}
 
@@ -198,9 +203,9 @@ User.prototype.login = async function()
 		Username : this.username,
 		Pool : userPool
 	};
-	let cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
+	this.cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
 	const auth_promise = new Promise((resolve) =>
-		cognitoUser.authenticateUser(authenticationDetails, {
+		this.cognitoUser.authenticateUser(authenticationDetails, {
 			onSuccess: async function (result) {
 				logger.info('auth success');
 				//logger.debug('access token + ' + result.getAccessToken().getJwtToken());
@@ -299,7 +304,7 @@ User.prototype.verifyConfirmationCode = async function(confirmation_code)
 		return false;
 	}
 	else {
-		logger.info('result: '+result.data);
+		logger.info('Registration Confirm: '+result.data);
 		return true;
 	}
 };
@@ -346,9 +351,270 @@ User.prototype.resendConfirmationCode = async function()
 	}
 };
 
+User.prototype.deleteUser = async function()
+{
+	logger.info('deleting user');
+
+	let poolData = {
+		UserPoolId : USER_POOL_ID,
+		ClientId : CLIENT_ID
+	};
+	let userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+	let userData = {
+		Username : this.username,
+		Pool : userPool
+	};
+	let cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
+
+	const delete_promise = new Promise((resolve) => {
+		cognitoUser.deleteUser(function(err) {
+			if (err) {
+				resolve({error:err});
+			} else {
+				resolve({});
+			}
+		});
+	});
+
+	const result = await delete_promise;
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+		return false;
+	}
+	else {
+		logger.info('user deleted');
+		return true;
+	}
+};
+
+User.prototype.isComplexPassword = function(new_password)
+{
+	return ! /(?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9])(?=\S*?[^0-9a-zA-Z])\S{8,}/.test(new_password);
+};
+
+User.prototype.changeUserPassword = async function(new_password)
+{
+	logger.info('changing password');
+
+	if (this.isComplexPassword(new_password)) {
+		logger.error('passphrase does not match having at least 8 letters, numbers, mixed case, and special characters');
+		return false;
+	}
+
+	const pw_promise = new Promise((resolve) => {
+		try {
+			this.cognitoUser.changePassword(this.getPassphrase(), new_password, function (err) {
+				if (err) {
+					resolve({error: err});
+				}
+				else {
+					resolve({});
+				}
+			});
+		}
+		catch (ex) {
+			resolve({error: ex.message});
+		}
+	});
+
+	const result = await pw_promise;
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+		return false;
+	}
+	else {
+		logger.info('password changed');
+		this.setPassphrase(new_password);
+		this.generateKey().then(()=>{
+			// todo: upload the new key
+		});
+		return true;
+	}
+};
+
+User.prototype.getAwsUserAttributes = async function()
+{
+	logger.info('retrieving attributes');
+
+	if (_.isEmpty(this.username)) {
+		logger.error('username is blank');
+		return false;
+	}
+
+	const attr_promise = new Promise((resolve) => {
+		this.cognitoUser.getUserAttributes(function(err, result) {
+			if (err) {
+				resolve({error:err});
+			} else {
+				resolve({data:result});
+			}
+		});
+	});
+
+	const result = await attr_promise;
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+		return false;
+	}
+	else {
+		this.awsSub = _.find(result.data, {'Name':'sub'}).Value;
+		this.email = _.find(result.data, {'Name':'email'}).Value;
+		this.email_verified = _.find(result.data, {'Name':'email_verified'}).Value;
+		this.phone = _.find(result.data, {'Name':'phone_number'}).Value;
+		this.phone_verified = _.find(result.data, {'Name':'phone_number_verified'}).Value;
+		return result.data;
+	}
+};
+
+User.prototype.updateUserAttribute = async function(attribute_name, attribute_value)
+{
+	logger.info('updating attributes');
+
+	if (_.isEmpty(attribute_name)) {
+		logger.error('attribute name is blank');
+		return false;
+	}
+
+	let attributeList = [];
+	const attribute = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute({
+		Name : attribute_name,
+		Value : attribute_value
+	});
+	attributeList.push(attribute);
+
+	const attr_promise = new Promise((resolve) => {
+		this.cognitoUser.updateAttributes(attributeList, function(err, result) {
+			if (err) {
+				resolve({error:err});
+			} else {
+				resolve({});
+			}
+		});
+	});
+
+	const result = await attr_promise;
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+		return false;
+	}
+	else {
+		logger.info('attribute changed');
+		return true;
+	}
+};
+
+User.prototype.logout = async function()
+{
+	logger.info('logout user');
+
+	this.cognitoUser.signOut();
+
+	logger.info('user logged out');
+	return true;
+};
+
+User.prototype.userForgotPassword = async function()
+{
+	logger.info('forgot password');
+
+	if (_.isEmpty(this.username)) {
+		logger.error('username is blank');
+		return false;
+	}
+
+	let poolData = {
+		UserPoolId : USER_POOL_ID,
+		ClientId : CLIENT_ID
+	};
+	let userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+	let userData = {
+		Username : this.username,
+		Pool : userPool
+	};
+	let cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
+
+	const pw_promise = new Promise((resolve) => {
+		cognitoUser.forgotPassword({
+			onSuccess: function (data) {
+				resolve({data:data});
+			},
+			onFailure: function(err) {
+				resolve({error:err});
+			}
+		});
+	});
+
+	const result = await pw_promise;
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+		return false;
+	}
+	else {
+		logger.info('forgot pw sent');
+		return true;
+	}
+};
+
+User.prototype.forgotPasswordReset = async function(confirmation_code, new_password)
+{
+	logger.info('forgot password reset');
+
+	if (_.isEmpty(this.username)) {
+		logger.error('username is blank');
+		return false;
+	}
+
+	if (this.isComplexPassword(new_password)) {
+		logger.error('passphrase does not match having at least 8 letters, numbers, mixed case, and special characters');
+		return false;
+	}
+
+	// have to use the full provider to get to the confirm method
+	let provider = new AWS.CognitoIdentityServiceProvider({apiVersion: '2016-04-18', region: 'us-east-1'});
+
+	const params = {
+		ClientId: CLIENT_ID,
+		ConfirmationCode: confirmation_code,
+		Password: new_password,
+		Username: this.username
+	};
+
+	const pw_promise = new Promise((resolve) => {
+		provider.confirmForgotPassword(params, (err)=>{
+			if (err) {
+				resolve({error:err});
+			} else {
+				resolve({});
+			}
+		});
+	});
+
+	const result = await pw_promise;
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+		return false;
+	}
+	else {
+		logger.info('forgot pw change confirmed');
+		return true;
+	}
+};
+
 User.prototype.callLambda = async function(invoke_params)
 {
-	logger.info('calling lambda');
+	logger.info('calling lambda '+invoke_params.FunctionName);
 
 	const lambda = new AWS.Lambda({region: 'us-east-1', apiVersion: '2015-03-31'});
 
@@ -363,25 +629,26 @@ User.prototype.callLambda = async function(invoke_params)
 	});
 
 	const result = await lambda_promise;
-    if (result.error) {
-	    logger.error(result.error.code + " - " + result.error.message);
-	    this.last_error_code = result.error.code;
-	    this.last_error_message = result.error.message;
-	    return false;
-    }
-    else {
-	    logger.info('lambda success');
-	    return true;
-    }
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+		return false;
+	}
+	else {
+		logger.info('lambda success');
+		return true;
+	}
 };
 
-User.prototype.test4Lambda = async function()
+User.prototype.createUserQueue = async function()
 {
-	logger.info('calling test4lambda');
+	logger.info('calling createUserQueue');
 
-	return this.callLambda({
-		FunctionName : 'cloud9-test4-test4-KORTFFROPJ1Y',
+	return await this.callLambda({
+		FunctionName : 'cloud9-Clinicoin-createQueue-O14FSFTX9EGF',
 		InvocationType : 'RequestResponse',
+		queueName: this.username,
 		LogType : 'None'
 	});
 };
@@ -389,6 +656,7 @@ User.prototype.test4Lambda = async function()
 /*
 TODO:
 and an entry is created in the directory
+does everybody get an S3 bucket?
 and a queue is created for the user
 and the user is given read/write rights to the queue
 and the queue receives a welcome message from the directory
