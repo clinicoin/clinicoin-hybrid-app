@@ -1,6 +1,8 @@
 const CLIENT_ID = '2s5fg9tumemtjm22lb7pup8l30';
 const USER_POOL_ID = 'us-east-1_QCQ5kVlpW';
 
+let current_user = new User();
+
 function User() {
     this.username = '';
     this.awsSub = '';
@@ -87,8 +89,8 @@ User.prototype.generateKey = async function()
     this.setPublicKey(key_object.publicKeyArmored);
 
 	logger.info('key return success');
-	logger.debug('private: '+key_object.privateKeyArmored);
-	logger.debug('public: '+key_object.publicKeyArmored);
+	//logger.debug('private: '+key_object.privateKeyArmored);
+	//logger.debug('public: '+key_object.publicKeyArmored);
 
     return true;
 };
@@ -150,7 +152,7 @@ User.prototype.registerUser = async function()
 				resolve({ error: err });
 			}
 			else {
-				resolve(result.user);
+				resolve(result);
 			}
 		})
 	);
@@ -164,7 +166,8 @@ User.prototype.registerUser = async function()
 		return false;
 	}
 	else {
-		logger.info('cognito user: ' + result.getUsername());
+		logger.info('cognito user: ' + result.user.getUsername());
+		this.awsSub = result.userSub;
 		return true;
 	}
 };
@@ -176,6 +179,8 @@ User.prototype.registerUser = async function()
 User.prototype.login = async function()
 {
 	logger.info('user aws login');
+
+	let self = this;
 
 	if (_.isEmpty(this.getPassphrase())) {
 		logger.error('passphrase is empty');
@@ -198,17 +203,22 @@ User.prototype.login = async function()
 		UserPoolId : USER_POOL_ID,
 		ClientId : CLIENT_ID
 	};
+
 	let userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+
 	let userData = {
 		Username : this.username,
 		Pool : userPool
 	};
+
 	this.cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
+
 	const auth_promise = new Promise((resolve) =>
 		this.cognitoUser.authenticateUser(authenticationDetails, {
 			onSuccess: async function (result) {
 				logger.info('auth success');
 				//logger.debug('access token + ' + result.getAccessToken().getJwtToken());
+				self.awsSub = result.idToken.payload.sub;
 
 				//POTENTIAL: Region needs to be set if not already set previously elsewhere.
 				AWS.config.region = 'us-east-1';
@@ -241,6 +251,7 @@ User.prototype.login = async function()
 				}
 
 				logger.debug('refresh success');
+
 
 				resolve({});
 			},
@@ -347,44 +358,6 @@ User.prototype.resendConfirmationCode = async function()
 	}
 	else {
 		logger.info('resend success');
-		return true;
-	}
-};
-
-User.prototype.deleteUser = async function()
-{
-	logger.info('deleting user');
-
-	let poolData = {
-		UserPoolId : USER_POOL_ID,
-		ClientId : CLIENT_ID
-	};
-	let userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
-	let userData = {
-		Username : this.username,
-		Pool : userPool
-	};
-	let cognitoUser = new AWSCognito.CognitoIdentityServiceProvider.CognitoUser(userData);
-
-	const delete_promise = new Promise((resolve) => {
-		cognitoUser.deleteUser(function(err) {
-			if (err) {
-				resolve({error:err});
-			} else {
-				resolve({});
-			}
-		});
-	});
-
-	const result = await delete_promise;
-	if (result.error) {
-		logger.error(result.error.code + " - " + result.error.message);
-		this.last_error_code = result.error.code;
-		this.last_error_message = result.error.message;
-		return false;
-	}
-	else {
-		logger.info('user deleted');
 		return true;
 	}
 };
@@ -614,7 +587,8 @@ User.prototype.forgotPasswordReset = async function(confirmation_code, new_passw
 
 User.prototype.callLambda = async function(invoke_params)
 {
-	logger.info('calling lambda '+invoke_params.FunctionName);
+	logger.info('calling lambda');
+	logger.debug(invoke_params);
 
 	const lambda = new AWS.Lambda({region: 'us-east-1', apiVersion: '2015-03-31'});
 
@@ -630,32 +604,76 @@ User.prototype.callLambda = async function(invoke_params)
 
 	const result = await lambda_promise;
 	if (result.error) {
+		logger.debug(result.error);
 		logger.error(result.error.code + " - " + result.error.message);
 		this.last_error_code = result.error.code;
 		this.last_error_message = result.error.message;
-		return false;
+		return {};
 	}
 	else {
+		logger.debug(result.data);
 		logger.info('lambda success');
-		return true;
+		return JSON.parse(result.data.Payload);
 	}
 };
 
 User.prototype.createUserQueue = async function()
 {
-	logger.info('calling createUserQueue');
+	logger.info('calling createUserQueue ('+this.username+')');
 
 	if (_.isEmpty(this.username)) {
 		logger.error('username is blank');
 		return false;
 	}
 
-	return await this.callLambda({
+	const result = await this.callLambda({
 		FunctionName : 'cloud9-Clinicoin-createQueue-O14FSFTX9EGF',
 		InvocationType : 'RequestResponse',
 		Payload: JSON.stringify({queueName: this.username}),
 		LogType : 'None'
 	});
+
+	return result.statusCode === 200;
+};
+
+User.prototype.updatePublicKey = async function()
+{
+	logger.info('calling updatePublicKey');
+
+	let key = this.getPublicKey();
+
+	if (_.isEmpty(key)) {
+		logger.error('public key is blank');
+		return false;
+	}
+
+	const result = await this.callLambda({
+		FunctionName : 'cloud9-Clinicoin-updatePublicKey-OW1U84LZV9EB',
+		InvocationType : 'RequestResponse',
+		Payload: JSON.stringify({username: this.username, sub: this.awsSub, publicKey: key}),
+		LogType : 'None'
+	});
+
+	return result.statusCode === 200;
+};
+
+User.prototype.deleteUser = async function()
+{
+	logger.info('calling updatePublicKey');
+
+	if (_.isEmpty(this.username)) {
+		logger.error('username is blank');
+		return false;
+	}
+
+	const result = await this.callLambda({
+		FunctionName : 'cloud9-Clinicoin-deleteUser-PFK481I0CRNP',
+		InvocationType : 'RequestResponse',
+		Payload: JSON.stringify({username: this.username}),
+		LogType : 'None'
+	});
+
+	return result.statusCode === 200;
 };
 
 /*

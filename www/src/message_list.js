@@ -11,18 +11,28 @@ function MessageList()
 
 MessageList.prototype.current_user = null;
 
-MessageList.prototype.sendMessage = async function(message)
+MessageList.prototype.getRecipientPublicKey = async function()
 {
-	// get the recipient's public key
-	await this.getRecipientPublicKey();
+	logger.info('calling getRecipientPublicKey');
 
-	// encrypt the message, sending signed
-	const encrypted_data = await this.encryptMessage(message, true);
+	if (_.isEmpty(this.recipient_user_id)) {
+		logger.error('recipient username is blank');
+		return false;
+	}
 
-	// send it to the server
-	await this.sendToServer(encrypted_data);
+	const response = await current_user.callLambda({
+		FunctionName : 'cloud9-Clinicoin-getPublicKey-129CYBDDJRHIG',
+		InvocationType : 'RequestResponse',
+		Payload: JSON.stringify({username: this.recipient_user_id}),
+		LogType : 'None'
+	});
 
-	// save to list
+	if ( ! _.isEmpty(response.body)) {
+		this.recipient_public_key = response.body.PublicKey.S;
+		return response.statusCode === 200;
+	}
+
+	return false;
 };
 
 MessageList.prototype.encryptMessage = async function(data_to_encrypt, signed)
@@ -37,25 +47,20 @@ MessageList.prototype.encryptMessage = async function(data_to_encrypt, signed)
 		return false;
 	}
 
-	options = {
+	let options = {
 		data: data_to_encrypt,    // input as String (or Uint8Array)
 		publicKeys: openpgp.key.readArmored(this.recipient_public_key).keys,
 	};
 
 	if (signed) {
-		let privKeyObj = openpgp.key.readArmored(this.current_user.getPrivateKey()).keys[0];
-		privKeyObj.decrypt(this.current_user.getPassphrase());
+		let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
+		privKeyObj.decrypt(current_user.getPassphrase());
 		options.privateKeys = privKeyObj;
 	}
 
 	const encrypt_promise = await openpgp.encrypt(options);
 
-	return encrypt_promise.ciphertext.data;
-};
-
-MessageList.prototype.getRecipientPublicKey = async function()
-{
-	this.recipient_public_key = ''; // retrieve from lambda
+	return encrypt_promise.data;
 };
 
 MessageList.prototype.sendToServer = async function(data)
@@ -93,6 +98,20 @@ MessageList.prototype.sendToServer = async function(data)
 	}
 };
 
+MessageList.prototype.sendMessage = async function(message)
+{
+	// get the recipient's public key
+	await this.getRecipientPublicKey();
+
+	// encrypt the message, sending signed
+	const encrypted_data = await this.encryptMessage(message, true);
+
+	// send it to the server
+	await this.sendToServer(encrypted_data);
+
+	// save to list
+};
+
 const retrieveMessages = async function()
 {
 	// get the list of messages
@@ -117,7 +136,7 @@ const retrieveMessagesFromServer = async function()
 	logger.debug('Retrieving messages');
 
 	var params = {
-		QueueUrl: this.current_user.user_id,
+		QueueUrl: current_user.user_id,
 		AttributeNames: [ FifoQueue | ContentBasedDeduplication ],
 		MaxNumberOfMessages: 10,
 		VisibilityTimeout: 30,
@@ -152,7 +171,7 @@ const deleteReceivedMessage = async function(receipt_handle)
 	logger.debug('Deleting message: '+receipt_handle);
 
 	var params = {
-		QueueUrl: this.current_user.user_id,
+		QueueUrl: current_user.user_id,
 		ReceiptHandle: receipt_handle
 	};
 
@@ -183,8 +202,8 @@ const deleteReceivedMessage = async function(receipt_handle)
 // request an encrypted string to decrypt
 MessageList.prototype.decryptMessage = async function(encrypted_data)
 {
-	var privKeyObj = openpgp.key.readArmored(this.current_user.getPrivateKey()).keys[0];
-	privKeyObj.decrypt(this.current_user.getPassphrase());
+	var privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
+	privKeyObj.decrypt(current_user.getPassphrase());
 
 	options = {
 		message: openpgp.message.readArmored(encrypted_data),     // parse armored message

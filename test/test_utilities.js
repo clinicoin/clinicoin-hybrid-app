@@ -110,5 +110,33 @@ const createConfirmLoginUser = async function()
 {
 	let user = await createAndConfirmUser();
 	await sleep(1000); // sometimes the login comes too quick for the shard to see it
-	return await user.login();
+	let login_result = await user.login();
+	if (!login_result) {
+		login_result = await user.login();
+	}
+	return user;
+};
+
+const getDemoUser = function()
+{
+	let test_user = new User();
+	test_user.name = 'test';
+	test_user.username = 'demouser'; // random username
+	test_user.email = test_user.username+"@mailsac.com";
+	test_user.phone = '+12125551217';
+	test_user.setPassphrase('aGreatPhrase321!');
+	return test_user;
+};
+
+const loginDemoUser = async function()
+{
+	let test_user = new User();
+	test_user.username = 'demouser';
+	test_user.setPassphrase('aGreatPhrase321!');
+	let login_result = await test_user.login();
+	if (!login_result) {
+		login_result = await test_user.login();
+	}
+	await sleep(1000);
+	return test_user;
 };

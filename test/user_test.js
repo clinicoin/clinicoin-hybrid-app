@@ -1,5 +1,3 @@
-const assert = chai.assert;
-
 let user = new User();
 user.name = 'test';
 user.username = 'test'+_.random(1111,9999); // random username
@@ -437,18 +435,28 @@ describe('createUserQueue', function() {
 
 	it('should create a queue', async function (done) {
 		setTimeout(done, 30000);
-		const test_user = await createAndConfirmUser();
-		await sleep(3000);
-		await test_user.login();
-		await sleep(1000);
+		const test_user = await createConfirmLoginUser();
+		await sleep(2000);
 		const result = await test_user.createUserQueue();
 		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
 		done();
 	});
+});
 
-	it('should require a user', async function () {
-		const test_user = new User();
-		const result = await test_user.createUserQueue();
-		assert.isFalse(result, "result is true");
+describe('updatePublicKey', function() {
+	this.slow(30000);
+	this.timeout(30000); // A very long environment setup.
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should update a key', async function (done) {
+		setTimeout(done, 30000);
+		const test_user = await createConfirmLoginUser();
+		await test_user.generateKey();
+		const result = await test_user.updatePublicKey();
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+		done();
 	});
 });

@@ -1,6 +1,7 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <meta name="google" content="notranslate"/>
     <title>Clinicoin Tests</title>
     <link href="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css" rel="stylesheet" />
 </head>
@@ -26,14 +27,19 @@
 <!-- source files -->
 <script src="../www/src/bindings.js"></script>
 <script src="../www/src/user.js"></script>
+<script src="../www/src/message_list.js"></script>
+<script src="../www/src/message.js"></script>
 
 <!-- test settings/utilities files -->
 <script src="passwords.js"></script>
+<script src="test_keys.js"></script>
 <script src="test_utilities.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
 <!-- test files -->
+<!--
 <script src="user_test.js"></script>
+-->
 <script src="message_list_test.js"></script>
 
 <script>
@@ -44,6 +50,8 @@
     mocha.checkLeaks();
     mocha.globals(['jQuery']);
     mocha.run();
+
+	const assert = chai.assert;
 </script>
 </body>
 </html>
