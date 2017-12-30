@@ -1,3 +1,16 @@
+/* needed for every page */
+localforage.config({
+	name: 'ClinicoinApp'
+});
+
+//const store = new DataStorage();
+
+// let logger = Minilog('app');
+// Minilog.pipe(Minilog.backends.array);
+// Minilog.enable();
+
+
+/* specific to pages */
 
 var setPageVisible = function(value)
 {

@@ -8,7 +8,7 @@ describe('getRecipientPublicKey', function() {
 		Minilog.backends.array.empty();
 	});
 
-	it('retrieve a known public key', async function () {
+	it('should retrieve a known public key', async function () {
 		await loginDemoUser();
 		let test_list = new MessageList();
 		test_list.recipient_user_id = 'demouser';
@@ -17,7 +17,7 @@ describe('getRecipientPublicKey', function() {
 		assert.equal('Demo_Public_key', test_list.recipient_public_key);
 	});
 
-	it('fail on unknown user', async function () {
+	it('should fail on unknown user', async function () {
 		await loginDemoUser();
 		let test_list = new MessageList();
 		test_list.recipient_user_id = 'user_not_existing';
@@ -25,23 +25,21 @@ describe('getRecipientPublicKey', function() {
 		assert.isFalse(result, "result is true");
 	});
 
-	it('fail on blank user', async function () {
+	it('should fail on blank user', async function () {
 		let test_list = new MessageList();
 		test_list.recipient_user_id = '';
 		const result = await test_list.getRecipientPublicKey();
 		assert.isFalse(result, "result is true");
 	});
 });
-*/
+
 describe('encryptMessage', function() {
-	this.slow(30000);
-	this.timeout(30000); // A very long environment setup.
 
 	beforeEach(function () {
 		Minilog.backends.array.empty();
 	});
 
-	it('encrypt a message', async function () {
+	it('should encrypt a message', async function () {
 		current_user.setPrivateKey(TEST_PRIVATE_KEY);
 		current_user.setPassphrase(TEST_PRIVATE_KEY_PASSWORD);
 		let test_list = new MessageList();
@@ -52,7 +50,7 @@ describe('encryptMessage', function() {
 		assert(encrypted_data.length>0, "result is false");
 	});
 
-	it('fail on blank contents', async function () {
+	it('should fail on blank contents', async function () {
 		let test_list = new MessageList();
 		test_list.recipient_public_key = TEST_PUBLIC_KEY;
 		let data_to_encrypt = '';
@@ -60,11 +58,63 @@ describe('encryptMessage', function() {
 		assert.isFalse(result, "result is true");
 	});
 
-	it('fail on blank key', async function () {
+	it('should fail on blank key', async function () {
 		let test_list = new MessageList();
 		test_list.recipient_public_key = '';
 		let data_to_encrypt = 'something';
 		const result = await test_list.encryptMessage(data_to_encrypt, true);
 		assert.isFalse(result, "result is true");
+	});
+});
+
+describe('sendToServer', function() {
+	this.timeout(10000);
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should send message to queue', async function () {
+		await loginDemoUser();
+		let test_list = new MessageList();
+		test_list.recipient_user_id = 'demouser';
+		const result = await test_list.sendToServer('message2');
+		assert.isTrue(result, "result is false");
+	});
+
+	it('should fail on blank message', async function () {
+		let test_list = new MessageList();
+		test_list.recipient_user_id = 'demouser';
+		const result = await test_list.sendToServer('');
+		assert.isFalse(result, "result is true");
+	});
+
+	it('should fail on blank recipient', async function () {
+		let test_list = new MessageList();
+		test_list.recipient_user_id = '';
+		const result = await test_list.sendToServer('something');
+		assert.isFalse(result, "result is true");
+	});
+
+	it('should fail bad recipient', async function () {
+		let test_list = new MessageList();
+		test_list.recipient_user_id = 'unknownreceipient';
+		const result = await test_list.sendToServer('something');
+		assert.isFalse(result, "result is true");
+	});
+});
+*/
+
+describe('saveMessage/loadMessages', function() {
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+});
+
+describe('saveSettings/loadSettings', function() {
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
 	});
 });

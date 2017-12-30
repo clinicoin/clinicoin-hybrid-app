@@ -1,31 +1,27 @@
-var wallabify = require('wallabify');
-var wallabyPostprocessor = wallabify({
-        // browserify options, such as
-        // insertGlobals: false
-    }
-    // you may also pass an initializer function to chain other
-    // browserify options, such as transformers
-    // , b => b.exclude('mkdirp').transform(require('babelify'))
-);
+module.exports = function (wallaby) {
+  return {
+    files: [
+      {pattern: 'node_modules/babel-polyfill/dist/polyfill.js', instrument: false},
+	    {pattern: 'node_modules/minilog/dist/minilog.js', instrument: false},
+	    'www/lib/*.js',
+	    'test/passwords.js',
+	    'test/test_keys.js',
+	    'test/test_utilities.js',
 
-module.exports = function () {
-    return {
-        // set `load: false` to all of the browserified source files and tests,
-        // as they should not be loaded in browser,
-        // their browserified versions will be loaded instead
-        files: [
-            {pattern: 'www/*.js', load: true}
-        ],
+	    'www/src/*.js',
+    ],
 
-        tests: [
-            {pattern: 'test/**/*Test.js', load: false}
-        ],
+    tests: [
+      'test/messagelist_test.js',
 
-        postprocessor: wallabyPostprocessor,
+    ],
 
-        setup: function () {
-            // required to trigger tests loading
-            window.__moduleBundler.loadTests();
-        }
-    };
+	testFramework: 'mocha',
+
+    compilers: {
+      '**/*.js': wallaby.compilers.babel()
+    },
+
+	debug: true
+  };
 };

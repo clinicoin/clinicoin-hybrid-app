@@ -23,12 +23,16 @@
 <script src="../www/lib/amazon-cognito-identity.min.js"></script>
 <script src="../www/lib/aws-sdk-2.171.0.js"></script>
 <script src="../www/lib/axios-0.17.1.min.js"></script>
+<script src="../www/lib/localforage.min.js"></script>
 
 <!-- source files -->
+<script src="../www/src/constants.js"></script>
 <script src="../www/src/bindings.js"></script>
 <script src="../www/src/user.js"></script>
-<script src="../www/src/message_list.js"></script>
+<script src="../www/src/messagelist.js"></script>
 <script src="../www/src/message.js"></script>
+<script src="../www/src/datastorage.js"></script>
+<script src="../www/src/channels.js"></script>
 
 <!-- test settings/utilities files -->
 <script src="passwords.js"></script>
@@ -39,19 +43,25 @@
 <!-- test files -->
 <!--
 <script src="user_test.js"></script>
+<script src="channels_test.js"></script>
 -->
-<script src="message_list_test.js"></script>
+<script src="messagelist_test.js"></script>
+
 
 <script>
-	var logger = Minilog('app');
+	let logger = Minilog('app');
 	Minilog.pipe(Minilog.backends.array);
 	Minilog.enable();
+
+	const store = new DataStorage();
 
     mocha.checkLeaks();
     mocha.globals(['jQuery']);
     mocha.run();
 
 	const assert = chai.assert;
+
+	let channels = new Channels();
 </script>
 </body>
 </html>

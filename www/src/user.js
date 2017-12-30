@@ -1,5 +1,4 @@
-const CLIENT_ID = '2s5fg9tumemtjm22lb7pup8l30';
-const USER_POOL_ID = 'us-east-1_QCQ5kVlpW';
+
 
 let current_user = new User();
 
@@ -48,6 +47,35 @@ function User() {
 	this.setPrivateKey = function(new_key)
 	{
 		private_key = new_key;
+	};
+
+	this.toJSON = function()
+	{
+		return JSON.stringify({
+			username: this.username,
+			awsSub: this.awsSub,
+			email: this.email,
+			email_verified: this.email_verified,
+			phone: this.phone,
+			phone_verified: this.phone_verified,
+			name: this.name,
+			private_key: this.private_key,
+			public_key: this.public_key
+		});
+	};
+
+	this.fromJSONString = function(json_string)
+	{
+		const data = JSON.parse(json_string);
+		this.username = data.username;
+		this.awsSub = data.awsSub;
+		this.email = data.email;
+		this.email_verified = data.email_verified;
+		this.phone = data.phone;
+		this.phone_verified = data.phone_verified;
+		this.name = data.name;
+		this.private_key = data.private_key;
+		this.public_key = data.public_key;
 	};
 }
 
@@ -221,7 +249,7 @@ User.prototype.login = async function()
 				self.awsSub = result.idToken.payload.sub;
 
 				//POTENTIAL: Region needs to be set if not already set previously elsewhere.
-				AWS.config.region = 'us-east-1';
+				AWS.config.region = AWS_REGION;
 
 				AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 					IdentityPoolId: 'us-east-1:d94bc2ab-8203-4105-9013-4cffe559f6ad', // your identity pool id here
@@ -553,7 +581,7 @@ User.prototype.forgotPasswordReset = async function(confirmation_code, new_passw
 	}
 
 	// have to use the full provider to get to the confirm method
-	let provider = new AWS.CognitoIdentityServiceProvider({apiVersion: '2016-04-18', region: 'us-east-1'});
+	let provider = new AWS.CognitoIdentityServiceProvider({apiVersion: '2016-04-18', region: AWS_REGION});
 
 	const params = {
 		ClientId: CLIENT_ID,
@@ -590,7 +618,7 @@ User.prototype.callLambda = async function(invoke_params)
 	logger.info('calling lambda');
 	logger.debug(invoke_params);
 
-	const lambda = new AWS.Lambda({region: 'us-east-1', apiVersion: '2015-03-31'});
+	const lambda = new AWS.Lambda({region: AWS_REGION, apiVersion: '2015-03-31'});
 
 	const lambda_promise = new Promise((resolve) => {
 		lambda.invoke(invoke_params, function(err, data) {
@@ -675,6 +703,23 @@ User.prototype.deleteUser = async function()
 
 	return result.statusCode === 200;
 };
+
+User.prototype.getFromStorage = async function(username)
+{
+	if (_.isEmpty(username)) {
+		username = this.username;
+	}
+
+	const data = await store.getItem('User_'+username);
+
+	this.fromJSONString(data);
+};
+
+User.prototype.setInStorage = async function()
+{
+	return await store.setItem('User_'+this.username, this.toJSON());
+};
+
 
 /*
 TODO:

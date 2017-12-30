@@ -460,3 +460,21 @@ describe('updatePublicKey', function() {
 		done();
 	});
 });
+
+describe('setInStorage/getFromStorage', function() {
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should store user data', async function () {
+		let test_user = new User();
+		test_user.username = 'test_user';
+		test_user.awsSub = 'my aws sub';
+		let result = await test_user.setInStorage();
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+		let actual_user = new User();
+		await actual_user.getFromStorage('test_user');
+		assert.equal(actual_user.awsSub, 'my aws sub', 'loaded value does not match');
+	});
+});
