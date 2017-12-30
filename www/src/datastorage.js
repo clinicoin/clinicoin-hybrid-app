@@ -9,15 +9,18 @@ function DataStorage() { }
  * @param key
  * @returns item value or null if error
  */
-DataStorage.prototype.getItem = async function(key)
+DataStorage.prototype.getItem = async function(key, default_value)
 {
+	let value = default_value;
 	try {
-		return await localforage.getItem(key);
+		value = await localforage.getItem(key);
+		logger.debug("getItem: "+key+" = "+value);
 	} catch (ex) {
-		logger.error(ex)
+		logger.error(ex);
+		logger.warn('using default, '+key+" = "+value);
 	}
 
-	return null;
+	return value;
 };
 
 /**
@@ -55,14 +58,34 @@ DataStorage.prototype.removeItem = async function(key)
 	return false;
 };
 
-DataStorage.prototype.getDictionaryValues = function(expression)
+DataStorage.prototype.removeItemsExpression = async function(expression)
 {
-	let _list = [];
-	localforage.iterate(function(value, key, iterationNumber) {
-		if (expression.test(key)) {
-			_list.push({ key:key, value:value });
+	try {
+		const self = this;
+		let key_list = await localforage.keys();
+		key_list = _.filter(key_list, key => expression.test(key));
+		logger.debug("key count: "+key_list.length);
+
+		for (let key of key_list) {
+			await store.removeItem(key);
 		}
-	});
-	logger.debug("getKeys items: "+_list.length);
-	return _list;
+	} catch (ex) {
+		logger.error(ex)
+	}
+	return false;
+};
+
+DataStorage.prototype.getFilteredData = async function(expression)
+{
+	const self = this;
+	let key_list = await localforage.keys();
+	key_list = _.filter(key_list, key => expression.test(key));
+	logger.debug("getKeys items: "+key_list.length);
+
+	let data_list = [];
+	for (let key of key_list) {
+		data_list.push(await store.getItem(key));
+	}
+
+	return data_list;
 };

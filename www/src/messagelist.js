@@ -23,6 +23,9 @@ function MessageList()
 
 	this.fromJSONString = function(json_string)
 	{
+		if (_.isEmpty(json_string)) {
+			return;
+		}
 		const data = JSON.parse(json_string);
 		this.friendly_name = data.friendly_name;
 		this.recipient_user_id = data.recipient_user_id;
@@ -191,29 +194,46 @@ MessageList.prototype.decryptMessage = async function(encrypted_data)
 	return decrypted_obj;
 };
 
+MessageList.prototype.removeAllMessages = async function()
+{
+	const exp = new RegExp('^ch_'+this.recipient_user_id+'_\d+');
+	await store.removeItemsExpression(exp);
+};
+
 MessageList.prototype.loadMessages = async function()
 {
+	logger.info('loading messages');
+
 	const self = this;
 	this.messages = [];
-	const exp = new RegExp('/^ch_'+this.recipient_user_id+'/');
-	const _json_list = await store.getDictionaryValues(exp);
-	_json_list.forEach(function(json) {
-	 	self.messages.push(msg.fromJSONString(json, self));
+	const exp = new RegExp('^ch_'+this.recipient_user_id+'_\\d+');
+	const key_list = await store.getFilteredData(exp);
+	key_list.forEach(async function(json) {
+		const msg = new Message();
+		msg.fromJSONString(json, self);
+		logger.debug("loading msg "+msg.MessageId);
+	 	self.messages.push(msg);
 	});
+
+	return true;
 };
 
 MessageList.prototype.saveMessage = async function(msg)
 {
-	await store.setItem('ch_'+this.recipient_user_id+'_'+msg.ReceiveDate, msg.toJSON());
+	logger.info('save message '+msg.MessageId);
+	await store.setItem('ch_' + this.recipient_user_id + '_' + msg.ReceiveDate, msg.toJSON());
+	return true;
 };
 
 MessageList.prototype.loadSettings = async function()
 {
 	const settings = await store.getItem('ch_'+this.recipient_user_id+'_Settings');
 	this.fromJSONString(settings);
+	return true;
 };
 
 MessageList.prototype.saveSettings = async function()
 {
 	await store.setItem('ch_'+this.recipient_user_id+'_Settings', this.toJSON());
+	return true;
 };

@@ -1,5 +1,5 @@
 const msg_list = new MessageList();
-/*
+
 describe('getRecipientPublicKey', function() {
 	this.slow(30000);
 	this.timeout(30000); // A very long environment setup.
@@ -103,12 +103,45 @@ describe('sendToServer', function() {
 		assert.isFalse(result, "result is true");
 	});
 });
-*/
 
 describe('saveMessage/loadMessages', function() {
 
 	beforeEach(function () {
 		Minilog.backends.array.empty();
+	});
+
+	afterEach(()=>{
+		let test_list = new MessageList();
+		test_list.recipient_user_id = 'demouser';
+		test_list.removeAllMessages();
+	});
+
+	it('should load saved messages', async function () {
+		let test_list = new MessageList();
+		test_list.recipient_user_id = 'demouser';
+
+		let msg = new Message();
+		msg.Username = 'demouser';
+		msg.Body = 'test message '+moment().format('x');
+		msg.MessageId = '123456';
+		msg.MessageList = test_list;
+		const save_result = await test_list.saveMessage(msg);
+		assert.isTrue(save_result, "result is false");
+
+		let actual_list = new MessageList();
+		actual_list.recipient_user_id = 'demouser';
+		const load_result = await actual_list.loadMessages();
+		assert.isTrue(load_result, "result is false");
+
+		assert(0 < actual_list.messages.length, 'no messages loaded');
+		assert.equal(msg.Body, _.last(actual_list.messages).Body, "Body message does not match");
+	});
+
+	it('should handle having no messages', async function () {
+		let actual_list = new MessageList();
+		const load_result = await actual_list.loadMessages();
+		assert.isTrue(load_result, "result is false");
+		assert.equal(0, actual_list.messages.length, 'messages loaded when they should not be');
 	});
 });
 
@@ -116,5 +149,25 @@ describe('saveSettings/loadSettings', function() {
 
 	beforeEach(function () {
 		Minilog.backends.array.empty();
+	});
+
+	it('should load settings', async function () {
+		let test_list = new MessageList();
+		test_list.recipient_user_id = 'demouser';
+		const save_result = await test_list.saveSettings();
+		assert.isTrue(save_result, "result is false");
+
+		let actual_list = new MessageList();
+		actual_list.recipient_user_id = 'demouser';
+		const load_result = await actual_list.loadSettings();
+		assert.isTrue(load_result, "result is false");
+		assert.equal('demouser', actual_list.recipient_user_id, "wrong setting");
+	});
+
+	it('should work on empty settings', async function () {
+		let actual_list = new MessageList();
+		actual_list.recipient_user_id = 'fake_user';
+		const load_result = await actual_list.loadSettings();
+		assert.isTrue(load_result, "result is false");
 	});
 });

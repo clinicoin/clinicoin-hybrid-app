@@ -5,7 +5,7 @@ function Message() {
 	this.EncryptedBody = '';
 	this.MessageId = '';
 	this.ReceiptHandle = '';
-	this.ReceiveDate = '';
+	this.ReceiveDate = moment();
 	this.MessageList = null;
 
 	this.toJSON = function()
@@ -14,7 +14,7 @@ function Message() {
 			Username: this.Username,
 			Body: this.Body,
 			MessageId: this.MessageId,
-			ReceiveDate: this.ReceiveDate
+			ReceiveDate: this.ReceiveDate.format('YYYY-MM-DD HH:mm:ss')
 		});
 	};
 
@@ -23,7 +23,7 @@ function Message() {
 		this.Username = data.Username;
 		this.Body = data.Body;
 		this.MessageId = data.MessageId;
-		this.ReceiveDate = data.ReceiveDate;
+		this.ReceiveDate = moment(data.ReceiveDate);
 		this.MessageList = messagelist;
 	};
 }

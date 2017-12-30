@@ -477,4 +477,34 @@ describe('setInStorage/getFromStorage', function() {
 		await actual_user.getFromStorage('test_user');
 		assert.equal(actual_user.awsSub, 'my aws sub', 'loaded value does not match');
 	});
+
+	it('should not fail on unknown user', async function () {
+		let actual_user = new User();
+		const result = await actual_user.getFromStorage('fake_user');
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+	});
+});
+
+describe('isLoggedIn', function() {
+	this.slow(30000);
+	this.timeout(30000); // A very long environment setup.
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should reflect logged in', async function () {
+		setTimeout(done, 30000);
+		const test_user = await createConfirmLoginUser();
+		const actual = await test_user.isLoggedIn();
+		assert.isTrue(actual, "result is false\n\n" + getLastConsoleMessage());
+	});
+
+	it('should reflect logged out', async function () {
+		setTimeout(done, 30000);
+		const test_user = await createConfirmLoginUser();
+		await test_user.logout();
+		const actual = await test_user.isLoggedIn();
+		assert.isFalse(actual, "result is true\n\n" + getLastConsoleMessage());
+	});
 });

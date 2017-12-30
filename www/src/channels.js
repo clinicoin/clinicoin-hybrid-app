@@ -35,15 +35,15 @@ Channels.prototype.removeChannel = function(channel)
 	return _list;
 };
 
-Channels.prototype.retrieveMessages = async function()
+Channels.prototype.checkForMessages = async function()
 {
 	// get the list of messages
-	const list = retrieveMessagesFromServer();
+	const list = this.retrieveMessagesFromServer();
 
 	list.every(async function(msg)
 	{
 		// find the list this belongs to
-		const msg_list = _.find(this.channel_list, { 'recipient_user_id': user_id });
+		const msg_list = _.find(this.channel_list, { 'recipient_user_id': msg.Username });
 
 		msg.MessageList = msg_list;
 
@@ -99,11 +99,17 @@ Channels.prototype.retrieveMessagesFromServer = async function()
 		let _list = [];
 		result.data.Messages.forEach((qm)=>{
 			let msg = new Message();
+			msg.Username = qm.Username;
 			msg.EncryptedBody = qm.Body;
 			msg.MessageId = qm.MessageId;
 			msg.ReceiptHandle = qm.ReceiptHandle;
 			_list.push(msg);
 		});
+
+		if (_list.length > 0) {
+			logger.debug(list.length + " messages retrieved");
+		}
+
 		return _list;
 	}
 };
@@ -141,3 +147,6 @@ Channels.prototype.deleteReceivedMessage = async function(receipt_handle)
 		return true;
 	}
 };
+
+
+let channels = new Channels();

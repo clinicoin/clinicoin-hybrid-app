@@ -66,6 +66,9 @@ function User() {
 
 	this.fromJSONString = function(json_string)
 	{
+		if (_.isEmpty(json_string)) {
+			return;
+		}
 		const data = JSON.parse(json_string);
 		this.username = data.username;
 		this.awsSub = data.awsSub;
@@ -198,6 +201,40 @@ User.prototype.registerUser = async function()
 		this.awsSub = result.userSub;
 		return true;
 	}
+};
+
+User.prototype.isLoggedIn = async function()
+{
+	let poolData = {
+		UserPoolId : USER_POOL_ID,
+		ClientId : CLIENT_ID
+	};
+	const userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(data);
+	const cognitoUser = userPool.getCurrentUser();
+
+	if (cognitoUser != null) {
+		const login_promise = new Promise((resolve) => {
+			cognitoUser.getSession(function(err, session) {
+				if (err) {
+					logger.warn('user not logged in');
+					resolve(false);
+				} else {
+					const valid = session.isValid();
+					if (valid) {
+						logger.debug('user logged in');
+					}
+					else {
+						logger.warn('user not logged in');
+					}
+					resolve(valid);
+				}
+			});
+		});
+
+		return await login_promise;
+	}
+
+	return false;
 };
 
 /**
@@ -516,7 +553,7 @@ User.prototype.logout = async function()
 {
 	logger.info('logout user');
 
-	this.cognitoUser.signOut();
+	await this.cognitoUser.signOut();
 
 	logger.info('user logged out');
 	return true;
@@ -713,19 +750,11 @@ User.prototype.getFromStorage = async function(username)
 	const data = await store.getItem('User_'+username);
 
 	this.fromJSONString(data);
+
+	return true;
 };
 
 User.prototype.setInStorage = async function()
 {
 	return await store.setItem('User_'+this.username, this.toJSON());
 };
-
-
-/*
-TODO:
-and an entry is created in the directory
-does everybody get an S3 bucket?
-and a queue is created for the user
-and the user is given read/write rights to the queue
-and the queue receives a welcome message from the directory
- */
