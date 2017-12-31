@@ -50,7 +50,7 @@ DataStorage.prototype.removeItem = async function(key)
 {
 	try {
 		logger.debug("removeItem: "+key);
-		await localforage.removeItem(key, value);
+		await localforage.removeItem(key);
 		return true;
 	} catch (ex) {
 		logger.error(ex)
@@ -75,16 +75,21 @@ DataStorage.prototype.removeItemsExpression = async function(expression)
 	return false;
 };
 
-DataStorage.prototype.getFilteredData = async function(expression)
+DataStorage.prototype.getFilteredData = async function(expression, decode_json)
 {
 	const self = this;
 	let key_list = await localforage.keys();
+	//logger.debug(key_list);
 	key_list = _.filter(key_list, key => expression.test(key));
 	logger.debug("getKeys items: "+key_list.length);
 
 	let data_list = [];
 	for (let key of key_list) {
-		data_list.push(await store.getItem(key));
+		let value = await store.getItem(key);
+		if (decode_json === true) {
+			value = JSON.parse(value);
+		}
+		data_list.push(value);
 	}
 
 	return data_list;

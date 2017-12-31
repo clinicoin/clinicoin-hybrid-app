@@ -116,9 +116,8 @@ describe('login', function() {
 
 	it('should login user', async function (done) {
 		setTimeout(done, 30000);
-		const test_user = await createAndConfirmUser();
-		await sleep(1000); // sometimes the login comes too quick for the shard to see it
-		const result = await test_user.login();
+		const test_user = await createConfirmLoginUser();
+		const result = await test_user.isLoggedIn();
 		assert.isTrue(result, "result is false\n\n"+getLastConsoleMessage());
 		done();
 	});
@@ -133,8 +132,8 @@ describe('login', function() {
 	});
 
 	it('should require a passphrase', async function() {
-		const old_pw = user.getPassphrase();
-		user.setPassphrase('');
+		const old_pw = user.getAwsPassword();
+		user.setAwsPassword('');
 		const result = await user.login();
 		user.setPassphrase(old_pw);
 		assert.isFalse(result, "result is true");
@@ -142,12 +141,16 @@ describe('login', function() {
 	});
 
 	it('should catch bad login', async function(done) {
-		const old_pw = user.getPassphrase();
+		user.username = 'demouser';
+		if (await user.isLoggedIn()) {
+			await user.logout();
+		}
+		const old_pw = user.getAwsPassword();
 		user.setPassphrase('aFakedLogin1234!');
 		const result = await user.login();
 		user.setPassphrase(old_pw);
 		assert.isFalse(result, "result is true");
-		assert.match(getLastConsoleMessage(), /^NotAuthorizedException/, "error messages do not match\n\n"+getLastConsoleMessage());
+		assert.match(getLastConsoleMessage(), /^NotAuthorizedException|^UserNotFoundException/, "error messages do not match\n\n"+getLastConsoleMessage());
 		done();
 	});
 });
@@ -178,10 +181,13 @@ describe('verifyConfirmationCode', function() {
 
 	it('should fail on already confirmed user', async function() {
 		const test_user = new User();
-		test_user.username = 'a101';  // some confirmed user
+		if (await user.isLoggedIn()) {
+			await user.logout();
+		}
+		test_user.username = 'demouser';  // some confirmed user
 		const result = await user.verifyConfirmationCode('1234');
 		assert.isFalse(result, "result is true");
-		assert.match(getLastConsoleMessage(), /user status is not UNCONFIRMED/, "error messages do not match");
+		assert.match(getLastConsoleMessage(), /user status is not UNCONFIRMED|UserNotFoundException/, "error messages do not match");
 	});
 
 	it('should fail on wrong confirmation', async function() {
@@ -202,8 +208,8 @@ describe('verifyConfirmationCode', function() {
 });
 
 describe('resendConfirmationCode', function() {
-	this.slow(30000);
-	this.timeout(30000); // A very long environment setup.
+	this.slow(15000);
+	this.timeout(15000); // A very long environment setup.
 
 	// these sometimes have to be run by hand because it takes too long to get the email confirmation
 
@@ -212,7 +218,7 @@ describe('resendConfirmationCode', function() {
 	});
 
 	it('should re-send confirmation', async function (done) {
-		setTimeout(done, 30000);
+		setTimeout(done, 15000);
 
 		// create a user
 		const test_user = new User();
@@ -232,7 +238,7 @@ describe('resendConfirmationCode', function() {
 
 			// wait for 2 emails
 			list = await getMailsacEmailList(test_user.email);
-			if (list.length == 2) {
+			if (list.length === 2) {
 				logger.debug('2 emails found');
 				break;
 			}
@@ -241,12 +247,15 @@ describe('resendConfirmationCode', function() {
 			}
 		}
 
-		assert(list.length==2, "list length not 2\n\n" + getLastConsoleMessage());
+		assert(list.length === 2, "list length not 2\n\n" + getLastConsoleMessage());
 
 		done();
 	});
 
 	it('should fail on random user', async function() {
+		if (await user.isLoggedIn()) {
+			await user.logout();
+		}
 		const test_user = new User();
 		test_user.username = 'fake_username';
 		const result = await user.resendConfirmationCode();
@@ -255,8 +264,11 @@ describe('resendConfirmationCode', function() {
 	});
 
 	it('should fail on already confirmed user', async function() {
+		if (await user.isLoggedIn()) {
+			await user.logout();
+		}
 		const test_user = new User();
-		test_user.username = 'a101';  // some confirmed user
+		test_user.username = 'demouser';  // some confirmed user
 		const result = await test_user.resendConfirmationCode();
 		assert.isFalse(result, "result is true");
 		assert.match(getLastConsoleMessage(), /User is already confirmed/, "error messages do not match");
@@ -493,18 +505,20 @@ describe('isLoggedIn', function() {
 		Minilog.backends.array.empty();
 	});
 
-	it('should reflect logged in', async function () {
+	it('should reflect logged in', async function (done) {
 		setTimeout(done, 30000);
 		const test_user = await createConfirmLoginUser();
 		const actual = await test_user.isLoggedIn();
 		assert.isTrue(actual, "result is false\n\n" + getLastConsoleMessage());
+		done();
 	});
 
-	it('should reflect logged out', async function () {
+	it('should reflect logged out', async function (done) {
 		setTimeout(done, 30000);
 		const test_user = await createConfirmLoginUser();
 		await test_user.logout();
 		const actual = await test_user.isLoggedIn();
 		assert.isFalse(actual, "result is true\n\n" + getLastConsoleMessage());
+		done();
 	});
 });

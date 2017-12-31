@@ -15,12 +15,29 @@ function User() {
 
 	this.cognitoUser = null;
 
+	let aws_password = '';
 	let passphrase = '';
     let private_key = '';
     let public_key = '';
 
+	this.getAwsPassword = function()
+	{
+		if (_.isEmpty(aws_password) && !_.isEmpty(passphrase)) {
+			return passphrase;
+		}
+		return aws_password;
+	};
+
+	this.setAwsPassword = function(new_password)
+	{
+		aws_password = new_password;
+	};
+
 	this.getPassphrase = function()
 	{
+		if (!_.isEmpty(aws_password) && _.isEmpty(passphrase)) {
+			return aws_password;
+		}
 		return passphrase;
 	};
 
@@ -153,8 +170,8 @@ User.prototype.registerUser = async function()
 		this.phone = '+'+this.phone;
 	}
 
-	if (_.isEmpty(this.getPassphrase())) {
-		logger.error('passphrase is empty');
+	if (_.isEmpty(this.getAwsPassword())) {
+		logger.error('aws password is empty');
 		return false;
 	}
 
@@ -178,7 +195,7 @@ User.prototype.registerUser = async function()
 	attributeList.push(attributePhoneNumber);
 
 	const signup_promise = new Promise((resolve) =>
-		userPool.signUp(this.username, this.getPassphrase(), attributeList, null, (err, result) => {
+		userPool.signUp(this.username, this.getAwsPassword(), attributeList, null, (err, result) => {
 			if (err) {
 				resolve({ error: err });
 			}
@@ -209,7 +226,7 @@ User.prototype.isLoggedIn = async function()
 		UserPoolId : USER_POOL_ID,
 		ClientId : CLIENT_ID
 	};
-	const userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(data);
+	const userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
 	const cognitoUser = userPool.getCurrentUser();
 
 	if (cognitoUser != null) {
@@ -221,6 +238,9 @@ User.prototype.isLoggedIn = async function()
 				} else {
 					const valid = session.isValid();
 					if (valid) {
+						if (this.cognitoUser === null) {
+							this.cognitoUser = session;
+						}
 						logger.debug('user logged in');
 					}
 					else {
@@ -247,8 +267,8 @@ User.prototype.login = async function()
 
 	let self = this;
 
-	if (_.isEmpty(this.getPassphrase())) {
-		logger.error('passphrase is empty');
+	if (_.isEmpty(this.getAwsPassword())) {
+		logger.error('password is empty');
 		return false;
 	}
 
@@ -259,7 +279,7 @@ User.prototype.login = async function()
 
 	const authenticationData = {
 		Username : this.username,
-		Password : this.getPassphrase()
+		Password : this.getAwsPassword()
 	};
 
 	let authenticationDetails = new AWSCognito.CognitoIdentityServiceProvider.AuthenticationDetails(authenticationData);
@@ -443,7 +463,7 @@ User.prototype.changeUserPassword = async function(new_password)
 
 	const pw_promise = new Promise((resolve) => {
 		try {
-			this.cognitoUser.changePassword(this.getPassphrase(), new_password, function (err) {
+			this.cognitoUser.changePassword(this.getAwsPassword(), new_password, function (err) {
 				if (err) {
 					resolve({error: err});
 				}
@@ -466,7 +486,7 @@ User.prototype.changeUserPassword = async function(new_password)
 	}
 	else {
 		logger.info('password changed');
-		this.setPassphrase(new_password);
+		this.setAwsPassword(new_password);
 		this.generateKey().then(()=>{
 			// todo: upload the new key
 		});
@@ -553,9 +573,14 @@ User.prototype.logout = async function()
 {
 	logger.info('logout user');
 
-	await this.cognitoUser.signOut();
+	if (this.cognitoUser != null) {
+		await this.cognitoUser.signOut();
+		logger.info('user logged out');
+	}
+	else {
+		logger.info('user not logged in')
+	}
 
-	logger.info('user logged out');
 	return true;
 };
 

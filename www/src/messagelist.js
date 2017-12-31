@@ -3,6 +3,7 @@ function MessageList()
 	this.friendly_name = '';
 	this.recipient_user_id = '';
 	this.recipient_public_key = '';
+	this.last_public_key_retrieval = '2017-01-01';
 	this.message_group_id = '1';
 	this.messages = [];
 	this.message_receive_event = null;
@@ -18,6 +19,7 @@ function MessageList()
 			recipient_user_id: this.recipient_user_id,
 			recipient_public_key: this.recipient_public_key,
 			message_group_id: this.message_group_id,
+			last_public_key_retrieval: this.last_public_key_retrieval
 		});
 	};
 
@@ -31,6 +33,7 @@ function MessageList()
 		this.recipient_user_id = data.recipient_user_id;
 		this.recipient_public_key = data.recipient_public_key;
 		this.message_group_id = data.message_group_id;
+		this.last_public_key_retrieval = data.last_public_key_retrieval;
 	};
 }
 
@@ -52,6 +55,7 @@ MessageList.prototype.getRecipientPublicKey = async function()
 
 	if ( ! _.isEmpty(response.body)) {
 		this.recipient_public_key = response.body.PublicKey.S;
+		this.last_public_key_retrieval = moment().format('YYYY-MM-DD HH:mm:ss');
 		return response.statusCode === 200;
 	}
 
@@ -98,15 +102,13 @@ MessageList.prototype.sendToServer = async function(data)
 		return false;
 	}
 
-	const d = new Date();
-
 	let queue_url = this.getUrl(this.recipient_user_id);
 
 	const params = {
 		MessageBody: data,
 		QueueUrl: queue_url,
 		DelaySeconds: 0,
-		MessageDeduplicationId: d.getTime().toString(),
+		MessageDeduplicationId: moment().format('x'),
 		MessageGroupId: this.message_group_id
 	};
 
@@ -135,63 +137,29 @@ MessageList.prototype.sendToServer = async function(data)
 	}
 };
 
-MessageList.prototype.sendMessage = async function(message)
+MessageList.prototype.sendMessage = async function(message_data)
 {
-	// we should receive a message object
+	let msg = new Message();
+	msg.Body = message_data;
+	msg.Username = this.recipient_user_id;
 
-	this.message.push(message);
+	this.messages.push(message_data);
 
-	// get the recipient's public key
-	await this.getRecipientPublicKey();
+	// get the recipient's public key if more than 24 hours old
+	if (moment(this.last_public_key_retrieval).isBefore(moment().subtract(24, 'hours'))) {
+		await this.getRecipientPublicKey();
+	}
 
 	// encrypt the message, sending signed
-	const encrypted_data = await this.encryptMessage(message, true);
+	msg.EncryptedBody = await this.encryptMessage(message_data, true);
 
 	// send it to the server
-	await this.sendToServer(encrypted_data);
+	await this.sendToServer(msg.getEnvelope()+"\n\n"+msg.EncryptedBody);
 
 	// save to list
-	await this.saveMessage(message);
-};
+	await this.saveMessage(msg);
 
-// request an encrypted string to decrypt
-MessageList.prototype.decryptMessage = async function(encrypted_data)
-{
-	logger.info('Decrypting message');
-
-	if (_.isEmpty(encrypted_data)) {
-		logger.error('nothing to decrypt');
-		return false;
-	}
-
-	if (_.isEmpty(current_user.getPrivateKey())) {
-		logger.error('no private key');
-		return false;
-	}
-
-	let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
-	privKeyObj.decrypt(current_user.getPassphrase());
-
-	let options = {
-		message: openpgp.message.readArmored(encrypted_data),     // parse armored message
-		privateKey: privKeyObj // for decryption
-	};
-
-	// only check for signing if we have key
-	if (_.isEmpty(this.recipient_public_key)) {
-		options.publicKeys = openpgp.key.readArmored(this.recipient_public_key).keys;
-	}
-
-	// returns object formatted with properties of data:string and signatures:[].valid
-	const decrypted_obj = await openpgp.decrypt(options);
-
-	logger.info("data decrypted");
-
-	if (decrypted_obj.signatures.length > 0 && decrypted_obj.signatures[0].valid) {
-		logger.info("valid signature");
-	}
-
-	return decrypted_obj;
+	return msg;
 };
 
 MessageList.prototype.removeAllMessages = async function()
@@ -235,5 +203,11 @@ MessageList.prototype.loadSettings = async function()
 MessageList.prototype.saveSettings = async function()
 {
 	await store.setItem('ch_'+this.recipient_user_id+'_Settings', this.toJSON());
+	return true;
+};
+
+MessageList.prototype.removeSettings = async function()
+{
+	await store.removeItem('ch_'+this.recipient_user_id+'_Settings');
 	return true;
 };

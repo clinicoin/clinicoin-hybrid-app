@@ -79,7 +79,7 @@ const createAndConfirmUser = async function()
 	user.username = 'test'+_.random(111111,999999); // random username
 	user.email = user.username+'@mailsac.com';
 	user.phone = '+12125551216';
-	user.setPassphrase('aGreatPhrase321!');
+	user.setAwsPassword('aGreatPhrase321!');
 	const register_result = await user.registerUser();
 	assert.isTrue(register_result, "user create failed\n\n"+getLastConsoleMessage());
 
@@ -124,7 +124,7 @@ const getDemoUser = function()
 	test_user.username = 'demouser'; // random username
 	test_user.email = test_user.username+"@mailsac.com";
 	test_user.phone = '+12125551217';
-	test_user.setPassphrase('aGreatPhrase321!');
+	test_user.setAwsPassword('aGreatPhrase321!');
 	return test_user;
 };
 
@@ -132,7 +132,7 @@ const loginDemoUser = async function()
 {
 	let test_user = new User();
 	test_user.username = 'demouser';
-	test_user.setPassphrase('aGreatPhrase321!');
+	test_user.setAwsPassword('aGreatPhrase321!');
 	let login_result = await test_user.login();
 	if (!login_result) {
 		login_result = await test_user.login();

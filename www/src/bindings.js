@@ -1,16 +1,3 @@
-/* needed for every page */
-localforage.config({
-	name: 'ClinicoinApp'
-});
-
-//const store = new DataStorage();
-
-// let logger = Minilog('app');
-// Minilog.pipe(Minilog.backends.array);
-// Minilog.enable();
-
-
-/* specific to pages */
 
 var setPageVisible = function(value)
 {
@@ -19,7 +6,7 @@ var setPageVisible = function(value)
 
 var bindLogin = function()
 {
-    console.log('Binding Login');
+    logger.debug('Binding Login');
 
     $('#btnLogin').on('click', function(e) {
         setPageVisible(2);
@@ -45,7 +32,7 @@ var bindLogin = function()
 
 var bindRegister = function()
 {
-    console.log('Binding Register');
+    logger.debug('Binding Register');
     
     $('#btnBackRegister').on('click', function(){
         setPageVisible(0);
@@ -59,7 +46,7 @@ var bindRegister = function()
 
 var bindMainList = function()
 {
-    console.log('Binding Main List');
+    logger.debug('Binding Main List');
     
     // making a generic forward to messages
     $('#servicelist').find('ons-list-item').on('click', function(){
@@ -77,7 +64,7 @@ var bindMainList = function()
 
 var bindMessaging = function()
 {
-    console.log('Binding Messaging');
+    logger.debug('Binding Messaging');
     
     $('#btnBackMsg').on('click', function(){
         setPageVisible(2);
@@ -102,7 +89,7 @@ var bindMessaging = function()
 
 var bindAddProvider = function()
 {
-    console.log('Binding Add Provider');
+    logger.debug('Binding Add Provider');
     
     $('#btnBackAddProvider').on('click', function(){
         setPageVisible(2);
@@ -115,7 +102,7 @@ var bindAddProvider = function()
 
 var bindSettings = function()
 {
-    console.log('Binding Settings');
+    logger.debug('Binding Settings');
     
     $('#btnBackSettings').on('click', function(){
         setPageVisible(2);

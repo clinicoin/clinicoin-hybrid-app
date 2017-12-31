@@ -171,3 +171,24 @@ describe('saveSettings/loadSettings', function() {
 		assert.isTrue(load_result, "result is false");
 	});
 });
+
+describe('removeSettings', function() {
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should load settings', async function () {
+		let test_list = new MessageList();
+		test_list.recipient_user_id = 'removable';
+		const save_result = await test_list.saveSettings();
+		assert.isTrue(save_result, "result is false");
+
+		await test_list.removeSettings();
+
+		let actual_list = new MessageList();
+		actual_list.recipient_user_id = 'removable';
+		const load_result = await actual_list.loadSettings();
+		assert(load_result.recipient_user_id==='');
+	});
+});

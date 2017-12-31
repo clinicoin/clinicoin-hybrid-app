@@ -9,10 +9,11 @@
   <script src="components/monaca-jquery/jquery.js"></script>
 
   <script src="lib/minilog3.1.0.js"></script>
-  <script>
-	  var log = Minilog('app');
-	  Minilog.enable();
-  </script>
+    <script>
+	    let logger = Minilog('app');
+	    Minilog.pipe(Minilog.backends.array);
+	    Minilog.enable();
+    </script>
   <script src="lib/lodash-4.17.4.js"></script>
   <script src="lib/openpgp.js"></script>
   <script src="lib/aws-cognito-sdk.min.js"></script>
@@ -20,7 +21,10 @@
   <script src="lib/aws-sdk-2.171.0.js"></script>
   <script src="lib/axios-0.17.1.min.js"></script>
   <script src="lib/localforage.min.js"></script>
-  <script src="../www/lib/moment.min.js"></script>
+    <script>
+	    let store = new DataStorage();
+    </script>
+  <script src="lib/moment.min.js"></script>
 
     <!-- source files -->
     <script src="src/constants.js"></script>
