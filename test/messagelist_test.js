@@ -181,6 +181,7 @@ describe('removeSettings', function() {
 	it('should load settings', async function () {
 		let test_list = new MessageList();
 		test_list.recipient_user_id = 'removable';
+		test_list.recipient_public_key = 'key';
 		const save_result = await test_list.saveSettings();
 		assert.isTrue(save_result, "result is false");
 
@@ -189,6 +190,7 @@ describe('removeSettings', function() {
 		let actual_list = new MessageList();
 		actual_list.recipient_user_id = 'removable';
 		const load_result = await actual_list.loadSettings();
-		assert(load_result.recipient_user_id==='');
+		assert.isTrue(load_result, "result is false");
+		assert(actual_list.recipient_public_key==='', 'Value exists: '+actual_list.recipient_user_id);
 	});
 });

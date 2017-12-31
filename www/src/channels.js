@@ -17,11 +17,13 @@ Channels.prototype.getChannels = async function()
 	logger.info('Retriving Channels');
 	const exp = new RegExp('^ch_.+_Settings');
 	const list = await store.getFilteredData(exp);
+	let local_list = [];
 	list.forEach(function (json) {
 		let msglist = new MessageList();
 		msglist.fromJSONString(json);
-		self.channel_list.push(msglist);
+		local_list.push(msglist);
 	});
+	this.channel_list = local_list;
 	return this.channel_list;
 };
 

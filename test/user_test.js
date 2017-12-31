@@ -67,12 +67,12 @@ describe('registerUser', function() {
 		assert.equal(getLastConsoleMessage(), "username is empty", "error messages do not match");
 	});
 
-	it('should require a passphrase', async function() {
+	it('should require a password', async function() {
 		user.setPassphrase('');
 		const result = await user.registerUser();
 		user.setPassphrase('aGreatPhrase321!');
 		assert.isFalse(result, "result is true");
-		assert.equal(getLastConsoleMessage(), "passphrase is empty", "error messages do not match");
+		assert.equal(getLastConsoleMessage(), "aws password is empty", "error messages do not match");
 	});
 
 	it('should catch aws failure', async function() {
@@ -131,13 +131,14 @@ describe('login', function() {
 		assert.equal(getLastConsoleMessage(), "username is empty", "error messages do not match");
 	});
 
-	it('should require a passphrase', async function() {
+	it('should require a password', async function() {
 		const old_pw = user.getAwsPassword();
 		user.setAwsPassword('');
+		user.setPassphrase('');
 		const result = await user.login();
 		user.setPassphrase(old_pw);
 		assert.isFalse(result, "result is true");
-		assert.equal(getLastConsoleMessage(), "passphrase is empty", "error messages do not match");
+		assert.equal(getLastConsoleMessage(), "password is empty", "error messages do not match");
 	});
 
 	it('should catch bad login', async function(done) {
@@ -223,8 +224,8 @@ describe('resendConfirmationCode', function() {
 		// create a user
 		const test_user = new User();
 		test_user.name = 'test';
-		test_user.username = 'test' + _.random(111111, 999999); // random username
-		test_user.email = user.username + '@mailsac.com';
+		test_user.username = 'test'+ _.random(111111, 999999); // random username
+		test_user.email = test_user.username + '@mailsac.com';
 		test_user.phone = '+12125551216';
 		test_user.setPassphrase('aGreatPhrase321!');
 		const register_result = await test_user.registerUser();
@@ -257,8 +258,8 @@ describe('resendConfirmationCode', function() {
 			await user.logout();
 		}
 		const test_user = new User();
-		test_user.username = 'fake_username';
-		const result = await user.resendConfirmationCode();
+		test_user.username = 'fake_username'+ _.random(111111, 999999);
+		const result = await test_user.resendConfirmationCode();
 		assert.isFalse(result, "result is true");
 		assert.match(getLastConsoleMessage(), /^UserNotFoundException/, "error messages do not match");
 	});

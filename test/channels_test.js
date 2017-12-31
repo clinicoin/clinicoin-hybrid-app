@@ -1,4 +1,4 @@
-/*
+
 describe('retrieveMessagesFromServer', function() {
 	this.timeout(5000);
 
@@ -15,9 +15,10 @@ describe('retrieveMessagesFromServer', function() {
 		const msg = 'message '+d.getTime().toString();
 		const send_result = await test_list.sendToServer(msg);
 		assert.isTrue(send_result, "sending failed");
+		sleep(2000);
 		const receive_list = await channels.retrieveMessagesFromServer();
 		assert(receive_list.length>0, "no messages to see");
-		assert.equal(msg, _.last(receive_list).EncryptedBody, "messages do not match");
+		assert.equal(msg, _.last(receive_list).Body, "messages do not match");
 
 		// clean up
 		channels.deleteReceivedMessage(_.last(receive_list).ReceiptHandle);
@@ -78,15 +79,18 @@ describe('addChannel', function() {
 	it('should add new channel', async function () {
 		const starting_count = (await channels.getChannels()).length;
 		logger.debug("starting channel count: "+starting_count);
+		logger.debug("starting array count: "+channels.channel_list.length);
 		const new_channel_name = 'test'+moment().format('x');
 		await channels.addChannel(new_channel_name);
 		logger.debug("channel array count: "+channels.channel_list.length);
+		logger.debug(channels.channel_list);
 		assert(channels.channel_list.length === starting_count+1, "channel count is off");
 	});
 
 	it('should not count existing channels', async function () {
 		const starting_count = (await channels.getChannels()).length;
 		logger.debug("starting channel count: "+starting_count);
+		logger.debug("starting array count: "+channels.channel_list.length);
 		const new_channel_name = 'demouser';
 		await channels.addChannel(new_channel_name);
 		logger.debug("channel array count: "+channels.channel_list.length);
@@ -98,8 +102,8 @@ describe('addChannel', function() {
 		const exp = new RegExp('^ch_test\\d+_Settings');
 		await store.removeItemsExpression(exp);
 	});
+
 });
-*/
 
 describe('end-to-end: sendMessage/checkForMessages', function() {
 	this.slow(30000);
