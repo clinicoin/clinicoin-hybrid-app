@@ -17,6 +17,9 @@
     
     <script>
     $(function(){
+	    if (current_user.isLoggedIn()) {
+		    setPageVisible(PAGE_MAIN_LIST);
+	    }
         bindLogin();
     });
   </script>

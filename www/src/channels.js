@@ -70,7 +70,7 @@ Channels.prototype.checkForMessages = async function()
 
 
 		// find the list this belongs to
-		let msg_list = _.find(this.channel_list, { 'recipient_user_id': msg.Username });
+		let msg_list = this.findByUsername(msg.Username);
 
 		// create a msglist for those without one
 		if (_.isEmpty(msg_list)) {
@@ -103,6 +103,11 @@ Channels.prototype.checkForMessages = async function()
 	}
 
 	return true;
+};
+
+Channels.prototype.findByUsername = function(username)
+{
+	return _.find(this.channel_list, { 'recipient_user_id': msg.Username });
 };
 
 Channels.prototype.retrieveMessagesFromServer = async function()

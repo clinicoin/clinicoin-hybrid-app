@@ -216,6 +216,7 @@ User.prototype.registerUser = async function()
 	else {
 		logger.info('cognito user: ' + result.user.getUsername());
 		this.awsSub = result.userSub;
+		this.setInStorage();
 		return true;
 	}
 };
@@ -768,8 +769,20 @@ User.prototype.deleteUser = async function()
 
 User.prototype.getFromStorage = async function(username)
 {
+	// if parameter is empty, look for the property user
 	if (_.isEmpty(username)) {
 		username = this.username;
+	}
+
+	// if still empty, load the default user (last user saved)
+	if (_.isEmpty(username)) {
+		username = await store.getItem('default_user');
+	}
+
+	// still no user? go back empty handed
+	if (_.isEmpty(username)) {
+		logger.error('no user to retrieve');
+		return false;
 	}
 
 	const data = await store.getItem('User_'+username);
@@ -781,5 +794,11 @@ User.prototype.getFromStorage = async function(username)
 
 User.prototype.setInStorage = async function()
 {
+	this.setDefaultUser();
 	return await store.setItem('User_'+this.username, this.toJSON());
+};
+
+User.prototype.setDefaultUser = async function()
+{
+	store.setItem('default_user', this.username);
 };

@@ -474,30 +474,6 @@ describe('updatePublicKey', function() {
 	});
 });
 
-describe('setInStorage/getFromStorage', function() {
-
-	beforeEach(function () {
-		Minilog.backends.array.empty();
-	});
-
-	it('should store user data', async function () {
-		let test_user = new User();
-		test_user.username = 'test_user';
-		test_user.awsSub = 'my aws sub';
-		let result = await test_user.setInStorage();
-		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
-		let actual_user = new User();
-		await actual_user.getFromStorage('test_user');
-		assert.equal(actual_user.awsSub, 'my aws sub', 'loaded value does not match');
-	});
-
-	it('should not fail on unknown user', async function () {
-		let actual_user = new User();
-		const result = await actual_user.getFromStorage('fake_user');
-		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
-	});
-});
-
 describe('isLoggedIn', function() {
 	this.slow(30000);
 	this.timeout(30000); // A very long environment setup.
@@ -522,4 +498,52 @@ describe('isLoggedIn', function() {
 		assert.isFalse(actual, "result is true\n\n" + getLastConsoleMessage());
 		done();
 	});
+});
+
+describe('setInStorage/getFromStorage', function() {
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should store user data', async function () {
+		let test_user = new User();
+		test_user.username = 'test_user';
+		test_user.awsSub = 'my aws sub';
+		let result = await test_user.setInStorage();
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+		let actual_user = new User();
+		await actual_user.getFromStorage('test_user');
+		assert.equal(actual_user.awsSub, 'my aws sub', 'loaded value does not match');
+	});
+
+	it('should use user property on blank', async function () {
+		let test_user = new User();
+		test_user.username = 'test_user';
+		test_user.awsSub = 'my aws sub';
+		let result = await test_user.setInStorage();
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+		let actual_user = new User();
+		test_user.username = 'test_user';
+		await actual_user.getFromStorage();
+		assert.equal(actual_user.awsSub, 'my aws sub', 'loaded value does not match');
+	});
+
+	it('should use default if everything is blank', async function () {
+		let test_user = new User();
+		test_user.username = 'test_user';
+		test_user.awsSub = 'my aws sub';
+		let result = await test_user.setInStorage();
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+		let actual_user = new User();
+		await actual_user.getFromStorage();
+		assert.equal(actual_user.awsSub, 'my aws sub', 'loaded value does not match');
+	});
+
+	it('should return empty (but not fail) on unknown user', async function () {
+		let actual_user = new User();
+		const result = await actual_user.getFromStorage('fake_user');
+		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
+	});
+
 });
