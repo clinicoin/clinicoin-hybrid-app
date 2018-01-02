@@ -140,3 +140,49 @@ const loginDemoUser = async function()
 	await sleep(1000);
 	return test_user;
 };
+
+const waitForElement = async function(search_element, seconds)
+{
+	if (_.isEmpty(seconds)) {
+		seconds = 30;
+	}
+
+	logger.debug('searching for '+search_element+" ("+seconds+")");
+
+	for(let i=0; i < seconds; i++) {
+		await sleep(1000);
+
+		// look for element
+		if ($(search_element).length > 0) {
+			logger.debug('element found');
+			break;
+		}
+		else {
+			logger.debug('still looking for '+search_element);
+		}
+	}
+};
+
+const getSpiedToast = function()
+{
+	const called = ons.notification.toast.getCall(0);
+	const msg = called.args[0].message;
+	logger.debug('Spied Toast: '+msg);
+	return msg;
+};
+
+const getSpiedConfirmText = function()
+{
+	const called = ons.notification.confirm.getCall(0);
+	const msg = called.args[0].message;
+	logger.debug('Spied Confirm: '+msg);
+	return msg;
+};
+
+const getSpiedConfirmFunction = function()
+{
+	const called = ons.notification.confirm.getCall(0);
+	const fcn = called.args[0].callback;
+	logger.debug('returning function');
+	return fcn;
+};

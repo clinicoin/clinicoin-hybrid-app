@@ -107,7 +107,7 @@ Channels.prototype.checkForMessages = async function()
 
 Channels.prototype.findByUsername = function(username)
 {
-	return _.find(this.channel_list, { 'recipient_user_id': msg.Username });
+	return _.find(this.channel_list, { 'recipient_user_id': username });
 };
 
 Channels.prototype.retrieveMessagesFromServer = async function()

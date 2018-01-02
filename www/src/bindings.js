@@ -7,11 +7,19 @@ const PAGE_MESSAGING = 5;
 const PAGE_ADD_PROVIDER = 6;
 const PAGE_SETTINGS = 7;
 
-let current_message_list = null;
+let current_message_list = {};
 
 const setPageVisible = function(value)
 {
+	logger.info('setting tab to '+value);
 	$('#tabbar').get(0).setActiveTab(value);
+};
+
+const getPageVisible = function()
+{
+	const value = $('#tabbar').get(0).getActiveTabIndex();
+	logger.debug('tab value = '+value);
+	return value;
 };
 
 $(document).on('LoggedIn', function () {
@@ -56,11 +64,16 @@ const bindLogin = function()
 
         ons.notification.confirm({
             message: 'Really reset your password?',
-            callback: function(result) {
+            callback: async function(result) {
                 if (result) {
                 	current_user.username = username;
-	                current_user.userForgotPassword();
-                    ons.notification.toast({message: 'Password reset message sent', timeout: 2000});
+	                const send_result = await current_user.userForgotPassword();
+	                if (send_result) {
+		                ons.notification.toast({message: 'Password reset message sent', timeout: 2000});
+	                }
+	                else {
+		                ons.notification.toast({message: current_user.last_error_message, timeout: 2000});
+	                }
 	                setPageVisible(PAGE_RESET_PASSWORD);
                 }
             }
@@ -146,7 +159,8 @@ const bindResetPassword = function()
 		}
 
 		if ( ! current_user.isComplexPassword(password)) {
-			alert('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
+			let msg = 'Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.';
+			ons.notification.toast({message: msg, timeout: 2000});
 			return;
 		}
 
@@ -160,7 +174,7 @@ const bindResetPassword = function()
 			$('#btnLogin').click();
 		}
 		else {
-			alert("Reset Failed: "+current_user.last_error_message);
+			ons.notification.toast({message: "Reset Failed: "+current_user.last_error_message, timeout: 2000});
 		}
 	});
 };

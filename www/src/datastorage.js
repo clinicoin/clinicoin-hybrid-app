@@ -1,8 +1,8 @@
+function DataStorage() { }
+
 localforage.config({
 	name: 'ClinicoinApp'
 });
-
-function DataStorage() { }
 
 /**
  * retrieve an item from storage

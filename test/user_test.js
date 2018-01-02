@@ -302,6 +302,44 @@ describe('changeUserPassword', function() {
 	});
 });
 
+describe('isComplexPassword', function() {
+	it('should require more than 8 characters', async function () {
+		const test_user = new User();
+		const result = await test_user.isComplexPassword('aB1@');
+		assert.isFalse(result, "result is true");
+	});
+
+	it('should require uppercase', async function () {
+		const test_user = new User();
+		const result = await test_user.isComplexPassword('abcdefg1@');
+		assert.isFalse(result, "result is true");
+	});
+
+	it('should require lowercase', async function () {
+		const test_user = new User();
+		const result = await test_user.isComplexPassword('ABCDEFG1@');
+		assert.isFalse(result, "result is true");
+	});
+
+	it('should require a number', async function () {
+		const test_user = new User();
+		const result = await test_user.isComplexPassword('ABCdefG%@');
+		assert.isFalse(result, "result is true");
+	});
+
+	it('should require a special character', async function () {
+		const test_user = new User();
+		const result = await test_user.isComplexPassword('ABCdefG123');
+		assert.isFalse(result, "result is true");
+	});
+
+	it('should be complex enough', async function () {
+		const test_user = new User();
+		const result = await test_user.isComplexPassword('ABCdefG&123');
+		assert.isTrue(result, "result is false");
+	});
+});
+
 describe('updateUserAttribute', function() {
 	this.slow(30000);
 	this.timeout(30000); // A very long environment setup.

@@ -450,7 +450,7 @@ User.prototype.resendConfirmationCode = async function()
 
 User.prototype.isComplexPassword = function(new_password)
 {
-	return ! /(?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9])(?=\S*?[^0-9a-zA-Z])\S{8,}/.test(new_password);
+	return /(?=\S*?[A-Z])(?=\S*?[a-z])(?=\S*?[0-9])(?=\S*?[^0-9a-zA-Z])\S{8,}/.test(new_password);
 };
 
 User.prototype.changeUserPassword = async function(new_password)

@@ -1,0 +1,105 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="components/loader.js"></script>
+    <script src="lib/onsenui/js/onsenui.min.js"></script>
+    <script src="components/monaca-jquery/jquery.js"></script>
+
+    <script src="lib/minilog3.1.0.js"></script>
+    <script>
+		let logger = Minilog('app');
+		Minilog.pipe(Minilog.backends.array);
+		Minilog.enable();
+    </script>
+    <script src="lib/lodash-4.17.4.js"></script>
+    <script src="lib/openpgp.js"></script>
+    <script src="lib/aws-cognito-sdk.min.js"></script>
+    <script src="lib/amazon-cognito-identity.min.js"></script>
+    <script src="lib/aws-sdk-2.171.0.js"></script>
+    <script src="lib/axios-0.17.1.min.js"></script>
+    <script src="lib/localforage.min.js"></script>
+    <script src="lib/moment.min.js"></script>
+
+    <!-- test settings/utilities files -->
+    <script src="../test/test_utilities.js"></script>
+
+    <!-- source files -->
+    <script src="src/constants.js"></script>
+    <script src="src/bindings.js"></script>
+    <script src="src/user.js"></script>
+    <script src="src/messagelist.js"></script>
+    <script src="src/message.js"></script>
+    <script src="src/datastorage.js"></script>
+    <script>
+		let store = new DataStorage();
+    </script>
+    <script src="src/channels.js"></script>
+
+
+    <link rel="stylesheet" href="components/loader.css">
+    <link rel="stylesheet" href="lib/onsenui/css/onsenui.css">
+    <link rel="stylesheet" href="lib/onsenui/css/onsen-css-components.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <link href="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css" rel="stylesheet" />
+
+    <script>
+		$(function(){
+
+		});
+    </script>
+
+    <!-- test libraries -->
+    <script src="https://cdn.rawgit.com/Automattic/expect.js/0.3.1/index.js"></script>
+    <script src="https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chai/4.1.2/chai.min.js"></script>
+    <script src="../test/sinon-4.1.3.js"></script>
+
+    <script>mocha.setup('bdd')</script>
+
+    <!-- test files -->
+    <!--
+    <script src="../test/bindLogin_test.js"></script>
+    -->
+    <script src="../test/bindResetPassword_test.js"></script>
+
+</head>
+<body>
+<ons-tabbar id="tabbar" animation="slide" hide-tabs>
+    <ons-tab page="login.html" active></ons-tab>
+    <ons-tab page="register.html"></ons-tab>
+    <ons-tab page="reset_password.html"></ons-tab>
+    <ons-tab page="login_verify.html"></ons-tab>
+    <ons-tab page="main_list.html"></ons-tab>
+    <ons-tab page="messaging.html"></ons-tab>
+    <ons-tab page="add_provider.html"></ons-tab>
+    <ons-tab page="settings.html"></ons-tab>
+</ons-tabbar>
+
+<div id="mocha"></div>
+</body>
+</html>
+<script>
+	mocha.checkLeaks();
+	mocha.globals(['jQuery']);
+	const assert = chai.assert;
+	mocha.run();
+
+	let sandbox = sinon.createSandbox();
+</script>
+
+<style>
+    div#mocha {
+        margin:0;
+        border: 10px solid green;
+        z-index: 10000;
+        position: absolute;
+        top: 60%;
+        width: 100%;
+        height: 40%;
+        overflow-x: scroll;
+    }
+</style>
