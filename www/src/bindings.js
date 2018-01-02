@@ -1,7 +1,7 @@
 const PAGE_LOGIN = 0;
 const PAGE_REGISTER = 1;
 const PAGE_RESET_PASSWORD = 2;
-const PAGE_LOGIN_VERIFY = 3;
+const PAGE_REGISTER_VERIFY = 3;
 const PAGE_MAIN_LIST = 4;
 const PAGE_MESSAGING = 5;
 const PAGE_ADD_PROVIDER = 6;
@@ -93,7 +93,7 @@ const bindRegister = function()
         setPageVisible(PAGE_LOGIN);
     });
     
-    $('#btnRegister').on('click', function(){
+    $('#btnRegister').on('click', async function(){
 	    current_user.email = $('#reg_email').val().trim();
 	    current_user.phone = $('#reg_phone').val().trim();
 	    current_user.username = $('#reg_username').val().trim();
@@ -106,23 +106,27 @@ const bindRegister = function()
 		    return;
 	    }
 
+	    if (_.isEmpty(password)) {
+		    ons.notification.toast({message: 'password cannot be empty', timeout: 2000});
+		    return;
+	    }
+
 	    if (password !== confirm) {
 		    ons.notification.toast({message: 'password and confirmation do not match', timeout: 2000});
 		    return;
 	    }
 
 	    if ( ! current_user.isComplexPassword(password)) {
-		    alert('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
+		    let msg = 'Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.';
+		    ons.notification.toast({message: msg, timeout: 2000});
 		    return;
 	    }
 
-	    const result = current_user.registerUser();
+	    const result = await current_user.registerUser();
 	    if (result) {
 		    ons.notification.toast({message: 'User registered, verfication sent', timeout: 2000});
 
-		    setPageVisible(PAGE_LOGIN_VERIFY);
-
-		    $('#password').val(password);
+		    setPageVisible(PAGE_REGISTER_VERIFY);
 	    }
 	    else {
 		    ons.notification.toast({message: current_user.last_error_message, timeout: 2000});
@@ -179,7 +183,7 @@ const bindResetPassword = function()
 	});
 };
 
-const bindLoginVerify = function()
+const bindRegisterVerify = function()
 {
 	logger.debug('Binding Login Verification');
 
@@ -204,14 +208,14 @@ const bindLoginVerify = function()
 			$('#btnLogin').click();
 		}
 		else {
-			alert("Verify Failed: "+current_user.last_error_message);
+			ons.notification.toast({message: "Verify Failed: "+current_user.last_error_message, timeout: 2000});
 		}
 	});
 
 	$('#divResendConfirmation').on('click', async function(){
 		const result = await current_user.resendConfirmationCode();
 		if (result) {
-			ons.notification.toast({message: 'Code confirmation re-sent', timeout: 2000});
+			ons.notification.toast({message: 'Registration confirmation code re-sent', timeout: 2000});
 		}
 		else {
 			ons.notification.toast({message: 'Resend Failed: '+current_user.last_error_message, timeout: 2000});

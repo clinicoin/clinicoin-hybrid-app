@@ -13,17 +13,23 @@ const Channels = function() {
  */
 Channels.prototype.getChannels = async function()
 {
-	const self = this;
 	logger.info('Retriving Channels');
+
 	const exp = new RegExp('^ch_.+_Settings');
+
 	const list = await store.getFilteredData(exp);
+
 	let local_list = [];
-	list.forEach(function (json) {
+
+	for (let json of list) {
 		let msglist = new MessageList();
 		msglist.fromJSONString(json);
+		await msglist.loadMessages();
 		local_list.push(msglist);
-	});
+	}
+
 	this.channel_list = local_list;
+
 	return this.channel_list;
 };
 

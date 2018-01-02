@@ -1,7 +1,5 @@
 
 describe('reset password', function() {
-	this.slow(30000);
-	this.timeout(30000);
 
 	beforeEach(async function () {
 		await waitForElement('#btnLogin');
