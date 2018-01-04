@@ -69,6 +69,7 @@ Channels.prototype.checkForMessages = async function()
 
 		const obj = JSON.parse(parts[0]);
 		msg.Username = obj.Sender;
+		msg.Sender = obj.Sender;
 		msg.SentDate = obj.Sent;
 
 		msg.Body = '';

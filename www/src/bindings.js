@@ -1,13 +1,3 @@
-const PAGE_LOGIN = 0;
-const PAGE_REGISTER = 1;
-const PAGE_RESET_PASSWORD = 2;
-const PAGE_REGISTER_VERIFY = 3;
-const PAGE_MAIN_LIST = 4;
-const PAGE_MESSAGING = 5;
-const PAGE_ADD_PROVIDER = 6;
-const PAGE_SETTINGS = 7;
-
-let current_message_list = {};
 
 const setPageVisible = function(value)
 {
@@ -21,167 +11,15 @@ const getPageVisible = function()
 	logger.debug('tab value = '+value);
 	return value;
 };
-
+/*
 $(document).on('LoggedIn', function () {
 	setInterval(()=>{
 		channels.checkForMessages();
 	},60000);
 });
+*/
 
-const bindLogin = function()
-{
-    logger.debug('Binding Login');
 
-    $('#btnLogin').on('click', async function(e) {
-	    current_user.username = $('#username').val().trim();
-	    current_user.setAwsPassword( $('#password').val().trim() );
-
-	    if (_.isEmpty(current_user.username)) {
-		    ons.notification.toast({message: 'username cannot be empty', timeout: 2000});
-		    return;
-	    }
-
-	    if (_.isEmpty(current_user.getAwsPassword())) {
-		    ons.notification.toast({message: 'password cannot be empty', timeout: 2000});
-		    return;
-	    }
-
-	    if (await current_user.login()) {
-		    setPageVisible(PAGE_MAIN_LIST);
-	    }
-	    else {
-		    ons.notification.toast({message: current_user.last_error_message, timeout: 2000});
-	    }
-    });
-    
-    $('#divForgot').on('click', function(e) {
-	    const username = $('#username').val().trim();
-
-	    if (_.isEmpty(username)) {
-		    ons.notification.toast({message: 'username cannot be empty', timeout: 2000});
-	    	return;
-	    }
-
-        ons.notification.confirm({
-            message: 'Really reset your password?',
-            callback: async function(result) {
-                if (result) {
-                	current_user.username = username;
-	                const send_result = await current_user.userForgotPassword();
-	                if (send_result) {
-		                ons.notification.toast({message: 'Password reset message sent', timeout: 2000});
-	                }
-	                else {
-		                ons.notification.toast({message: current_user.last_error_message, timeout: 2000});
-	                }
-	                setPageVisible(PAGE_RESET_PASSWORD);
-                }
-            }
-        });
-    });
-    
-    $('#divRegister').on('click', function(e) {
-        setPageVisible(PAGE_REGISTER);
-    });
-};
-
-const bindRegister = function()
-{
-    logger.debug('Binding Register');
-    
-    $('#btnBackRegister').on('click', function(){
-        setPageVisible(PAGE_LOGIN);
-    });
-    
-    $('#btnRegister').on('click', async function(){
-	    current_user.email = $('#reg_email').val().trim();
-	    current_user.phone = $('#reg_phone').val().trim();
-	    current_user.username = $('#reg_username').val().trim();
-	    current_user.setAwsPassword($('#reg_password').val().trim());
-	    const password = $('#reg_password').val().trim();
-	    const confirm = $('#reg_confirm').val().trim();
-
-	    if (_.isEmpty(current_user.username)) {
-		    ons.notification.toast({message: 'username cannot be empty', timeout: 2000});
-		    return;
-	    }
-
-	    if (_.isEmpty(password)) {
-		    ons.notification.toast({message: 'password cannot be empty', timeout: 2000});
-		    return;
-	    }
-
-	    if (password !== confirm) {
-		    ons.notification.toast({message: 'password and confirmation do not match', timeout: 2000});
-		    return;
-	    }
-
-	    if ( ! current_user.isComplexPassword(password)) {
-		    let msg = 'Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.';
-		    ons.notification.toast({message: msg, timeout: 2000});
-		    return;
-	    }
-
-	    const result = await current_user.registerUser();
-	    if (result) {
-		    ons.notification.toast({message: 'User registered, verfication sent', timeout: 2000});
-
-		    setPageVisible(PAGE_REGISTER_VERIFY);
-	    }
-	    else {
-		    ons.notification.toast({message: current_user.last_error_message, timeout: 2000});
-	    }
-    });
-};
-
-const bindResetPassword = function()
-{
-	logger.debug('Binding Reset Password');
-
-	$('#btnBackResetPassword').on('click', function(){
-		setPageVisible(PAGE_LOGIN);
-	});
-
-	$('#btnReset').on('click', async function(){
-		const password = $('#reset_password').val().trim();
-		const confirm = $('#reset_confirm').val().trim();
-		const code = $('#reset_code').val().trim();
-
-		if (_.isEmpty(code)) {
-			ons.notification.toast({message: 'code cannot be empty', timeout: 2000});
-			return;
-		}
-
-		if (_.isEmpty(password)) {
-			ons.notification.toast({message: 'password cannot be empty', timeout: 2000});
-			return;
-		}
-
-		if (password !== confirm) {
-			ons.notification.toast({message: 'password and confirmation do not match', timeout: 2000});
-			return;
-		}
-
-		if ( ! current_user.isComplexPassword(password)) {
-			let msg = 'Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.';
-			ons.notification.toast({message: msg, timeout: 2000});
-			return;
-		}
-
-		const result = await current_user.forgotPasswordReset(code, password);
-		if (result) {
-			ons.notification.toast({message: 'Password reset successful', timeout: 2000});
-
-			// try to log them in
-			setPageVisible(PAGE_LOGIN);
-			$('#password').val(password);
-			$('#btnLogin').click();
-		}
-		else {
-			ons.notification.toast({message: "Reset Failed: "+current_user.last_error_message, timeout: 2000});
-		}
-	});
-};
 
 const bindRegisterVerify = function()
 {
@@ -238,7 +76,7 @@ const bindMainList = function()
     });
     
     $('#btnAddProvider').on('click', function(){
-        setPageVisible(PAGE_ADD_PROVIDER);
+        setPageVisible(PAGE_CONNECT);
     });
     
     $('#btnSettings').on('click', function(){
@@ -296,3 +134,25 @@ const bindSettings = function()
         ons.notification.toast({message: 'Password Updated', timeout: 2000});
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

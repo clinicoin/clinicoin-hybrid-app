@@ -1,6 +1,7 @@
 
 function Message() {
 	this.Username = '';
+	this.Sender = 'me';
 	this.Body = '';
 	this.EncryptedBody = '';
 	this.Signed = false;
@@ -14,16 +15,19 @@ function Message() {
 	{
 		return JSON.stringify({
 			Username: this.Username,
+			Sender: this.Sender,
 			Body: this.Body,
 			Signed: this.Signed,
 			MessageId: this.MessageId,
-			ReceiveDate: this.ReceiveDate.format('YYYY-MM-DD HH:mm:ss')
+			ReceiveDate: this.ReceiveDate.format('YYYY-MM-DD HH:mm:ss'),
+			SentDate: this.SentDate.format('YYYY-MM-DD HH:mm:ss')
 		});
 	};
 
 	this.fromJSONString = function(json_string, messagelist) {
 		const data = JSON.parse(json_string);
 		this.Username = data.Username;
+		this.Sender = data.Sender;
 		this.Body = data.Body;
 		this.Signed = data.Signed;
 		this.MessageId = data.MessageId;
