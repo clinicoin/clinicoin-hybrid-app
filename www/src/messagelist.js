@@ -201,7 +201,7 @@ MessageList.prototype.loadMessages = async function()
 	const key_list = await store.getFilteredData(exp);
 	key_list.forEach(async function(json) {
 		const msg = new Message();
-		msg.fromJSONString(json, self);
+		msg.fromJSONString(json);
 		logger.debug("loading msg "+msg.MessageId);
 	 	self.messages.push(msg);
 	});

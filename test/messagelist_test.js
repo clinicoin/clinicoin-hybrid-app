@@ -32,7 +32,7 @@ describe('getRecipientPublicKey', function() {
 		assert.isFalse(result, "result is true");
 	});
 });
-/*
+
 describe('encryptMessage', function() {
 
 	beforeEach(function () {
@@ -124,7 +124,6 @@ describe('saveMessage/loadMessages', function() {
 		msg.Username = 'demouser';
 		msg.Body = 'test message '+moment().format('x');
 		msg.MessageId = '123456';
-		msg.MessageList = test_list;
 		const save_result = await test_list.saveMessage(msg);
 		assert.isTrue(save_result, "result is false");
 
@@ -194,4 +193,3 @@ describe('removeSettings', function() {
 		assert(actual_list.recipient_public_key==='', 'Value exists: '+actual_list.recipient_user_id);
 	});
 });
-*/

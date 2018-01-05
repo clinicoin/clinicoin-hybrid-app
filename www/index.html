@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
   <script src="components/monaca-jquery/jquery.js"></script>
-    <script src="components/loader.js"></script>
+	<script src="components/loader.js"></script>
 
 
 
   <script src="lib/minilog3.1.0.js"></script>
-    <script>
-	    let logger = Minilog('app');
-	    Minilog.pipe(Minilog.backends.array);
-	    Minilog.enable();
-    </script>
+	<script>
+		let logger = Minilog('app');
+		Minilog.pipe(Minilog.backends.array);
+		Minilog.enable();
+	</script>
   <script src="lib/lodash-4.17.4.js"></script>
   <script src="lib/openpgp.js"></script>
   <script src="lib/aws-cognito-sdk.min.js"></script>
@@ -25,255 +25,437 @@
   <script src="lib/moment.min.js"></script>
   <script src="lib/vue-2.5.13.js"></script>
   <script src="lib/qrious-4.0.2.min.js"></script>
+  <script src="lib/vuetify-0.17.6.js"></script>
 
-    <script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
-
-    <!-- source files -->
-    <script src="src/constants.js"></script>
-    <script src="src/user.js"></script>
-    <script src="src/messagelist.js"></script>
-    <script src="src/message.js"></script>
-    <script src="src/datastorage.js"></script>
-    <script>
+	<!-- source files -->
+	<script src="src/constants.js"></script>
+	<script src="src/user.js"></script>
+	<script src="src/messagelist.js"></script>
+	<script src="src/message.js"></script>
+	<script src="src/datastorage.js"></script>
+	<script>
 		let store = new DataStorage();
-    </script>
-    <script src="src/channels.js"></script>
+	</script>
+	<script src="src/channels.js"></script>
 
-    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
-    <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="//cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css">
+	<link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+	<link href="css/vuetify-0.17.6.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="css/materialdesignicons-2.1.19.min.css">
 
   <link rel="stylesheet" href="components/loader.css">
   <link rel="stylesheet" href="css/style.css">
 
-    <style>
-        [v-cloak] {
-            display: none;
+	<style>
+		[v-cloak] {
+			display: none;
+		}
+
+        div#app, .fade-background {
+            background: #483ebb;
+            background: -moz-linear-gradient(45deg, #483ebb 0%, #2989d8 100%, #207cca 100%, #79a1e7 100%, #2989d8 100%);
+            background: -webkit-linear-gradient(45deg, #483ebb 0%,#2989d8 100%,#207cca 100%,#79a1e7 100%,#2989d8 100%);
+            background: linear-gradient(45deg, #483ebb 0%,#2989d8 100%,#207cca 100%,#79a1e7 100%,#2989d8 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#483ebb', endColorstr='#2989d8',GradientType=1 );
         }
-    </style>
+
+        .local-rounded-button {
+            border-radius: 50px;
+            -moz-border-radius: 50px;
+            -webkit-border-radius: 50px;
+            border: 1px solid white;
+            width: 100%;
+            color: #483ebb;
+            text-align: center;
+            background-color: white;
+            font-size: xx-large;
+            height: 60px;
+            padding-top: 5px;
+            cursor: pointer;
+        }
+
+        .white-container {
+            background: white;
+            height:100%;
+        }
+	</style>
 
   <script>
-    $(function(){
+	$(function(){
 
-    });
+	});
   </script>
 
 </head>
 <body>
 <div id="app">
-    <v-app v-cloak>
-        <v-toolbar color="grey darken-1" dark>
-            <v-btn icon v-show="page_visible > PAGE_MAIN_LIST" @click="page_visible=PAGE_MAIN_LIST">
-                <v-icon>home</v-icon>
-            </v-btn>
+	<v-app v-cloak>
+		<v-toolbar class="fade-background" dark v-if="page_visible >= PAGE_MAIN_LIST">
+			<v-btn icon v-show="page_visible > PAGE_MAIN_LIST" @click="page_visible=PAGE_MAIN_LIST">
+				<v-icon>home</v-icon>
+			</v-btn>
 
-            <v-btn icon v-show="page_visible > PAGE_LOGIN && page_visible < PAGE_MAIN_LIST" @click="page_visible=PAGE_LOGIN">
-                <v-icon>keyboard_arrow_left</v-icon>
-            </v-btn>
+			<v-btn icon v-show="page_visible > PAGE_LOGIN && page_visible < PAGE_MAIN_LIST" @click="page_visible=PAGE_LOGIN">
+				<v-icon>keyboard_arrow_left</v-icon>
+			</v-btn>
 
-            <v-toolbar-title>CliniCoin</v-toolbar-title>
+			<v-toolbar-title>CliniCoin</v-toolbar-title>
 
-            <v-spacer></v-spacer>
-            <v-btn icon v-show="page_visible == PAGE_MAIN_LIST" @click="page_visible=PAGE_SETTINGS">
-                <v-icon>settings</v-icon>
-            </v-btn>
-        </v-toolbar>
+			<v-spacer></v-spacer>
+			<v-btn icon v-show="page_visible == PAGE_MAIN_LIST" @click="page_visible=PAGE_SETTINGS">
+				<v-icon>settings</v-icon>
+			</v-btn>
+		</v-toolbar>
 
-        <v-content>
-            <v-container fluid id="conLogin" v-show="page_visible==PAGE_LOGIN">
-                <div style="text-align:center;">
-                    <div style="margin-top:40%;">
-                        <div style="font-size:large; margin-bottom:20px;">Login</div>
+		<v-content>
+            <v-container fluid v-show="page_visible==PAGE_INITIAL">
+                <div style="height: 100%; width: 100%;">
+                    <div style="margin-top: 47%;">
+                        <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
+                    </div>
 
-                        <v-text-field label="Username" id="username" v-model="username"></v-text-field>
-
-                        <v-text-field label="Password" id="password" type="password" v-model="password"></v-text-field>
-
-                        <div>
-                            <v-btn flat @click="showforgotPasswordConfirm">Forgot Password</v-btn>
+                    <div class="text-xs-center" style="margin-top: 58%; padding-left: 10%; padding-right: 10%;">
+                        <div class="local-rounded-button" style="" @click="page_visible = PAGE_TOUR">
+                            New To Clinicoin
                         </div>
-                        <div>
-                            <v-btn color="primary" @click="loginUser">Login</v-btn>
-                        </div>
-                        <div>
-                            <v-btn flat color="primary" @click="showRegistration">New User Registration</v-btn>
+                    </div>
+                    <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+                        <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="page_visible = PAGE_LOGIN">
+                           Sign In
                         </div>
                     </div>
                 </div>
-            </v-container>
 
-            <v-dialog v-model="show_forgot_password_dialog" max-width="290">
-                <v-card>
-                    <v-card-title class="headline">Really reset password?</v-card-title>
-                    <v-card-text>You will receive an email with a code to enter in the next step.</v-card-text>
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn color="green darken-1" flat="flat" @click="sendforgotPassword">Continue</v-btn>
-                        <v-btn color="red darken-1" flat="flat" @click="cancelForgotPassword">Cancel</v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-dialog>
-
-            <v-container fluid id="conResetPassword" v-show="page_visible==PAGE_RESET_PASSWORD">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Reset Password</div>
-
-                <v-text-field label="Reset Code" id="reset_code" v-model="reset_code"></v-text-field>
-                <v-text-field label="Password" id="reset_password" type="password" v-model="password"></v-text-field>
-                <v-text-field label="Confirmation" id="reset_confirm" type="confirm" v-model="confirm"></v-text-field>
-                <div style="text-align:center;">
-                    <v-btn color="primary" @click="resetForgotPassword">Reset Password</v-btn>
+                <v-footer color="transparent" absolute fixed>
+                <div style="text-align: center; width: 100%; color:white;">
+                    &copy; 2018 Mosio&trade; and Clinicoin&trade;
                 </div>
-            </v-container>
-
-            <v-container fluid id="conRegister" v-show="page_visible==PAGE_REGISTER">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Register</div>
-
-                <v-text-field label="Email" v-model="email"></v-text-field>
-                <v-text-field label="Phone" v-model="phone"></v-text-field>
-                <v-text-field label="Username"  v-model="username"></v-text-field>
-                <v-text-field label="Password" id="register_password" type="password" v-model="password"></v-text-field>
-                <v-text-field label="Confirmation" id="register_confirm" type="confirm" v-model="confirm"></v-text-field>
-                <div style="text-align:center;">
-                    <v-btn color="primary" @click="registerUser">Register</v-btn>
-                </div>
-            </v-container>
-
-            <v-container fluid id="conConfirmRegistration" v-show="page_visible==PAGE_REGISTER_VERIFY">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Confirm Registration</div>
-
-                <v-text-field label="Confirmation Code" v-model="register_code"></v-text-field>
-
-                <div style="text-align:center;">
-                    <v-btn color="primary" @click="confirmUserRegistration">Enter Confirmation</v-btn>
-                </div>
-                <div style="text-align:center;">
-                    <v-btn flat @click="resendConfirmation">Re-Send Confirmation</v-btn>
-                </div>
-            </v-container>
-
-            <v-container fluid id="conMainList" v-show="page_visible==PAGE_MAIN_LIST">
-
-                <v-list two-line>
-                    <template v-for="item in channels">
-                        <v-list-tile v-bind:key="item.title" @click="messageListSelected(item.username)">
-                            <v-list-tile-content>
-                                <v-list-tile-title v-html="item.title"></v-list-tile-title>
-                                <v-list-tile-sub-title v-html="item.subtitle"></v-list-tile-sub-title>
-                            </v-list-tile-content>
-                            <v-badge color="indigo">
-                                <span slot="badge">{{item.count}}</span>
-                                <v-icon color="grey">chat</v-icon>
-                            </v-badge>
-                        </v-list-tile>
-                    </template>
-                </v-list>
-
-
-                <v-speed-dial bottom fixed right>
-                    <v-btn slot="activator" color="blue darken-2" dark fab hover large>
-                        <v-icon>account_circle</v-icon>
-                        <v-icon>close</v-icon>
-                    </v-btn>
-                    <v-btn fab dark color="green" @click="showQRCode">
-                        <v-icon>mdi-qrcode-scan</v-icon>
-                    </v-btn>
-                    <v-btn fab dark color="indigo" @click="showAddConnection">
-                        <v-icon>supervisor_account</v-icon>
-                    </v-btn>
-                    <v-btn fab dark color="red" @click="logoutUser">
-                        <v-icon>cloud_off</v-icon>
-                    </v-btn>
-                </v-speed-dial>
-            </v-container>
-
-            <v-container fluid id="conMessages" v-show="page_visible==PAGE_MESSAGING">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
-                <v-list>
-                    <template v-for="item in active_channel.messages">
-                        <v-list-tile v-show="item.Sender=='me'">
-                            <div style="width:100%;">
-                                <div style="float:right; border: 1px solid red; padding: 5px;">
-                                {{ item.Body }}
-                                </div>
-                            </div>
-                        </v-list-tile>
-                        <v-list-tile v-show="item.Sender!='me'">
-                            <div style="width:100%;">
-                                <div style="float:left; border: 1px solid blue; padding: 5px;">
-                                    {{ item.Body }}
-                                </div>
-                            </div>
-                        </v-list-tile>
-                    </template>
-                </v-list>
-                <v-footer class="pa-3" absolute fixed>
-                    <v-text-field
-                            name="input-1"
-                            label="Message"
-                            textarea
-                            clearable
-                            auto-grow
-                            v-model="outgoing_message"
-                    ></v-text-field>
-                    <v-btn outline large fab color="indigo" @click="sendUserMessage">
-                        <v-icon>send</v-icon>
-                    </v-btn>
                 </v-footer>
             </v-container>
-
-            <v-container fluid id="conSettings" v-show="page_visible==PAGE_CONNECT">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Connect With People</div>
-
-                <div style="text-align:center;">
-                    <v-btn outline color="indigo" @click="showScanBarcode">Scan QR Code</v-btn>
+            <v-container fluid v-show="page_visible==PAGE_TOUR">
+                <v-carousel id="carousel" v-bind:cycle="false">
+                    <v-carousel-item src="img/tour1.png" key="1"></v-carousel-item>
+                    <v-carousel-item src="img/tour2.png" key="2"></v-carousel-item>
+                    <v-carousel-item src="img/tour3.png" key="3"></v-carousel-item>
+                    <v-carousel-item src="img/tour4.png" key="4"></v-carousel-item>
+                </v-carousel>
+                <div class="text-xs-center" style="margin-top: 20%; padding-left: 10%; padding-right: 10%;">
+                    <div class="local-rounded-button" style="" @click="changeCarouselItem">
+                        Continue
+                    </div>
                 </div>
-
-                <v-text-field label="Clinicoin URL" v-model="add_name"></v-text-field>
-
-                <div style="text-align:center;">
-                    <v-btn color="primary" @click="connectUser">Connect</v-btn>
-                </div>
-            </v-container>
-
-            <v-container fluid id="conSettings" v-show="page_visible==PAGE_QRCODE">
-                <div style="text-align: center; margin-top: 100px;">
-                <canvas id="qr"></canvas>
+                <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+                    <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="page_visible = PAGE_REGISTER">
+                        Get Started
+                    </div>
                 </div>
             </v-container>
-
-            <v-container fluid id="conSettings" v-show="page_visible==PAGE_SETTINGS">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Settings</div>
-
-                <v-text-field label="Email" v-model="email"></v-text-field>
-                <v-text-field label="Phone" v-model="phone"></v-text-field>
-                <div style="text-align:center;">
-                    <v-btn flat>Update Settings</v-btn>
+			<v-container fluid id="conLogin" v-show="page_visible==PAGE_LOGIN">
+                <div style="margin-top: 50%;">
+                    <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
                 </div>
 
-                <div style="padding: 30px;"></div>
-                <v-text-field label="Password" id="settings_password" type="password" v-model="password"></v-text-field>
-                <v-text-field label="Confirmation" id="settings_confirm" type="confirm" v-model="confirm"></v-text-field>
+                <div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white;">
+                    Sign In
+                </div>
 
                 <div style="text-align:center;">
-                    <v-btn flat>Change Password</v-btn>
+                    <v-card>
+                        <v-card-text>
+                            <v-text-field label="Username" id="username" v-model="username"></v-text-field>
+
+                            <v-text-field
+                                    label="Password"
+                                    id="login_password"
+                                    type="password"
+                                    v-model="password"
+                                    :append-icon="login_pw_visible ? 'visibility_off' : 'visibility'"
+                                    :append-icon-cb="() => (login_pw_visible = !login_pw_visible)"
+                                    :type="login_pw_visible ? 'text' : 'password'"
+                            ></v-text-field>
+                        </v-card-text>
+                    </v-card>
+                    <div>
+                        <v-btn flat dark @click="showforgotPasswordConfirm">Forgot Password</v-btn>
+                    </div>
+
+                    <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+                        <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="loginUser">
+                            Sign In
+                        </div>
+                    </div>
+				</div>
+			</v-container>
+
+			<v-dialog v-model="show_forgot_password_dialog" max-width="290">
+				<v-card>
+					<v-card-title class="headline">Really reset password?</v-card-title>
+					<v-card-text>You will receive an email with a code to enter in the next step.</v-card-text>
+					<v-card-actions>
+						<v-spacer></v-spacer>
+						<v-btn color="green darken-1" flat="flat" @click="sendforgotPassword">Continue</v-btn>
+						<v-btn color="red darken-1" flat="flat" @click="cancelForgotPassword">Cancel</v-btn>
+					</v-card-actions>
+				</v-card>
+			</v-dialog>
+
+			<v-container fluid id="conResetPassword" v-show="page_visible==PAGE_RESET_PASSWORD">
+                <div style="margin-top: 5%;">
+                    <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
                 </div>
-            </v-container>
 
-            <v-snackbar id="errorSnack" bottom color="red" :timeout=5000 v-model="show_error_toast_value">
-                {{ error_message }}
-            </v-snackbar>
-            <v-snackbar id="infoSnack" bottom color="blue" :timeout=5000 v-model="show_info_toast_value">
-                {{ info_message }}
-            </v-snackbar>
-            <v-snackbar id="successSnack" bottom color="green" :timeout=5000 v-model="show_success_toast_value">
-                {{ success_message }}
-            </v-snackbar>
+                <div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white;">
+                    Reset Password
+                </div>
 
-            <v-layout row justify-center v-if="show_spinner">
-                <v-progress-circular indeterminate v-bind:size="200" v-bind:width="10" color="blue"></v-progress-circular>
-            </v-layout>
-        </v-content>
-    </v-app>
+                <v-card color="grey lighten-4" flat>
+                    <v-card-text>
+                        <v-text-field
+                                label="Reset Code"
+                                hint="6-digit code sent to you"
+                                id="reset_code"
+                                v-model="reset_code"
+                                mask="######"
+                                v-bind:rules="[()=>{ return reset_code.length==0 ? 'Reset code is required' : true; }]"
+                        ></v-text-field>
+                        <v-text-field
+                                label="Password"
+                                id="reset_password"
+                                type="password"
+                                v-model="password"
+                                hint="At least 8 characters, a number, upper- and lower-case, and a special character"
+                                :append-icon="register_pw_visible ? 'visibility_off' : 'visibility'"
+                                :append-icon-cb="() => (register_pw_visible = !register_pw_visible)"
+                                :type="register_pw_visible ? 'text' : 'password'"
+                                v-bind:rules="[isPasswordComplex]"
+                        ></v-text-field>
+                        <v-text-field
+                                label="Confirmation"
+                                id="reset_confirm"
+                                v-model="confirm"
+                                type="password"
+                                hint="Must match the password"
+                                :append-icon="register_confirm_visible ? 'visibility_off' : 'visibility'"
+                                :append-icon-cb="() => (register_confirm_visible = !register_confirm_visible)"
+                                :type="register_confirm_visible ? 'text' : 'password'"
+                                v-bind:rules="[isPasswordAndConfirmMatched]"
+                        ></v-text-field>
+                    </v-card-text>
+                </v-card>
+
+                <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+                    <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="resetForgotPassword">
+                        Reset Password
+                    </div>
+                </div>
+			</v-container>
+
+			<v-container fluid id="conRegister" v-show="page_visible==PAGE_REGISTER">
+                <div style="margin-top: 5%;">
+                    <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
+                </div>
+
+				<div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white;">Register</div>
+
+                <v-card color="grey lighten-4" flat>
+                    <v-card-text>
+                        <v-text-field label="Email" prepend-icon="mail_outline" v-model="email"></v-text-field>
+                        <v-text-field label="Phone" prepend-icon="phone" v-model="phone"></v-text-field>
+                        <v-text-field label="Username" prepend-icon="account_box" v-model="username"></v-text-field>
+                        <v-text-field
+                                label="Password"
+                                id="register_password"
+                                type="password"
+                                v-model="password"
+                                hint="At least 8 characters, a number, upper- and lower-case, and a special character"
+                                :append-icon="register_pw_visible ? 'visibility_off' : 'visibility'"
+                                :append-icon-cb="() => (register_pw_visible = !register_pw_visible)"
+                                :type="register_pw_visible ? 'text' : 'password'"
+                                v-bind:rules="[isPasswordComplex]"
+                        ></v-text-field>
+                        <v-text-field
+                                label="Confirmation"
+                                id="register_confirm"
+                                v-model="confirm"
+                                type="password"
+                                hint="Must match the password"
+                                :append-icon="register_confirm_visible ? 'visibility_off' : 'visibility'"
+                                :append-icon-cb="() => (register_confirm_visible = !register_confirm_visible)"
+                                :type="register_confirm_visible ? 'text' : 'password'"
+                                v-bind:rules="[isPasswordAndConfirmMatched]"
+                        ></v-text-field>
+                    </v-card-text>
+                </v-card>
+                <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+                    <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="registerUser">
+                        Sign Up
+                    </div>
+                </div>
+                <div style="margin-top: 50px;">
+                    <div style="text-align: center; color: white; font-size: large; cursor: pointer;" @click="page_visible=PAGE_LOGIN">
+                        Already have an account? <span style="font-weight: bold;">Sign In</span>
+                    </div>
+                </div>
+			</v-container>
+
+			<v-container fluid id="conConfirmRegistration" v-show="page_visible==PAGE_REGISTER_VERIFY">
+                <div style="margin-top: 5%;">
+                    <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
+                </div>
+
+                <div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white; margin-top: 100px;">
+                    Confirm Registration
+                </div>
+
+                <v-card color="grey lighten-4" flat>
+                    <v-card-text>
+                        <v-text-field
+                                label="Registration Code"
+                                hint="6-digit code sent to you"
+                                id="register_code"
+                                v-model="register_code"
+                                mask="######"
+                                v-bind:rules="[()=>{ return register_code.length==0 ? 'Reset code is required' : true; }]"
+                        ></v-text-field>
+                    </v-card-text>
+                </v-card>
+
+                <div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
+                    <div class="local-rounded-button" style="" @click="confirmUserRegistration">
+                        Enter Confirmation
+                    </div>
+                </div>
+                <div class="text-xs-center" style="margin-top: 15%; padding-left: 10%; padding-right: 10%;">
+                    <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="resendConfirmation">
+                        Re-Send Confirmation
+                    </div>
+                </div>
+			</v-container>
+
+			<v-container fluid id="conMainList" v-show="page_visible==PAGE_MAIN_LIST" class="white-container">
+
+				<v-list two-line>
+					<template v-for="item in channels">
+						<v-list-tile v-bind:key="item.title" @click="messageListSelected(item.username)">
+							<v-list-tile-content>
+								<v-list-tile-title v-html="item.title"></v-list-tile-title>
+								<v-list-tile-sub-title v-html="item.subtitle"></v-list-tile-sub-title>
+							</v-list-tile-content>
+							<v-badge color="indigo">
+								<span slot="badge">{{item.count}}</span>
+								<v-icon color="grey">chat</v-icon>
+							</v-badge>
+						</v-list-tile>
+					</template>
+				</v-list>
+
+
+				<v-speed-dial bottom fixed right>
+					<v-btn slot="activator" color="blue darken-2" dark fab hover large>
+						<v-icon>account_circle</v-icon>
+						<v-icon>close</v-icon>
+					</v-btn>
+					<v-btn fab dark color="green" @click="showQRCode">
+						<v-icon>mdi-qrcode-scan</v-icon>
+					</v-btn>
+					<v-btn fab dark color="indigo" @click="showAddConnection">
+						<v-icon>supervisor_account</v-icon>
+					</v-btn>
+					<v-btn fab dark color="red" @click="logoutUser">
+						<v-icon>cloud_off</v-icon>
+					</v-btn>
+				</v-speed-dial>
+			</v-container>
+
+			<v-container fluid id="conMessages" v-show="page_visible==PAGE_MESSAGING" class="white-container">
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
+                <div id="messaging_list" style="height: 60%; overflow-y: scroll;">
+                    <v-list>
+                        <template v-for="item in active_channel.messages">
+                            <v-list-tile v-show="item.Sender=='me'">
+                                <div style="width:100%;">
+                                    <div style="float:right; border: 1px solid red; padding: 5px;">
+                                    {{ item.Body }}
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                            <v-list-tile v-show="item.Sender!='me'">
+                                <div style="width:100%;">
+                                    <div style="float:left; border: 1px solid blue; padding: 5px;">
+                                        {{ item.Body }}
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                        </template>
+                    </v-list>
+                </div>
+				<v-footer style="background-color:white;" v-bind:app="true">
+					<v-text-field
+							name="input-1"
+							label="Message"
+							textarea
+							clearable
+							auto-grow
+							v-model="outgoing_message"
+					></v-text-field>
+					<v-btn outline large fab color="indigo" @click="sendUserMessage">
+						<v-icon>send</v-icon>
+					</v-btn>
+				</v-footer>
+			</v-container>
+
+			<v-container fluid id="conSettings" v-show="page_visible==PAGE_CONNECT" class="white-container">
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">Connect With People</div>
+
+				<div style="text-align:center;">
+					<v-btn outline color="indigo" @click="showScanBarcode">Scan QR Code</v-btn>
+				</div>
+
+				<v-text-field label="Clinicoin URL" v-model="add_name"></v-text-field>
+
+				<div style="text-align:center;">
+					<v-btn color="primary" @click="connectUser">Connect</v-btn>
+				</div>
+			</v-container>
+
+			<v-container fluid id="conSettings" v-show="page_visible==PAGE_QRCODE" class="white-container">
+				<div style="text-align: center; margin-top: 100px;">
+				<canvas id="qr"></canvas>
+				</div>
+			</v-container>
+
+			<v-container fluid id="conSettings" v-show="page_visible==PAGE_SETTINGS" class="white-container">
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">Settings</div>
+
+				<v-text-field label="Email" v-model="email"></v-text-field>
+				<v-text-field label="Phone" v-model="phone"></v-text-field>
+				<div style="text-align:center;">
+					<v-btn flat>Update Settings</v-btn>
+				</div>
+
+				<div style="padding: 30px;"></div>
+				<v-text-field label="Password" id="settings_password" type="password" v-model="password"></v-text-field>
+				<v-text-field label="Confirmation" id="settings_confirm" type="confirm" v-model="confirm"></v-text-field>
+
+				<div style="text-align:center;">
+					<v-btn flat>Change Password</v-btn>
+				</div>
+			</v-container>
+
+			<v-snackbar id="errorSnack" bottom color="red" :timeout=5000 v-model="show_error_toast_value">
+				{{ error_message }}
+			</v-snackbar>
+			<v-snackbar id="infoSnack" bottom color="blue" :timeout=5000 v-model="show_info_toast_value">
+				{{ info_message }}
+			</v-snackbar>
+			<v-snackbar id="successSnack" bottom color="green" :timeout=5000 v-model="show_success_toast_value">
+				{{ success_message }}
+			</v-snackbar>
+
+			<v-layout row justify-center v-if="show_spinner">
+				<v-progress-circular indeterminate v-bind:size="200" v-bind:width="10" color="blue"></v-progress-circular>
+			</v-layout>
+		</v-content>
+	</v-app>
 </div>
 
 
@@ -285,23 +467,50 @@
 	let current_message_list = {};
 
 	let vm = new Vue({
-        el: '#app',
+		el: '#app',
 		created: async function () {
 
-			if (await current_user.isLoggedIn()) {
-				this.page_visible = this.PAGE_MAIN_LIST;
-            }
-            else {
-				this.page_visible = this.PAGE_LOGIN;
-            }
+			// try to catch the back button
+			// this doesn't seem to work...
+			document.addEventListener("deviceready", function(){
+				document.addEventListener("backbutton", function(){
+					if (this.page_visible > this.PAGE_MAIN_LIST) {
+						this.page_visible = this.PAGE_LOGIN;
+                    }
+                    else {
+						this.page_visible = this.PAGE_MAIN_LIST;
+                    }
+                }, false);
+            }, false);
 
-            await current_user.getFromStorage();
-			this.username = current_user.username;
-			this.phone = current_user.phone;
-			this.email = current_user.email;
+
+			// set the initial page
+			if (await current_user.isLoggedIn()) {
+
+				// retrieve user info from storage
+				await current_user.getFromStorage();
+				this.username = current_user.username;
+				this.phone = current_user.phone;
+				this.email = current_user.email;
+
+				this.page_visible = this.PAGE_MAIN_LIST;
+				store.setItem('Clinicoin_First',1);
+			}
+			else {
+				const BeenHereBefore = store.getItem('Clinicoin_First',0);
+				logger.debug("BeenHereBefore = "+BeenHereBefore);
+
+				if (!BeenHereBefore) {
+					this.page_visible = this.PAGE_INITIAL;
+				}
+				else {
+					this.page_visible = this.PAGE_LOGIN;
+				}
+			}
+
 
 			// fill channel list data
-            let data_list = [];
+			let data_list = [];
 			await channels.getChannels();
 
 			channels.channel_list.forEach((channel)=>{
@@ -309,20 +518,20 @@
 
 				data_list.push({
 					title: channel.friendly_name,
-                    username: channel.recipient_user_id,
-                    subtitle: last_message.Body,
-                    count: channel.messages.length
-                });
-            });
+					username: channel.recipient_user_id,
+					subtitle: last_message.Body,
+					count: channel.messages.length
+				});
+			});
 			this.channels = data_list;
 		},
 		methods: {
-        	showErrorToast: function(message)
-            {
-            	this.error_message = message;
-	            this.show_error_toast_value = 1;
-	            logger.error(message);
-            },
+			showErrorToast: function(message)
+			{
+				this.error_message = message;
+				this.show_error_toast_value = 1;
+				logger.error(message);
+			},
 			showInfoToast: function(message)
 			{
 				this.info_message = message;
@@ -335,28 +544,37 @@
 				this.show_success_toast_value = 1;
 				logger.debug(message);
 			},
-			loginUser: async function()
+			skipTour: function()
+			{
+				this.page_visible = this.PAGE_REGISTER;
+			},
+            changeCarouselItem: function()
             {
-                if (_.isEmpty(this.username)) {
-                	this.showErrorToast('username cannot be empty');
-                }
-                else if (_.isEmpty(this.password)) {
-	                this.showErrorToast('password cannot be empty');
-                }
-                else {
-	                current_user.username = this.username;
-	                current_user.setAwsPassword(this.password);
-
-	                if (await current_user.login()) {
-		                this.page_visible = this.PAGE_MAIN_LIST;
-	                }
-	                else {
-		                this.showErrorToast(current_user.last_error_message);
-	                }
-                }
+	            $('.carousel__right').find('button').click();
             },
+			loginUser: async function()
+			{
+				if (_.isEmpty(this.username)) {
+					this.showErrorToast('username cannot be empty');
+				}
+				else if (_.isEmpty(this.password)) {
+					this.showErrorToast('password cannot be empty');
+				}
+				else {
+					current_user.username = this.username;
+					current_user.setAwsPassword(this.password);
+
+					if (await current_user.login()) {
+						this.page_visible = this.PAGE_MAIN_LIST;
+						store.setItem('Clinicoin_First',1);
+					}
+					else {
+						this.showErrorToast(current_user.last_error_message);
+					}
+				}
+			},
 			showforgotPasswordConfirm: function ()
-            {
+			{
 				if (_.isEmpty(this.username)) {
 					this.showErrorToast('username cannot be empty');
 				}
@@ -365,194 +583,213 @@
 				}
 			},
 			cancelForgotPassword: function()
-            {
-	            this.show_forgot_password_dialog = false;
-	            this.page_visible = this.PAGE_LOGIN;
-            },
-            sendforgotPassword: async function()
-            {
-                current_user.username = this.username;
-                const send_result = await current_user.userForgotPassword();
-                if (send_result) {
-	                this.showInfoToast('Password reset message sent');
-	                this.page_visible = this.PAGE_RESET_PASSWORD;
-                }
-                else {
-	                this.showErrorToast(current_user.last_error_message);
-                }
-	            this.show_forgot_password_dialog = false;
-            },
-            resetForgotPassword: async function()
-            {
-                if (_.isEmpty(this.reset_code)) {
-	                this.showErrorToast('code cannot be empty');
-                }
-                else if (_.isEmpty(this.password)) {
-	                this.showErrorToast('password cannot be empty');
-                }
-                else if (this.password !== this.confirm) {
-	                this.showErrorToast('password and confirmation do not match');
-                }
-                else if ( ! current_user.isComplexPassword(this.password)) {
-	                this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
-                }
-                else {
-	                const result = await current_user.forgotPasswordReset(this.reset_code, this.password);
-	                if (result) {
-		                this.showSuccessToast('Password reset successful');
-
-		                // try to log them in
-		                this.page_visible = this.PAGE_LOGIN;
-		                this.loginUser();
-	                }
-	                else {
-		                this.showErrorToast("Reset Failed: " + current_user.last_error_message);
-	                }
-                }
-            },
-			showRegistration: function()
-            {
-            	this.page_visible = this.PAGE_REGISTER;
-            },
-			registerUser: async function()
-            {
-                if (_.isEmpty(this.username.trim())) {
-	                this.showErrorToast('username cannot be empty');
-                }
-                else if (_.isEmpty(this.password.trim())) {
-	                this.showErrorToast('password cannot be empty');
-                }
-                else if (this.password.trim() !== this.confirm.trim()) {
-	                this.showErrorToast('password and confirmation do not match');
-                }
-                else if ( ! current_user.isComplexPassword(this.password.trim())) {
-	                this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
-                }
-                else {
-	                current_user.email = this.email.trim();
-	                current_user.phone = this.phone.trim();
-	                current_user.username = this.username.trim();
-	                current_user.setAwsPassword(this.password.trim());
-
-	                const result = await current_user.registerUser();
-	                if (result) {
-		                this.showSuccessToast('User registered, verfication sent');
-		                this.page_visible = this.PAGE_REGISTER_VERIFY;
-	                }
-	                else {
-		                this.showErrorToast(current_user.last_error_message);
-	                }
-                }
+			{
+				this.show_forgot_password_dialog = false;
+				this.page_visible = this.PAGE_LOGIN;
 			},
-            confirmUserRegistration: async function()
-            {
-                if (_.isEmpty(this.register_code.trim())) {
-	                this.showErrorToast('code cannot be empty');
-                }
-                else {
-	                const result = await current_user.verifyConfirmationCode(this.register_code.trim());
-	                if (result) {
-		                this.showSuccessToast('Code confirmation successful');
+			sendforgotPassword: async function()
+			{
+				current_user.username = this.username;
+				const send_result = await current_user.userForgotPassword();
+				if (send_result) {
+					this.showInfoToast('Password reset message sent');
+					this.page_visible = this.PAGE_RESET_PASSWORD;
+				}
+				else {
+					this.showErrorToast(current_user.last_error_message);
+				}
+				this.show_forgot_password_dialog = false;
+			},
+			resetForgotPassword: async function()
+			{
+				if (_.isEmpty(this.reset_code)) {
+					this.showErrorToast('code cannot be empty');
+				}
+				else if (_.isEmpty(this.password)) {
+					this.showErrorToast('password cannot be empty');
+				}
+				else if (this.password !== this.confirm) {
+					this.showErrorToast('password and confirmation do not match');
+				}
+				else if ( ! current_user.isComplexPassword(this.password)) {
+					this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
+				}
+				else {
+					const result = await current_user.forgotPasswordReset(this.reset_code, this.password);
+					if (result) {
+						this.showSuccessToast('Password reset successful');
 
-		                // try to log them in
-		                this.page_visible = this.PAGE_LOGIN;
-		                this.loginUser();
-	                }
-	                else {
-		                this.showErrorToast(current_user.last_error_message);
-	                }
-                }
-            },
-            resendConfirmation: async function()
-            {
-	            const result = await current_user.resendConfirmationCode();
-	            if (result) {
-		            this.showInfoToast('Registration confirmation code re-sent');
-	            }
-	            else {
-		            this.showErrorToast(current_user.last_error_message);
-	            }
-            },
-            messageListSelected: function(selected_user)
-            {
-	            this.page_visible = this.PAGE_MESSAGING;
-	            current_message_list = _.find(channels.channel_list, { "recipient_user_id": selected_user });
-	            this.active_channel.username = current_message_list.recipient_user_id;
-	            this.active_channel.friendly_name = current_message_list.friendly_name;
+						// try to log them in
+						this.page_visible = this.PAGE_LOGIN;
+						this.loginUser();
+					}
+					else {
+						this.showErrorToast("Reset Failed: " + current_user.last_error_message);
+					}
+				}
+			},
+			showRegistration: function()
+			{
+				this.page_visible = this.PAGE_REGISTER;
+			},
+			registerUser: async function()
+			{
+				if (_.isEmpty(this.username.trim())) {
+					this.showErrorToast('username cannot be empty');
+				}
+				else if (_.isEmpty(this.password.trim())) {
+					this.showErrorToast('password cannot be empty');
+				}
+				else if (this.password.trim() !== this.confirm.trim()) {
+					this.showErrorToast('password and confirmation do not match');
+				}
+				else if ( ! current_user.isComplexPassword(this.password.trim())) {
+					this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
+				}
+				else {
+					current_user.email = this.email.trim();
+					current_user.phone = this.phone.trim();
+					current_user.username = this.username.trim();
+					current_user.setAwsPassword(this.password.trim());
 
-	            let message_list = [];
-	            current_message_list.messages.forEach(function(msg){
-	            	message_list.push({
-			            Sender: msg.Sender,
-                        Body: msg.Body,
-                        SentDate: msg.SentDate
-                    })
-                });
-	            this.active_channel.messages = message_list;
+					const result = await current_user.registerUser();
+					if (result) {
+						this.showSuccessToast('User registered, verfication sent');
+						this.page_visible = this.PAGE_REGISTER_VERIFY;
+					}
+					else {
+						this.showErrorToast(current_user.last_error_message);
+					}
+				}
+			},
+            isPasswordComplex: function()
+            {
+            	if (!current_user.isComplexPassword(this.password.trim())) {
+            		return 'Password is not sufficiently complex';
+                }
+                return true;
             },
+			isPasswordAndConfirmMatched: function()
+			{
+				if (this.password !== this.confirm){
+					return "Password and confirmation do not match";
+                }
+                return true;
+			},
+			confirmUserRegistration: async function()
+			{
+				if (_.isEmpty(this.register_code.trim())) {
+					this.showErrorToast('code cannot be empty');
+				}
+				else {
+					const result = await current_user.verifyConfirmationCode(this.register_code.trim());
+					if (result) {
+						this.showSuccessToast('Code confirmation successful');
+
+						// try to log them in
+						this.page_visible = this.PAGE_LOGIN;
+						this.loginUser();
+					}
+					else {
+						this.showErrorToast(current_user.last_error_message);
+					}
+				}
+			},
+			resendConfirmation: async function()
+			{
+				const result = await current_user.resendConfirmationCode();
+				if (result) {
+					this.showInfoToast('Registration confirmation code re-sent');
+				}
+				else {
+					this.showErrorToast(current_user.last_error_message);
+				}
+			},
+			messageListSelected: function(selected_user)
+			{
+				this.page_visible = this.PAGE_MESSAGING;
+				current_message_list = _.find(channels.channel_list, { "recipient_user_id": selected_user });
+				this.active_channel.username = current_message_list.recipient_user_id;
+				this.active_channel.friendly_name = current_message_list.friendly_name;
+
+				let message_list = [];
+				current_message_list.messages.forEach(function(msg){
+					message_list.push({
+						Sender: msg.Sender,
+						Body: msg.Body,
+						SentDate: msg.SentDate
+					})
+				});
+				this.active_channel.messages = message_list;
+
+				// scroll to bottom
+                setTimeout(()=> {
+                	$('#messaging_list').scrollTop($('#messaging_list')[0].scrollHeight);
+                }, 100);
+			},
 			sendUserMessage: async function () {
-                if (this.outgoing_message.trim().length===0) {
-                	this.showErrorToast('No message to send');
-                }
-                else if (await current_message_list.sendMessage(this.outgoing_message)==='Sent') {
-                	this.showSuccessToast('Message Sent');
-                }
-                else {
-                	this.showErrorToast(current_message_list.last_error_message);
-                }
+				if (this.outgoing_message.trim().length===0) {
+					this.showErrorToast('No message to send');
+				}
+				else if (await current_message_list.sendMessage(this.outgoing_message)==='Sent') {
+					this.showSuccessToast('Message Sent');
+				}
+				else {
+					this.showErrorToast(current_message_list.last_error_message);
+				}
 			},
 			showQRCode: function()
-            {
-	            this.page_visible = this.PAGE_QRCODE;
-	            const qr = new QRious({
-		            element: document.getElementById('qr'),
-		            value: 'https://www.clinicoin.com/connect/'+vm.username,
-		            size: 300
-	            });
-            },
+			{
+				this.page_visible = this.PAGE_QRCODE;
+				const qr = new QRious({
+					element: document.getElementById('qr'),
+					value: 'https://www.clinicoin.com/connect/'+vm.username,
+					size: 300
+				});
+			},
 			showAddConnection: function()
-            {
-	            this.page_visible = this.PAGE_CONNECT;
-            },
-            showScanBarcode: function()
-            {
-            	if (window.plugins !== undefined) {
-		            window.plugins.barcodeScanner.scan(function (result) {
-			            if (!result.cancelled) {
-				            logger.debug("Result: " + result.text + ", format: " + result.format);
-				            this.add_name = result.text;
-			            }
-			            else {
-				            logger.debug("Scan cancelled");
-			            }
-		            });
-	            }
-	            else {
-            		this.showErrorToast('Barcode scanner plugin not loaded');
-                }
-            },
+			{
+				this.page_visible = this.PAGE_CONNECT;
+			},
+			showScanBarcode: function()
+			{
+				if (window.plugins !== undefined) {
+					window.plugins.barcodeScanner.scan(function (result) {
+						if (!result.cancelled) {
+							logger.debug("Result: " + result.text + ", format: " + result.format);
+							this.add_name = result.text;
+						}
+						else {
+							logger.debug("Scan cancelled");
+						}
+					});
+				}
+				else {
+					this.showErrorToast('Barcode scanner plugin not loaded');
+				}
+			},
 			connectUser: async function()
-            {
-	            if (_.isEmpty(this.add_name.trim())) {
-		            this.showErrorToast('username cannot be empty');
-	            }
-	            else {
-		            const list = new MessageList();
-		            list.recipient_user_id = this.add_name.trim();
-		            if (await list.getRecipientPublicKey()) {
-			            this.showSuccessToast('Connected Successfully to ' + this.add_name.trim());
-			            channels.channel_list.push(list);
-			            this.messageListSelected(this.add_name.trim());
-		            }
-		            else {
-			            this.showErrorToast('Could not connect to ' + this.add_name.trim() + ', ' + list.last_error_message);
-		            }
-	            }
-            },
+			{
+				if (_.isEmpty(this.add_name.trim())) {
+					this.showErrorToast('username cannot be empty');
+				}
+				else {
+					const list = new MessageList();
+					list.recipient_user_id = this.add_name.trim();
+					if (await list.getRecipientPublicKey()) {
+						this.showSuccessToast('Connected Successfully to ' + this.add_name.trim());
+						channels.channel_list.push(list);
+						this.messageListSelected(this.add_name.trim());
+					}
+					else {
+						this.showErrorToast('Could not connect to ' + this.add_name.trim() + ', ' + list.last_error_message);
+					}
+				}
+			},
 			logoutUser: function ()
-            {
-            	current_user.logout();
-                this.page_visible = this.PAGE_LOGIN;
+			{
+				current_user.logout();
+				this.page_visible = this.PAGE_LOGIN;
 			},
 			updateSettings: function ()
 			{
@@ -568,36 +805,36 @@
 					this.showSuccessToast('User settings updated')
 				}
 			},
-            updatePassword: async function()
-            {
-	            if (_.isEmpty(this.username.trim())) {
-		            this.showErrorToast('username cannot be empty');
-	            }
-	            else if (_.isEmpty(this.password.trim())) {
-		            this.showErrorToast('password cannot be empty');
-	            }
-	            else if (this.password.trim() !== this.confirm.trim()) {
-		            this.showErrorToast('password and confirmation do not match');
-	            }
-	            else if ( ! current_user.isComplexPassword(this.password.trim())) {
-		            this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
-	            }
-	            else {
-		            current_user.email = this.email.trim();
-		            current_user.phone = this.phone.trim();
-		            current_user.username = this.username.trim();
-		            current_user.setAwsPassword(this.password.trim());
+			updatePassword: async function()
+			{
+				if (_.isEmpty(this.username.trim())) {
+					this.showErrorToast('username cannot be empty');
+				}
+				else if (_.isEmpty(this.password.trim())) {
+					this.showErrorToast('password cannot be empty');
+				}
+				else if (this.password.trim() !== this.confirm.trim()) {
+					this.showErrorToast('password and confirmation do not match');
+				}
+				else if ( ! current_user.isComplexPassword(this.password.trim())) {
+					this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
+				}
+				else {
+					current_user.email = this.email.trim();
+					current_user.phone = this.phone.trim();
+					current_user.username = this.username.trim();
+					current_user.setAwsPassword(this.password.trim());
 
-		            const result = await current_user.changeUserPassword(this.password.trim());
-		            if (result) {
-			            this.showSuccessToast('Password updated');
-			            this.page_visible = this.PAGE_REGISTER_VERIFY;
-		            }
-		            else {
-			            this.showErrorToast(current_user.last_error_message);
-		            }
-	            }
-            }
+					const result = await current_user.changeUserPassword(this.password.trim());
+					if (result) {
+						this.showSuccessToast('Password updated');
+						this.page_visible = this.PAGE_REGISTER_VERIFY;
+					}
+					else {
+						this.showErrorToast(current_user.last_error_message);
+					}
+				}
+			}
 		},
 		data() {
 			return {
@@ -605,10 +842,10 @@
 				email: 'me@them.com',
 				phone: '9995551212',
 				password: 'aGreatPhrase321!',
-                new_password: '',
-				confirm: 'conf',
-				reset_code: '1234',
-				register_code: '4321',
+				new_password: '',
+				confirm: '',
+				reset_code: '',
+				register_code: '',
 				add_name: '',
 				page_visible: 0,
 				show_spinner: 0,
@@ -621,82 +858,170 @@
 				success_message: 'success',
 				outgoing_message: '',
 
-				PAGE_LOGIN: 0,
-                PAGE_REGISTER: 1,
-                PAGE_RESET_PASSWORD: 2,
-                PAGE_REGISTER_VERIFY: 3,
-                PAGE_MAIN_LIST: 4,
-                PAGE_MESSAGING: 5,
-                PAGE_CONNECT: 6,
-                PAGE_QRCODE: 7,
-                PAGE_SETTINGS: 8,
+				login_pw_visible: false,
+				register_pw_visible: false,
+				register_confirm_visible: false,
 
-                channels: [ ],
-                active_channel: {
+				PAGE_INITIAL: 0,
+                PAGE_TOUR: 1,
+				PAGE_LOGIN: 2,
+				PAGE_REGISTER: 3,
+				PAGE_RESET_PASSWORD: 4,
+				PAGE_REGISTER_VERIFY: 5,
+				PAGE_MAIN_LIST: 6,
+				PAGE_MESSAGING: 7,
+				PAGE_CONNECT: 8,
+				PAGE_QRCODE: 9,
+				PAGE_SETTINGS: 10,
+
+				tour_images: [
+                    { src: 'img/tour1.png' },
+					{ src: 'img/tour2.png' },
+					{ src: 'img/tour3.png' },
+					{ src: 'img/tour4.png' }
+                ],
+
+				channels: [ ],
+				active_channel: {
 					username: "demouser",
-                    friendly_name: "channel",
+					friendly_name: "channel",
 					messages: [
-                    ]
-                }
+					]
+				}
 			};
 		}
 	});
 
 	const writeTestData = function()
-    {
-	    current_user.username = 'demouser';
-	    current_user.awsSub = 'awssub';
-	    current_user.email = 'demouser@mailsac.com';
-	    current_user.email_verified = true;
-	    current_user.phone = '4157896412';
-	    current_user.phone_verified = false;
-	    current_user.name = 'Daaron';
-	    current_user.setInStorage();
+	{
+		current_user.username = 'demouser';
+		current_user.awsSub = 'awssub';
+		current_user.email = 'demouser@mailsac.com';
+		current_user.email_verified = true;
+		current_user.phone = '4157896412';
+		current_user.phone_verified = false;
+		current_user.name = 'Daaron';
+		current_user.setInStorage();
 
-	    let list = new MessageList();
-	    list.friendly_name = 'Bart Simpson';
-	    list.recipient_user_id = 'bsimpson';
-	    list.recipient_public_key = '';
-	    list.last_public_key_retrieval = '2017-01-01';
-	    list.message_group_id = '1';
-	    list.saveSettings();
-	    let msg = new Message();
-	    msg.Username = 'bsimpson';
-	    msg.Sender = 'bsimpson';
-	    msg.Body = 'Cowabunga';
-	    msg.SentDate = '2018-01-01 12:38:23';
-	    msg.ReceiveDate = '2018-01-01 12:39:11';
-	    list.saveMessage(msg);
-	    list.messages.push(msg);
-	    msg.Username = 'bsimpson';
-	    msg.Sender = 'me';
-	    msg.Body = 'Whut?';
-	    msg.SentDate = '2018-01-01 12:38:43';
-	    msg.ReceiveDate = '2018-01-01 12:39:41';
-	    list.messages.push(msg);
-	    list.saveMessage(msg);
+		let list = new MessageList();
+		list.friendly_name = 'Bart Simpson';
+		list.recipient_user_id = 'bsimpson';
+		list.recipient_public_key = '';
+		list.last_public_key_retrieval = '2017-01-01';
+		list.message_group_id = '1';
+		list.saveSettings();
+		let msg = new Message();
+		msg.Username = 'bsimpson';
+		msg.Sender = 'bsimpson';
+		msg.Body = 'Cowabunga';
+		msg.SentDate = '2018-01-01 12:38:23';
+		msg.ReceiveDate = '2018-01-01 12:39:11';
+		list.saveMessage(msg);
+		list.messages.push(msg);
+		msg.Username = 'bsimpson';
+		msg.Sender = 'me';
+		msg.Body = 'Whut?';
+		msg.SentDate = '2018-01-01 12:38:43';
+		msg.ReceiveDate = '2018-01-01 12:39:41';
+		list.messages.push(msg);
+		list.saveMessage(msg);
 
-        list = new MessageList();
-	    list.friendly_name = 'Beavis';
-	    list.recipient_user_id = 'beavis';
-	    list.recipient_public_key = '';
-	    list.last_public_key_retrieval = '2017-01-01';
-	    list.message_group_id = '1';
-	    list.saveSettings();
-        msg = new Message();
-	    msg.Username = 'beavis';
-	    msg.Sender = 'beavis';
-	    msg.Body = 'Are you threatening me?';
-	    msg.SentDate = '2018-01-01 12:38:23';
-	    msg.ReceiveDate = '2018-01-01 12:39:11';
-	    list.saveMessage(msg);
-	    list.messages.push(msg);
-	    msg.Username = 'beavis';
-	    msg.Sender = 'me';
-	    msg.Body = 'huh?';
-	    msg.SentDate = '2018-01-01 12:38:43';
-	    msg.ReceiveDate = '2018-01-01 12:39:41';
-	    list.messages.push(msg);
-	    list.saveMessage(msg);
-    };
+		list = new MessageList();
+		list.friendly_name = 'Beavis';
+		list.recipient_user_id = 'beavis';
+		list.recipient_public_key = '';
+		list.last_public_key_retrieval = '2017-01-01';
+		list.message_group_id = '1';
+		list.saveSettings();
+		msg = new Message();
+		msg.Username = 'beavis';
+		msg.Sender = 'beavis';
+		msg.Body = 'Are you threatening me?';
+		msg.SentDate = '2018-01-01 12:38:23';
+		msg.ReceiveDate = '2018-01-01 12:39:11';
+		list.saveMessage(msg);
+		list.messages.push(msg);
+		msg.Username = 'beavis';
+		msg.Sender = 'me';
+		msg.Body = 'huh?';
+		msg.SentDate = '2018-01-01 12:40:43';
+		msg.ReceiveDate = '2018-01-01 12:41:41';
+		list.messages.push(msg);
+		list.saveMessage(msg);
+		msg = new Message();
+		msg.Username = 'beavis';
+		msg.Sender = 'beavis';
+		msg.Body = 'Are you threatening me?';
+		msg.SentDate = '2018-01-01 12:42:23';
+		msg.ReceiveDate = '2018-01-01 12:43:11';
+		list.saveMessage(msg);
+		list.messages.push(msg);
+		msg.Username = 'beavis';
+		msg.Sender = 'me';
+		msg.Body = 'huh?';
+		msg.SentDate = '2018-01-01 12:44:43';
+		msg.ReceiveDate = '2018-01-01 12:45:41';
+		list.messages.push(msg);
+		list.saveMessage(msg);
+		msg = new Message();
+		msg.Username = 'beavis';
+		msg.Sender = 'beavis';
+		msg.Body = 'Are you threatening me?';
+		msg.SentDate = '2018-01-01 12:46:23';
+		msg.ReceiveDate = '2018-01-01 12:47:11';
+		list.saveMessage(msg);
+		list.messages.push(msg);
+		msg.Username = 'beavis';
+		msg.Sender = 'me';
+		msg.Body = 'huh?';
+		msg.SentDate = '2018-01-01 12:48:43';
+		msg.ReceiveDate = '2018-01-01 12:49:41';
+		list.messages.push(msg);
+		list.saveMessage(msg);
+		msg = new Message();
+		msg.Username = 'beavis';
+		msg.Sender = 'beavis';
+		msg.Body = 'Are you threatening me?';
+		msg.SentDate = '2018-01-01 12:50:23';
+		msg.ReceiveDate = '2018-01-01 12:51:11';
+		list.saveMessage(msg);
+		list.messages.push(msg);
+		msg.Username = 'beavis';
+		msg.Sender = 'me';
+		msg.Body = 'huh?';
+		msg.SentDate = '2018-01-01 12:52:43';
+		msg.ReceiveDate = '2018-01-01 12:53:41';
+		list.messages.push(msg);
+		list.saveMessage(msg);
+		msg = new Message();
+		msg.Username = 'beavis';
+		msg.Sender = 'beavis';
+		msg.Body = 'Are you threatening me?';
+		msg.SentDate = '2018-01-01 12:54:23';
+		msg.ReceiveDate = '2018-01-01 12:54:41';
+		list.saveMessage(msg);
+		list.messages.push(msg);
+		msg.Username = 'beavis';
+		msg.Sender = 'me';
+		msg.Body = 'huh?';
+		msg.SentDate = '2018-01-01 12:55:43';
+		msg.ReceiveDate = '2018-01-01 12:55:48';
+		list.messages.push(msg);
+		list.saveMessage(msg);
+		msg = new Message();
+		msg.Username = 'beavis';
+		msg.Sender = 'beavis';
+		msg.Body = 'Are you threatening me?';
+		msg.SentDate = '2018-01-01 12:56:23';
+		msg.ReceiveDate = '2018-01-01 12:56:51';
+		list.saveMessage(msg);
+		list.messages.push(msg);
+		msg.Username = 'beavis';
+		msg.Sender = 'me';
+		msg.Body = 'huh?';
+		msg.SentDate = '2018-01-01 12:57:13';
+		msg.ReceiveDate = '2018-01-01 12:57:41';
+		list.messages.push(msg);
+		list.saveMessage(msg);
+	};
 </script>

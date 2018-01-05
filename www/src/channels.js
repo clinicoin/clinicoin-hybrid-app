@@ -84,8 +84,6 @@ Channels.prototype.checkForMessages = async function()
 			msg_list = await this.addChannel(msg.Username);
 		}
 
-		msg.MessageList = msg_list;
-
 		// decrypt
 		const decrypted_obj = await this.decryptMessage(msg.EncryptedBody);
 

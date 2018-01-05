@@ -9,8 +9,8 @@ function Message() {
 	this.ReceiptHandle = '';
 	this.ReceiveDate = {};
 	this.SentDate = {};
-	this.MessageList = null;
 	this.SendStatus = 'Unsent';
+	this.ReadDate = {};
 
 	this.toJSON = function()
 	{
@@ -22,11 +22,12 @@ function Message() {
 			MessageId: this.MessageId,
 			ReceiveDate: moment(this.ReceiveDate).format('YYYY-MM-DD HH:mm:ss'),
 			SentDate: moment(this.SentDate).format('YYYY-MM-DD HH:mm:ss'),
+			ReadDate: moment(this.SentDate).format('YYYY-MM-DD HH:mm:ss'),
 			SendStatus: this.SendStatus
 		});
 	};
 
-	this.fromJSONString = function(json_string, messagelist) {
+	this.fromJSONString = function(json_string) {
 		const data = JSON.parse(json_string);
 		this.Username = data.Username;
 		this.Sender = data.Sender;
@@ -34,7 +35,7 @@ function Message() {
 		this.Signed = data.Signed;
 		this.MessageId = data.MessageId;
 		this.ReceiveDate = moment(data.ReceiveDate);
-		this.MessageList = messagelist;
+		this.ReadDate = data.ReadDate;
 		this.SendStatus = data.SendStatus;
 	};
 
