@@ -14,6 +14,7 @@ function User() {
 	this.last_error_message = '';
 
 	this.cognitoUser = null;
+	this.jwtToken = '';
 
 	let aws_password = '';
 	let passphrase = '';
@@ -77,7 +78,8 @@ function User() {
 			phone_verified: this.phone_verified,
 			name: this.name,
 			private_key: this.private_key,
-			public_key: this.public_key
+			public_key: this.public_key,
+			jwt_token: this.jwtToken
 		});
 	};
 
@@ -96,6 +98,7 @@ function User() {
 		this.name = data.name;
 		this.private_key = data.private_key;
 		this.public_key = data.public_key;
+		this.jwtToken = data.jwt_token;
 	};
 }
 
@@ -223,12 +226,20 @@ User.prototype.registerUser = async function()
 
 User.prototype.isLoggedIn = async function()
 {
+	const self = this;
 	let poolData = {
 		UserPoolId : USER_POOL_ID,
 		ClientId : CLIENT_ID
 	};
 	const userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
 	const cognitoUser = userPool.getCurrentUser();
+	this.cognitoUser = cognitoUser;
+
+	// not logged in
+	if (cognitoUser === null) {
+		return false;
+	}
+	this.username = userPool.getCurrentUser().username;
 
 	if (cognitoUser != null) {
 		const login_promise = new Promise((resolve) => {
@@ -239,8 +250,20 @@ User.prototype.isLoggedIn = async function()
 				} else {
 					const valid = session.isValid();
 					if (valid) {
-						if (this.cognitoUser === null) {
-							this.cognitoUser = session;
+						if (_.isEmpty(this.cognitoUser)) {
+							//POTENTIAL: Region needs to be set if not already set previously elsewhere.
+							AWS.config.region = AWS_REGION;
+
+
+							self.jwtToken = session.getIdToken().getJwtToken();
+
+							AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+								IdentityPoolId: 'us-east-1:d94bc2ab-8203-4105-9013-4cffe559f6ad', // your identity pool id here
+								Logins: {
+									// Change the key below according to the specific region your user pool is in.
+									'cognito-idp.us-east-1.amazonaws.com/us-east-1_QCQ5kVlpW': self.jwtToken
+								}
+							});
 						}
 						logger.debug('user logged in');
 					}
@@ -402,6 +425,10 @@ User.prototype.verifyConfirmationCode = async function(confirmation_code)
 	}
 	else {
 		logger.info('Registration Confirm: '+result.data);
+		this.generateKey().then(()=>{
+			this.updatePublicKey();
+			this.setInStorage();
+		});
 		return true;
 	}
 };
@@ -488,8 +515,10 @@ User.prototype.changeUserPassword = async function(new_password)
 	else {
 		logger.info('password changed');
 		this.setAwsPassword(new_password);
+		this.setPassphrase(new_password);
 		this.generateKey().then(()=>{
-			// todo: upload the new key
+			this.updatePublicKey();
+			this.setInStorage();
 		});
 		return true;
 	}
@@ -574,12 +603,20 @@ User.prototype.logout = async function()
 {
 	logger.info('logout user');
 
-	if (this.cognitoUser != null) {
-		await this.cognitoUser.signOut();
+	let poolData = {
+		UserPoolId : USER_POOL_ID,
+		ClientId : CLIENT_ID
+	};
+	const userPool = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserPool(poolData);
+
+	const cognitoUser = userPool.getCurrentUser();
+	if (!_.isEmpty(cognitoUser)) {
+		cognitoUser.signOut();
+		cognitoUser.globalSignOut();
 		logger.info('user logged out');
 	}
 	else {
-		logger.info('user not logged in')
+		logger.info('user not logged in in order to log out')
 	}
 
 	return true;
@@ -672,6 +709,12 @@ User.prototype.forgotPasswordReset = async function(confirmation_code, new_passw
 	}
 	else {
 		logger.info('forgot pw change confirmed');
+		this.setAwsPassword(new_password);
+		this.setPassphrase(new_password);
+		this.generateKey().then(()=>{
+			this.updatePublicKey();
+			this.setInStorage();
+		});
 		return true;
 	}
 };
@@ -682,6 +725,8 @@ User.prototype.callLambda = async function(invoke_params)
 	logger.debug(invoke_params);
 
 	const lambda = new AWS.Lambda({region: AWS_REGION, apiVersion: '2015-03-31'});
+
+	AWSCognito.config.update({accessKeyId: 'anything', secretAccessKey: 'anything'});
 
 	const lambda_promise = new Promise((resolve) => {
 		lambda.invoke(invoke_params, function(err, data) {
@@ -788,6 +833,8 @@ User.prototype.getFromStorage = async function(username)
 	const data = await store.getItem('User_'+username);
 
 	this.fromJSONString(data);
+
+	this.setDefaultUser();
 
 	return true;
 };

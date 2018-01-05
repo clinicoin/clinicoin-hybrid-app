@@ -7,9 +7,10 @@ function Message() {
 	this.Signed = false;
 	this.MessageId = '';
 	this.ReceiptHandle = '';
-	this.ReceiveDate = moment();
-	this.SentDate = moment();
+	this.ReceiveDate = {};
+	this.SentDate = {};
 	this.MessageList = null;
+	this.SendStatus = 'Unsent';
 
 	this.toJSON = function()
 	{
@@ -19,8 +20,9 @@ function Message() {
 			Body: this.Body,
 			Signed: this.Signed,
 			MessageId: this.MessageId,
-			ReceiveDate: this.ReceiveDate.format('YYYY-MM-DD HH:mm:ss'),
-			SentDate: this.SentDate.format('YYYY-MM-DD HH:mm:ss')
+			ReceiveDate: moment(this.ReceiveDate).format('YYYY-MM-DD HH:mm:ss'),
+			SentDate: moment(this.SentDate).format('YYYY-MM-DD HH:mm:ss'),
+			SendStatus: this.SendStatus
 		});
 	};
 
@@ -33,6 +35,7 @@ function Message() {
 		this.MessageId = data.MessageId;
 		this.ReceiveDate = moment(data.ReceiveDate);
 		this.MessageList = messagelist;
+		this.SendStatus = data.SendStatus;
 	};
 
 	this.getEnvelope = function()

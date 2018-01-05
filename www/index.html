@@ -23,14 +23,13 @@
   <script src="lib/axios-0.17.1.min.js"></script>
   <script src="lib/localforage.min.js"></script>
   <script src="lib/moment.min.js"></script>
-  <script src="lib/vue-2.5.13.min.js"></script>
+  <script src="lib/vue-2.5.13.js"></script>
   <script src="lib/qrious-4.0.2.min.js"></script>
 
     <script src="https://unpkg.com/vuetify/dist/vuetify.js"></script>
 
     <!-- source files -->
     <script src="src/constants.js"></script>
-    <script src="src/bindings.js"></script>
     <script src="src/user.js"></script>
     <script src="src/messagelist.js"></script>
     <script src="src/message.js"></script>
@@ -42,7 +41,7 @@
 
     <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
     <link href="https://unpkg.com/vuetify/dist/vuetify.min.css" rel="stylesheet">
-
+    <link rel="stylesheet" href="//cdn.materialdesignicons.com/2.1.19/css/materialdesignicons.min.css">
 
   <link rel="stylesheet" href="components/loader.css">
   <link rel="stylesheet" href="css/style.css">
@@ -64,7 +63,7 @@
 <div id="app">
     <v-app v-cloak>
         <v-toolbar color="grey darken-1" dark>
-            <v-btn icon v-show="page_visible > PAGE_MAIN_LIST">
+            <v-btn icon v-show="page_visible > PAGE_MAIN_LIST" @click="page_visible=PAGE_MAIN_LIST">
                 <v-icon>home</v-icon>
             </v-btn>
 
@@ -75,7 +74,7 @@
             <v-toolbar-title>CliniCoin</v-toolbar-title>
 
             <v-spacer></v-spacer>
-            <v-btn icon v-show="page_visible >= PAGE_MAIN_LIST">
+            <v-btn icon v-show="page_visible == PAGE_MAIN_LIST" @click="page_visible=PAGE_SETTINGS">
                 <v-icon>settings</v-icon>
             </v-btn>
         </v-toolbar>
@@ -169,9 +168,22 @@
                     </template>
                 </v-list>
 
-                <v-btn fab dark color="indigo" bottom fixed right>
-                    <v-icon dark>add</v-icon>
-                </v-btn>
+
+                <v-speed-dial bottom fixed right>
+                    <v-btn slot="activator" color="blue darken-2" dark fab hover large>
+                        <v-icon>account_circle</v-icon>
+                        <v-icon>close</v-icon>
+                    </v-btn>
+                    <v-btn fab dark color="green" @click="showQRCode">
+                        <v-icon>mdi-qrcode-scan</v-icon>
+                    </v-btn>
+                    <v-btn fab dark color="indigo" @click="showAddConnection">
+                        <v-icon>supervisor_account</v-icon>
+                    </v-btn>
+                    <v-btn fab dark color="red" @click="logoutUser">
+                        <v-icon>cloud_off</v-icon>
+                    </v-btn>
+                </v-speed-dial>
             </v-container>
 
             <v-container fluid id="conMessages" v-show="page_visible==PAGE_MESSAGING">
@@ -199,10 +211,13 @@
                             name="input-1"
                             label="Message"
                             textarea
-                            append-icon="send"
                             clearable
+                            auto-grow
                             v-model="outgoing_message"
                     ></v-text-field>
+                    <v-btn outline large fab color="indigo" @click="sendUserMessage">
+                        <v-icon>send</v-icon>
+                    </v-btn>
                 </v-footer>
             </v-container>
 
@@ -210,13 +225,13 @@
                 <div style="text-align:center; font-size:large; margin-bottom:20px;">Connect With People</div>
 
                 <div style="text-align:center;">
-                    <v-btn outline color="indigo">Scan QR Code</v-btn>
+                    <v-btn outline color="indigo" @click="showScanBarcode">Scan QR Code</v-btn>
                 </div>
 
                 <v-text-field label="Clinicoin URL" v-model="add_name"></v-text-field>
 
                 <div style="text-align:center;">
-                    <v-btn color="primary">Connect</v-btn>
+                    <v-btn color="primary" @click="connectUser">Connect</v-btn>
                 </div>
             </v-container>
 
@@ -244,12 +259,19 @@
                 </div>
             </v-container>
 
-            <v-snackbar id="errorSnack" bottom color="red" timeout="3000" v-model="show_error_toast_value">
-                <div style="text-align: center">{{ error_message }}</div>
+            <v-snackbar id="errorSnack" bottom color="red" :timeout=5000 v-model="show_error_toast_value">
+                {{ error_message }}
             </v-snackbar>
-            <v-snackbar id="infoSnack" bottom color="blue" timeout="3000" v-model="show_info_toast_value">
-                <div style="text-align: center">{{ info_message }}</div>
+            <v-snackbar id="infoSnack" bottom color="blue" :timeout=5000 v-model="show_info_toast_value">
+                {{ info_message }}
             </v-snackbar>
+            <v-snackbar id="successSnack" bottom color="green" :timeout=5000 v-model="show_success_toast_value">
+                {{ success_message }}
+            </v-snackbar>
+
+            <v-layout row justify-center v-if="show_spinner">
+                <v-progress-circular indeterminate v-bind:size="200" v-bind:width="10" color="blue"></v-progress-circular>
+            </v-layout>
         </v-content>
     </v-app>
 </div>
@@ -260,32 +282,29 @@
 
 
 <script>
-	const PAGE_LOGIN = 0;
-	const PAGE_REGISTER = 1;
-	const PAGE_RESET_PASSWORD = 2;
-	const PAGE_REGISTER_VERIFY = 3;
-	const PAGE_MAIN_LIST = 4;
-	const PAGE_MESSAGING = 5;
-	const PAGE_CONNECT = 6;
-	const PAGE_QRCODE = 7;
-	const PAGE_SETTINGS = 8;
-
 	let current_message_list = {};
 
 	let vm = new Vue({
         el: '#app',
 		created: async function () {
-			if (current_user.isLoggedIn()) {
-				//this.$data.page_visible = PAGE_MAIN_LIST;
+
+			if (await current_user.isLoggedIn()) {
+				this.page_visible = this.PAGE_MAIN_LIST;
+            }
+            else {
+				this.page_visible = this.PAGE_LOGIN;
             }
 
             await current_user.getFromStorage();
+			this.username = current_user.username;
+			this.phone = current_user.phone;
+			this.email = current_user.email;
 
 			// fill channel list data
             let data_list = [];
 			await channels.getChannels();
 
-			forEach((channel)=>{
+			channels.channel_list.forEach((channel)=>{
 				const last_message = _.last(channel.messages);
 
 				data_list.push({
@@ -302,11 +321,19 @@
             {
             	this.error_message = message;
 	            this.show_error_toast_value = 1;
+	            logger.error(message);
             },
 			showInfoToast: function(message)
 			{
 				this.info_message = message;
 				this.show_info_toast_value = 1;
+				logger.info(message);
+			},
+			showSuccessToast: function(message)
+			{
+				this.success_message = message;
+				this.show_success_toast_value = 1;
+				logger.debug(message);
 			},
 			loginUser: async function()
             {
@@ -321,7 +348,7 @@
 	                current_user.setAwsPassword(this.password);
 
 	                if (await current_user.login()) {
-		                this.page_visible = PAGE_MAIN_LIST;
+		                this.page_visible = this.PAGE_MAIN_LIST;
 	                }
 	                else {
 		                this.showErrorToast(current_user.last_error_message);
@@ -340,7 +367,7 @@
 			cancelForgotPassword: function()
             {
 	            this.show_forgot_password_dialog = false;
-	            this.page_visible = PAGE_LOGIN;
+	            this.page_visible = this.PAGE_LOGIN;
             },
             sendforgotPassword: async function()
             {
@@ -348,7 +375,7 @@
                 const send_result = await current_user.userForgotPassword();
                 if (send_result) {
 	                this.showInfoToast('Password reset message sent');
-	                this.page_visible = PAGE_RESET_PASSWORD;
+	                this.page_visible = this.PAGE_RESET_PASSWORD;
                 }
                 else {
 	                this.showErrorToast(current_user.last_error_message);
@@ -372,10 +399,10 @@
                 else {
 	                const result = await current_user.forgotPasswordReset(this.reset_code, this.password);
 	                if (result) {
-		                this.showErrorToast('Password reset successful');
+		                this.showSuccessToast('Password reset successful');
 
 		                // try to log them in
-		                this.page_visible = PAGE_LOGIN;
+		                this.page_visible = this.PAGE_LOGIN;
 		                this.loginUser();
 	                }
 	                else {
@@ -385,7 +412,7 @@
             },
 			showRegistration: function()
             {
-            	this.page_visible = PAGE_REGISTER;
+            	this.page_visible = this.PAGE_REGISTER;
             },
 			registerUser: async function()
             {
@@ -409,8 +436,8 @@
 
 	                const result = await current_user.registerUser();
 	                if (result) {
-		                this.showErrorToast('User registered, verfication sent');
-		                this.page_visible = PAGE_REGISTER_VERIFY;
+		                this.showSuccessToast('User registered, verfication sent');
+		                this.page_visible = this.PAGE_REGISTER_VERIFY;
 	                }
 	                else {
 		                this.showErrorToast(current_user.last_error_message);
@@ -425,10 +452,10 @@
                 else {
 	                const result = await current_user.verifyConfirmationCode(this.register_code.trim());
 	                if (result) {
-		                this.showInfoToast('Code confirmation successful');
+		                this.showSuccessToast('Code confirmation successful');
 
 		                // try to log them in
-		                this.page_visible = PAGE_LOGIN;
+		                this.page_visible = this.PAGE_LOGIN;
 		                this.loginUser();
 	                }
 	                else {
@@ -448,10 +475,10 @@
             },
             messageListSelected: function(selected_user)
             {
-	            this.page_visible = PAGE_MESSAGING;
+	            this.page_visible = this.PAGE_MESSAGING;
 	            current_message_list = _.find(channels.channel_list, { "recipient_user_id": selected_user });
 	            this.active_channel.username = current_message_list.recipient_user_id;
-	            this.friendly_name = current_message_list.friendly_name;
+	            this.active_channel.friendly_name = current_message_list.friendly_name;
 
 	            let message_list = [];
 	            current_message_list.messages.forEach(function(msg){
@@ -462,49 +489,214 @@
                     })
                 });
 	            this.active_channel.messages = message_list;
+            },
+			sendUserMessage: async function () {
+                if (this.outgoing_message.trim().length===0) {
+                	this.showErrorToast('No message to send');
+                }
+                else if (await current_message_list.sendMessage(this.outgoing_message)==='Sent') {
+                	this.showSuccessToast('Message Sent');
+                }
+                else {
+                	this.showErrorToast(current_message_list.last_error_message);
+                }
+			},
+			showQRCode: function()
+            {
+	            this.page_visible = this.PAGE_QRCODE;
+	            const qr = new QRious({
+		            element: document.getElementById('qr'),
+		            value: 'https://www.clinicoin.com/connect/'+vm.username,
+		            size: 300
+	            });
+            },
+			showAddConnection: function()
+            {
+	            this.page_visible = this.PAGE_CONNECT;
+            },
+            showScanBarcode: function()
+            {
+            	if (window.plugins !== undefined) {
+		            window.plugins.barcodeScanner.scan(function (result) {
+			            if (!result.cancelled) {
+				            logger.debug("Result: " + result.text + ", format: " + result.format);
+				            this.add_name = result.text;
+			            }
+			            else {
+				            logger.debug("Scan cancelled");
+			            }
+		            });
+	            }
+	            else {
+            		this.showErrorToast('Barcode scanner plugin not loaded');
+                }
+            },
+			connectUser: async function()
+            {
+	            if (_.isEmpty(this.add_name.trim())) {
+		            this.showErrorToast('username cannot be empty');
+	            }
+	            else {
+		            const list = new MessageList();
+		            list.recipient_user_id = this.add_name.trim();
+		            if (await list.getRecipientPublicKey()) {
+			            this.showSuccessToast('Connected Successfully to ' + this.add_name.trim());
+			            channels.channel_list.push(list);
+			            this.messageListSelected(this.add_name.trim());
+		            }
+		            else {
+			            this.showErrorToast('Could not connect to ' + this.add_name.trim() + ', ' + list.last_error_message);
+		            }
+	            }
+            },
+			logoutUser: function ()
+            {
+            	current_user.logout();
+                this.page_visible = this.PAGE_LOGIN;
+			},
+			updateSettings: function ()
+			{
+				if (_.isEmpty(this.email.trim())) {
+					this.showErrorToast('email cannot be empty');
+				}
+				else if (_.isEmpty(this.phone.trim())) {
+					this.showErrorToast('phone cannot be empty');
+				}
+				else {
+					current_user.updateUserAttribute('email', this.email);
+					current_user.updateUserAttribute('phone_number', this.phone);
+					this.showSuccessToast('User settings updated')
+				}
+			},
+            updatePassword: async function()
+            {
+	            if (_.isEmpty(this.username.trim())) {
+		            this.showErrorToast('username cannot be empty');
+	            }
+	            else if (_.isEmpty(this.password.trim())) {
+		            this.showErrorToast('password cannot be empty');
+	            }
+	            else if (this.password.trim() !== this.confirm.trim()) {
+		            this.showErrorToast('password and confirmation do not match');
+	            }
+	            else if ( ! current_user.isComplexPassword(this.password.trim())) {
+		            this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
+	            }
+	            else {
+		            current_user.email = this.email.trim();
+		            current_user.phone = this.phone.trim();
+		            current_user.username = this.username.trim();
+		            current_user.setAwsPassword(this.password.trim());
+
+		            const result = await current_user.changeUserPassword(this.password.trim());
+		            if (result) {
+			            this.showSuccessToast('Password updated');
+			            this.page_visible = this.PAGE_REGISTER_VERIFY;
+		            }
+		            else {
+			            this.showErrorToast(current_user.last_error_message);
+		            }
+	            }
             }
 		},
 		data() {
 			return {
-				username: current_user.username,
+				username: '',
 				email: 'me@them.com',
 				phone: '9995551212',
-				password: 'pass',
+				password: 'aGreatPhrase321!',
+                new_password: '',
 				confirm: 'conf',
 				reset_code: '1234',
 				register_code: '4321',
 				add_name: '',
 				page_visible: 0,
+				show_spinner: 0,
 				show_forgot_password_dialog: 0,
 				show_error_toast_value: 0,
 				show_info_toast_value: 0,
+				show_success_toast_value: 0,
 				error_message: 'an error',
 				info_message: 'some info',
+				success_message: 'success',
 				outgoing_message: '',
-                channels: [
-                    { title: "channel 1", subtitle:"a date maybe", count: 3 },
-	                { title: "channel 2", subtitle:"a date maybe", count: 1 },
-	                { title: "channel 3", subtitle:"a date maybe", count: 8 },
-                ],
+
+				PAGE_LOGIN: 0,
+                PAGE_REGISTER: 1,
+                PAGE_RESET_PASSWORD: 2,
+                PAGE_REGISTER_VERIFY: 3,
+                PAGE_MAIN_LIST: 4,
+                PAGE_MESSAGING: 5,
+                PAGE_CONNECT: 6,
+                PAGE_QRCODE: 7,
+                PAGE_SETTINGS: 8,
+
+                channels: [ ],
                 active_channel: {
 					username: "demouser",
-                    friendly_name: "channel 2",
+                    friendly_name: "channel",
 					messages: [
-                        { Sender:"me", Body: "this is my message", SentDate: "2017-12-27 11:53:53" },
-						{ Sender:"demouser", Body: "really?", SentDate: "2017-12-27 11:54:53" },
-						{ Sender:"me", Body: "this is my message", SentDate: "2017-12-27 11:53:53" },
-						{ Sender:"demouser", Body: "really?", SentDate: "2017-12-27 11:54:53" }
                     ]
                 }
 			};
 		}
 	});
 
+	const writeTestData = function()
+    {
+	    current_user.username = 'demouser';
+	    current_user.awsSub = 'awssub';
+	    current_user.email = 'demouser@mailsac.com';
+	    current_user.email_verified = true;
+	    current_user.phone = '4157896412';
+	    current_user.phone_verified = false;
+	    current_user.name = 'Daaron';
+	    current_user.setInStorage();
 
+	    let list = new MessageList();
+	    list.friendly_name = 'Bart Simpson';
+	    list.recipient_user_id = 'bsimpson';
+	    list.recipient_public_key = '';
+	    list.last_public_key_retrieval = '2017-01-01';
+	    list.message_group_id = '1';
+	    list.saveSettings();
+	    let msg = new Message();
+	    msg.Username = 'bsimpson';
+	    msg.Sender = 'bsimpson';
+	    msg.Body = 'Cowabunga';
+	    msg.SentDate = '2018-01-01 12:38:23';
+	    msg.ReceiveDate = '2018-01-01 12:39:11';
+	    list.saveMessage(msg);
+	    list.messages.push(msg);
+	    msg.Username = 'bsimpson';
+	    msg.Sender = 'me';
+	    msg.Body = 'Whut?';
+	    msg.SentDate = '2018-01-01 12:38:43';
+	    msg.ReceiveDate = '2018-01-01 12:39:41';
+	    list.messages.push(msg);
+	    list.saveMessage(msg);
 
-    const qr = new QRious({
-        element: document.getElementById('qr'),
-        value: 'https://www.clinicoin.com/connect/'+vm.username,
-	    size: 300
-    });
+        list = new MessageList();
+	    list.friendly_name = 'Beavis';
+	    list.recipient_user_id = 'beavis';
+	    list.recipient_public_key = '';
+	    list.last_public_key_retrieval = '2017-01-01';
+	    list.message_group_id = '1';
+	    list.saveSettings();
+        msg = new Message();
+	    msg.Username = 'beavis';
+	    msg.Sender = 'beavis';
+	    msg.Body = 'Are you threatening me?';
+	    msg.SentDate = '2018-01-01 12:38:23';
+	    msg.ReceiveDate = '2018-01-01 12:39:11';
+	    list.saveMessage(msg);
+	    list.messages.push(msg);
+	    msg.Username = 'beavis';
+	    msg.Sender = 'me';
+	    msg.Body = 'huh?';
+	    msg.SentDate = '2018-01-01 12:38:43';
+	    msg.ReceiveDate = '2018-01-01 12:39:41';
+	    list.messages.push(msg);
+	    list.saveMessage(msg);
+    };
 </script>

@@ -32,7 +32,7 @@ describe('getRecipientPublicKey', function() {
 		assert.isFalse(result, "result is true");
 	});
 });
-
+/*
 describe('encryptMessage', function() {
 
 	beforeEach(function () {
@@ -194,3 +194,4 @@ describe('removeSettings', function() {
 		assert(actual_list.recipient_public_key==='', 'Value exists: '+actual_list.recipient_user_id);
 	});
 });
+*/

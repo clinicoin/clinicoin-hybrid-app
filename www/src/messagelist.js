@@ -53,10 +53,22 @@ MessageList.prototype.getRecipientPublicKey = async function()
 		LogType : 'None'
 	});
 
-	if ( ! _.isEmpty(response.body)) {
+	if ( ! _.isEmpty(response.body) && response.statusCode===200) {
 		this.recipient_public_key = response.body.PublicKey.S;
 		this.last_public_key_retrieval = moment().format('YYYY-MM-DD HH:mm:ss');
 		return response.statusCode === 200;
+	}
+	else if (response.statusCode===404){
+		this.last_error_message = 'Key retrieved failed - '+response.body;
+		this.last_error_code = "UserNotFound";
+	}
+	else if (response.statusCode===400){
+		this.last_error_message = 'Key retrieved failed - '+response.body;
+		this.last_error_code = "LambdaRetrievalError";
+	}
+	else {
+		this.last_error_message = 'Key retrieved failed - '+current_user.last_error_message;
+		this.last_error_code = current_user.last_error_code;
 	}
 
 	return false;
@@ -146,18 +158,29 @@ MessageList.prototype.sendMessage = async function(message_data)
 	this.messages.push(message_data);
 
 	// get the recipient's public key if more than 24 hours old
+	let key_result = false;
 	if (moment(this.last_public_key_retrieval).isBefore(moment().subtract(24, 'hours'))) {
-		await this.getRecipientPublicKey();
+		key_result = await this.getRecipientPublicKey();
+	}
+
+	if (!key_result) {
+		return msg;
 	}
 
 	// encrypt the message, sending signed
 	msg.EncryptedBody = await this.encryptMessage(message_data, true);
 
 	// send it to the server
-	await this.sendToServer(msg.getEnvelope()+"\n\n"+msg.EncryptedBody);
+	const send_success = await this.sendToServer(msg.getEnvelope()+"\n\n"+msg.EncryptedBody);
+
+	if (!send_success) {
+		return msg;
+	}
 
 	// save to list
 	await this.saveMessage(msg);
+
+	msg.SendStatus = 'Sent';
 
 	return msg;
 };
@@ -165,7 +188,7 @@ MessageList.prototype.sendMessage = async function(message_data)
 MessageList.prototype.removeAllMessages = async function()
 {
 	const exp = new RegExp('^ch_'+this.recipient_user_id+'_\d+');
-	await store.removeItemsExpression(exp);
+	//await store.removeItemsExpression(exp);
 };
 
 MessageList.prototype.loadMessages = async function()
