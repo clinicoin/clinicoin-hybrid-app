@@ -1,31 +1,31 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <meta http-equiv="Content-Security-Policy" content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
-  <script src="components/monaca-jquery/jquery.js"></script>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<meta http-equiv="Content-Security-Policy"
+		  content="default-src * data: gap: https://ssl.gstatic.com; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+	<script src="components/monaca-jquery/jquery.js"></script>
 	<script src="components/loader.js"></script>
 
 
-
-  <script src="lib/minilog3.1.0.js"></script>
+	<script src="lib/minilog3.1.0.js"></script>
 	<script>
 		let logger = Minilog('app');
 		Minilog.pipe(Minilog.backends.array);
 		Minilog.enable();
 	</script>
-  <script src="lib/lodash-4.17.4.js"></script>
-  <script src="lib/openpgp.js"></script>
-  <script src="lib/aws-cognito-sdk.min.js"></script>
-  <script src="lib/amazon-cognito-identity.min.js"></script>
-  <script src="lib/aws-sdk-2.171.0.js"></script>
-  <script src="lib/axios-0.17.1.min.js"></script>
-  <script src="lib/localforage.min.js"></script>
-  <script src="lib/moment.min.js"></script>
-  <script src="lib/vue-2.5.13.js"></script>
-  <script src="lib/qrious-4.0.2.min.js"></script>
-  <script src="lib/vuetify-0.17.6.js"></script>
+	<script src="lib/lodash-4.17.4.js"></script>
+	<script src="lib/openpgp.js"></script>
+	<script src="lib/aws-cognito-sdk.min.js"></script>
+	<script src="lib/amazon-cognito-identity.min.js"></script>
+	<script src="lib/aws-sdk-2.171.0.js"></script>
+	<script src="lib/axios-0.17.1.min.js"></script>
+	<script src="lib/localforage.min.js"></script>
+	<script src="lib/moment.min.js"></script>
+	<script src="lib/vue-2.5.13.js"></script>
+	<script src="lib/qrious-4.0.2.min.js"></script>
+	<script src="lib/vuetify-0.17.6.js"></script>
 
 	<!-- source files -->
 	<script src="src/constants.js"></script>
@@ -42,48 +42,49 @@
 	<link href="css/vuetify-0.17.6.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="css/materialdesignicons-2.1.19.min.css">
 
-  <link rel="stylesheet" href="components/loader.css">
-  <link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="components/loader.css">
+	<link rel="stylesheet" href="css/style.css">
+
 
 	<style>
 		[v-cloak] {
 			display: none;
 		}
 
-        div#app, .fade-background {
-            background: #483ebb;
-            background: -moz-linear-gradient(45deg, #483ebb 0%, #2989d8 100%, #207cca 100%, #79a1e7 100%, #2989d8 100%);
-            background: -webkit-linear-gradient(45deg, #483ebb 0%,#2989d8 100%,#207cca 100%,#79a1e7 100%,#2989d8 100%);
-            background: linear-gradient(45deg, #483ebb 0%,#2989d8 100%,#207cca 100%,#79a1e7 100%,#2989d8 100%);
-            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#483ebb', endColorstr='#2989d8',GradientType=1 );
-        }
+		div#app, .fade-background {
+			background: #483ebb;
+			background: -moz-linear-gradient(45deg, #483ebb 0%, #2989d8 100%, #207cca 100%, #79a1e7 100%, #2989d8 100%);
+			background: -webkit-linear-gradient(45deg, #483ebb 0%, #2989d8 100%, #207cca 100%, #79a1e7 100%, #2989d8 100%);
+			background: linear-gradient(45deg, #483ebb 0%, #2989d8 100%, #207cca 100%, #79a1e7 100%, #2989d8 100%);
+			filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#483ebb', endColorstr='#2989d8', GradientType=1);
+		}
 
-        .local-rounded-button {
-            border-radius: 50px;
-            -moz-border-radius: 50px;
-            -webkit-border-radius: 50px;
-            border: 1px solid white;
-            width: 100%;
-            color: #483ebb;
-            text-align: center;
-            background-color: white;
-            font-size: xx-large;
-            height: 60px;
-            padding-top: 5px;
-            cursor: pointer;
-        }
+		.local-rounded-button {
+			border-radius: 50px;
+			-moz-border-radius: 50px;
+			-webkit-border-radius: 50px;
+			border: 1px solid white;
+			width: 100%;
+			color: #483ebb;
+			text-align: center;
+			background-color: white;
+			font-size: xx-large;
+			height: 60px;
+			padding-top: 5px;
+			cursor: pointer;
+		}
 
-        .white-container {
-            background: white;
-            height:100%;
-        }
+		.white-container {
+			background: white;
+			height: 100%;
+		}
 	</style>
 
-  <script>
-	$(function(){
+	<script>
+		$(function () {
 
-	});
-  </script>
+		});
+	</script>
 
 </head>
 <body>
@@ -94,7 +95,8 @@
 				<v-icon>home</v-icon>
 			</v-btn>
 
-			<v-btn icon v-show="page_visible > PAGE_LOGIN && page_visible < PAGE_MAIN_LIST" @click="page_visible=PAGE_LOGIN">
+			<v-btn icon v-show="page_visible > PAGE_LOGIN && page_visible < PAGE_MAIN_LIST"
+				   @click="page_visible=PAGE_LOGIN">
 				<v-icon>keyboard_arrow_left</v-icon>
 			</v-btn>
 
@@ -107,82 +109,89 @@
 		</v-toolbar>
 
 		<v-content>
-            <v-container fluid v-show="page_visible==PAGE_INITIAL">
-                <div style="height: 100%; width: 100%;">
-                    <div style="margin-top: 47%;">
-                        <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
-                    </div>
+			<v-container fluid v-show="page_visible==PAGE_INITIAL">
+				<div style="height: 100%; width: 100%;">
+					<div style="margin-top: 47%;">
+						<img src="img/logo.png" style="width: 72%; margin-left: 12%;">
+					</div>
 
-                    <div class="text-xs-center" style="margin-top: 58%; padding-left: 10%; padding-right: 10%;">
-                        <div class="local-rounded-button" style="" @click="page_visible = PAGE_TOUR">
-                            New To Clinicoin
-                        </div>
-                    </div>
-                    <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
-                        <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="page_visible = PAGE_LOGIN">
-                           Sign In
-                        </div>
-                    </div>
-                </div>
+					<div class="text-xs-center" style="margin-top: 58%; padding-left: 10%; padding-right: 10%;">
+						<div class="local-rounded-button" style="" @click="page_visible = PAGE_TOUR">
+							New To Clinicoin
+						</div>
+					</div>
+					<div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+						<div class="local-rounded-button"
+							 style="background-color: transparent; color: white; border-color: white;"
+							 @click="page_visible = PAGE_LOGIN">
+							Sign In
+						</div>
+					</div>
+				</div>
 
-                <v-footer color="transparent" absolute fixed>
-                <div style="text-align: center; width: 100%; color:white;">
-                    &copy; 2018 Mosio&trade; and Clinicoin&trade;
-                </div>
-                </v-footer>
-            </v-container>
-            <v-container fluid v-show="page_visible==PAGE_TOUR">
-                <v-carousel id="carousel" v-bind:cycle="false">
-                    <v-carousel-item src="img/tour1.png" key="1"></v-carousel-item>
-                    <v-carousel-item src="img/tour2.png" key="2"></v-carousel-item>
-                    <v-carousel-item src="img/tour3.png" key="3"></v-carousel-item>
-                    <v-carousel-item src="img/tour4.png" key="4"></v-carousel-item>
-                </v-carousel>
-                <div class="text-xs-center" style="margin-top: 20%; padding-left: 10%; padding-right: 10%;">
-                    <div class="local-rounded-button" style="" @click="changeCarouselItem">
-                        Continue
-                    </div>
-                </div>
-                <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
-                    <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="page_visible = PAGE_REGISTER">
-                        Get Started
-                    </div>
-                </div>
-            </v-container>
+				<v-footer color="transparent" absolute fixed>
+					<div style="text-align: center; width: 100%; color:white;">
+						&copy; 2018 Mosio&trade; and Clinicoin&trade;
+					</div>
+				</v-footer>
+			</v-container>
+			<v-container fluid v-show="page_visible==PAGE_TOUR">
+				<v-carousel id="carousel" v-bind:cycle="false">
+					<v-carousel-item src="img/tour1.png" key="1"></v-carousel-item>
+					<v-carousel-item src="img/tour2.png" key="2"></v-carousel-item>
+					<v-carousel-item src="img/tour3.png" key="3"></v-carousel-item>
+					<v-carousel-item src="img/tour4.png" key="4"></v-carousel-item>
+				</v-carousel>
+				<div class="text-xs-center" style="margin-top: 20%; padding-left: 10%; padding-right: 10%;">
+					<div class="local-rounded-button" style="" @click="changeCarouselItem">
+						Continue
+					</div>
+				</div>
+				<div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+					<div class="local-rounded-button"
+						 style="background-color: transparent; color: white; border-color: white;"
+						 @click="page_visible = PAGE_REGISTER">
+						Get Started
+					</div>
+				</div>
+			</v-container>
 			<v-container fluid id="conLogin" v-show="page_visible==PAGE_LOGIN">
-                <div style="margin-top: 50%;">
-                    <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
-                </div>
+				<div style="margin-top: 50%;">
+					<img src="img/logo.png" style="width: 72%; margin-left: 12%;">
+				</div>
 
-                <div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white;">
-                    Sign In
-                </div>
+				<div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white;">
+					Sign In
+				</div>
 
-                <div style="text-align:center;">
-                    <v-card>
-                        <v-card-text>
-                            <v-text-field label="Username" id="username" v-model="username"></v-text-field>
+				<div style="text-align:center;">
+					<v-card>
+						<v-card-text>
+							<v-text-field label="Username" ref="login_username" id="login_username" v-model="username"></v-text-field>
 
-                            <v-text-field
-                                    label="Password"
-                                    id="login_password"
-                                    type="password"
-                                    v-model="password"
-                                    :append-icon="login_pw_visible ? 'visibility_off' : 'visibility'"
-                                    :append-icon-cb="() => (login_pw_visible = !login_pw_visible)"
-                                    :type="login_pw_visible ? 'text' : 'password'"
-                            ></v-text-field>
-                        </v-card-text>
-                    </v-card>
-                    <div>
-                        <v-btn flat dark @click="showforgotPasswordConfirm">Forgot Password</v-btn>
-                    </div>
+							<v-text-field
+									label="Password"
+									id="login_password"
+									type="password"
+									v-model="password"
+									:append-icon="login_pw_visible ? 'visibility_off' : 'visibility'"
+									:append-icon-cb="() => (login_pw_visible = !login_pw_visible)"
+									:type="login_pw_visible ? 'text' : 'password'"
+							></v-text-field>
+						</v-card-text>
+					</v-card>
+					<div>
+						<v-btn id="btnForgot" flat dark @click="showforgotPasswordConfirm">Forgot Password</v-btn>
+					</div>
 
-                    <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
-                        <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="loginUser">
-                            Sign In
-                        </div>
-                    </div>
+					<div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+						<div id="btnLogin"
+                             class="local-rounded-button"
+							 style="background-color: transparent; color: white; border-color: white;"
+							 @click="loginUser">
+							Sign In
+						</div>
+					</div>
 				</div>
 			</v-container>
 
@@ -192,143 +201,152 @@
 					<v-card-text>You will receive an email with a code to enter in the next step.</v-card-text>
 					<v-card-actions>
 						<v-spacer></v-spacer>
-						<v-btn color="green darken-1" flat="flat" @click="sendforgotPassword">Continue</v-btn>
-						<v-btn color="red darken-1" flat="flat" @click="cancelForgotPassword">Cancel</v-btn>
+						<v-btn id="btnSendForgotPassword" color="green darken-1" flat="flat" @click="sendforgotPassword">Continue</v-btn>
+						<v-btn id="btnCancelForgotPassword" color="red darken-1" flat="flat" @click="cancelForgotPassword">Cancel</v-btn>
 					</v-card-actions>
 				</v-card>
 			</v-dialog>
 
 			<v-container fluid id="conResetPassword" v-show="page_visible==PAGE_RESET_PASSWORD">
-                <div style="margin-top: 5%;">
-                    <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
-                </div>
+				<div style="margin-top: 5%;">
+					<img src="img/logo.png" style="width: 72%; margin-left: 12%;">
+				</div>
 
-                <div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white;">
-                    Reset Password
-                </div>
+				<div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white;">
+					Reset Password
+				</div>
 
-                <v-card color="grey lighten-4" flat>
-                    <v-card-text>
-                        <v-text-field
-                                label="Reset Code"
-                                hint="6-digit code sent to you"
-                                id="reset_code"
-                                v-model="reset_code"
-                                mask="######"
-                                v-bind:rules="[()=>{ return reset_code.length==0 ? 'Reset code is required' : true; }]"
-                        ></v-text-field>
-                        <v-text-field
-                                label="Password"
-                                id="reset_password"
-                                type="password"
-                                v-model="password"
-                                hint="At least 8 characters, a number, upper- and lower-case, and a special character"
-                                :append-icon="register_pw_visible ? 'visibility_off' : 'visibility'"
-                                :append-icon-cb="() => (register_pw_visible = !register_pw_visible)"
-                                :type="register_pw_visible ? 'text' : 'password'"
-                                v-bind:rules="[isPasswordComplex]"
-                        ></v-text-field>
-                        <v-text-field
-                                label="Confirmation"
-                                id="reset_confirm"
-                                v-model="confirm"
-                                type="password"
-                                hint="Must match the password"
-                                :append-icon="register_confirm_visible ? 'visibility_off' : 'visibility'"
-                                :append-icon-cb="() => (register_confirm_visible = !register_confirm_visible)"
-                                :type="register_confirm_visible ? 'text' : 'password'"
-                                v-bind:rules="[isPasswordAndConfirmMatched]"
-                        ></v-text-field>
-                    </v-card-text>
-                </v-card>
+				<v-card color="grey lighten-4" flat>
+					<v-card-text>
+						<v-text-field
+								label="Reset Code"
+								hint="6-digit code sent to you"
+								id="reset_code"
+								v-model="reset_code"
+								mask="######"
+								v-bind:rules="[()=>{ return reset_code.length==0 ? 'Reset code is required' : true; }]"
+						></v-text-field>
+						<v-text-field
+								label="Password"
+								id="reset_password"
+								type="password"
+								v-model="password"
+								hint="At least 8 characters, a number, upper- and lower-case, and a special character"
+								:append-icon="register_pw_visible ? 'visibility_off' : 'visibility'"
+								:append-icon-cb="() => (register_pw_visible = !register_pw_visible)"
+								:type="register_pw_visible ? 'text' : 'password'"
+								v-bind:rules="[isPasswordComplex]"
+						></v-text-field>
+						<v-text-field
+								label="Confirmation"
+								id="reset_confirm"
+								v-model="confirm"
+								type="password"
+								hint="Must match the password"
+								:append-icon="register_confirm_visible ? 'visibility_off' : 'visibility'"
+								:append-icon-cb="() => (register_confirm_visible = !register_confirm_visible)"
+								:type="register_confirm_visible ? 'text' : 'password'"
+								v-bind:rules="[isPasswordAndConfirmMatched]"
+						></v-text-field>
+					</v-card-text>
+				</v-card>
 
-                <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
-                    <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="resetForgotPassword">
-                        Reset Password
-                    </div>
-                </div>
+				<div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+					<div class="local-rounded-button"
+						 style="background-color: transparent; color: white; border-color: white;"
+						 @click="resetForgotPassword">
+						Reset Password
+					</div>
+				</div>
 			</v-container>
 
 			<v-container fluid id="conRegister" v-show="page_visible==PAGE_REGISTER">
-                <div style="margin-top: 5%;">
-                    <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
-                </div>
+				<div style="margin-top: 5%;">
+					<img src="img/logo.png" style="width: 72%; margin-left: 12%;">
+				</div>
 
-				<div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white;">Register</div>
+				<div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white;">
+					Register
+				</div>
 
-                <v-card color="grey lighten-4" flat>
-                    <v-card-text>
-                        <v-text-field label="Email" prepend-icon="mail_outline" v-model="email"></v-text-field>
-                        <v-text-field label="Phone" prepend-icon="phone" v-model="phone"></v-text-field>
-                        <v-text-field label="Username" prepend-icon="account_box" v-model="username"></v-text-field>
-                        <v-text-field
-                                label="Password"
-                                id="register_password"
-                                type="password"
-                                v-model="password"
-                                hint="At least 8 characters, a number, upper- and lower-case, and a special character"
-                                :append-icon="register_pw_visible ? 'visibility_off' : 'visibility'"
-                                :append-icon-cb="() => (register_pw_visible = !register_pw_visible)"
-                                :type="register_pw_visible ? 'text' : 'password'"
-                                v-bind:rules="[isPasswordComplex]"
-                        ></v-text-field>
-                        <v-text-field
-                                label="Confirmation"
-                                id="register_confirm"
-                                v-model="confirm"
-                                type="password"
-                                hint="Must match the password"
-                                :append-icon="register_confirm_visible ? 'visibility_off' : 'visibility'"
-                                :append-icon-cb="() => (register_confirm_visible = !register_confirm_visible)"
-                                :type="register_confirm_visible ? 'text' : 'password'"
-                                v-bind:rules="[isPasswordAndConfirmMatched]"
-                        ></v-text-field>
-                    </v-card-text>
-                </v-card>
-                <div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
-                    <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="registerUser">
-                        Sign Up
-                    </div>
-                </div>
-                <div style="margin-top: 50px;">
-                    <div style="text-align: center; color: white; font-size: large; cursor: pointer;" @click="page_visible=PAGE_LOGIN">
-                        Already have an account? <span style="font-weight: bold;">Sign In</span>
-                    </div>
-                </div>
+				<v-card color="grey lighten-4" flat>
+					<v-card-text>
+						<v-text-field label="Email" prepend-icon="mail_outline" v-model="email"></v-text-field>
+						<v-text-field label="Phone" prepend-icon="phone" v-model="phone"></v-text-field>
+						<v-text-field label="Username" prepend-icon="account_box" v-model="username"></v-text-field>
+						<v-text-field
+								label="Password"
+								id="register_password"
+								type="password"
+								v-model="password"
+								hint="At least 8 characters, a number, upper- and lower-case, and a special character"
+								:append-icon="register_pw_visible ? 'visibility_off' : 'visibility'"
+								:append-icon-cb="() => (register_pw_visible = !register_pw_visible)"
+								:type="register_pw_visible ? 'text' : 'password'"
+								v-bind:rules="[isPasswordComplex]"
+						></v-text-field>
+						<v-text-field
+								label="Confirmation"
+								id="register_confirm"
+								v-model="confirm"
+								type="password"
+								hint="Must match the password"
+								:append-icon="register_confirm_visible ? 'visibility_off' : 'visibility'"
+								:append-icon-cb="() => (register_confirm_visible = !register_confirm_visible)"
+								:type="register_confirm_visible ? 'text' : 'password'"
+								v-bind:rules="[isPasswordAndConfirmMatched]"
+						></v-text-field>
+					</v-card-text>
+				</v-card>
+				<div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
+					<div class="local-rounded-button"
+						 style="background-color: transparent; color: white; border-color: white;"
+						 @click="registerUser">
+						Sign Up
+					</div>
+				</div>
+				<div style="margin-top: 50px;">
+					<div style="text-align: center; color: white; font-size: large; cursor: pointer;"
+						 @click="page_visible=PAGE_LOGIN">
+						Already have an account? <span style="font-weight: bold;">Sign In</span>
+					</div>
+				</div>
 			</v-container>
 
 			<v-container fluid id="conConfirmRegistration" v-show="page_visible==PAGE_REGISTER_VERIFY">
-                <div style="margin-top: 5%;">
-                    <img src="img/logo.png" style="width: 72%; margin-left: 12%;">
-                </div>
+				<div style="margin-top: 5%;">
+					<img src="img/logo.png" style="width: 72%; margin-left: 12%;">
+				</div>
 
-                <div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white; margin-top: 100px;">
-                    Confirm Registration
-                </div>
+				<div style="text-align:center; font-size:xx-large; font-weight: bold; margin-bottom:20px; color:white; margin-top: 100px;">
+					Confirm Registration
+				</div>
 
-                <v-card color="grey lighten-4" flat>
-                    <v-card-text>
-                        <v-text-field
-                                label="Registration Code"
-                                hint="6-digit code sent to you"
-                                id="register_code"
-                                v-model="register_code"
-                                mask="######"
-                                v-bind:rules="[()=>{ return register_code.length==0 ? 'Reset code is required' : true; }]"
-                        ></v-text-field>
-                    </v-card-text>
-                </v-card>
+				<v-card color="grey lighten-4" flat>
+					<v-card-text>
+						<v-text-field
+								label="Registration Code"
+								hint="6-digit code sent to you"
+								id="register_code"
+								v-model="register_code"
+								mask="######"
+								v-bind:rules="[()=>{ return register_code.length==0 ? 'Reset code is required' : true; }]"
+						></v-text-field>
+					</v-card-text>
+				</v-card>
 
-                <div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
-                    <div class="local-rounded-button" style="" @click="confirmUserRegistration">
-                        Enter Confirmation
-                    </div>
-                </div>
-                <div class="text-xs-center" style="margin-top: 15%; padding-left: 10%; padding-right: 10%;">
-                    <div class="local-rounded-button" style="background-color: transparent; color: white; border-color: white;" @click="resendConfirmation">
-                        Re-Send Confirmation
-                    </div>
-                </div>
+				<div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
+					<div class="local-rounded-button" style="" @click="confirmUserRegistration">
+						Enter Confirmation
+					</div>
+				</div>
+				<div class="text-xs-center" style="margin-top: 15%; padding-left: 10%; padding-right: 10%;">
+					<div class="local-rounded-button"
+						 style="background-color: transparent; color: white; border-color: white;"
+						 @click="resendConfirmation">
+						Re-Send Confirmation
+					</div>
+				</div>
 			</v-container>
 
 			<v-container fluid id="conMainList" v-show="page_visible==PAGE_MAIN_LIST" class="white-container">
@@ -367,27 +385,28 @@
 			</v-container>
 
 			<v-container fluid id="conMessages" v-show="page_visible==PAGE_MESSAGING" class="white-container">
-				<div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
-                <div id="messaging_list" style="height: 60%; overflow-y: scroll;">
-                    <v-list>
-                        <template v-for="item in active_channel.messages">
-                            <v-list-tile v-show="item.Sender=='me'">
-                                <div style="width:100%;">
-                                    <div style="float:right; border: 1px solid red; padding: 5px;">
-                                    {{ item.Body }}
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                            <v-list-tile v-show="item.Sender!='me'">
-                                <div style="width:100%;">
-                                    <div style="float:left; border: 1px solid blue; padding: 5px;">
-                                        {{ item.Body }}
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                        </template>
-                    </v-list>
-                </div>
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}
+				</div>
+				<div id="messaging_list" style="height: 60%; overflow-y: scroll;">
+					<v-list>
+						<template v-for="item in active_channel.messages">
+							<v-list-tile v-show="item.Sender=='me'">
+								<div style="width:100%;">
+									<div style="float:right; border: 1px solid red; padding: 5px;">
+										{{ item.Body }}
+									</div>
+								</div>
+							</v-list-tile>
+							<v-list-tile v-show="item.Sender!='me'">
+								<div style="width:100%;">
+									<div style="float:left; border: 1px solid blue; padding: 5px;">
+										{{ item.Body }}
+									</div>
+								</div>
+							</v-list-tile>
+						</template>
+					</v-list>
+				</div>
 				<v-footer style="background-color:white;" v-bind:app="true">
 					<v-text-field
 							name="input-1"
@@ -419,7 +438,7 @@
 
 			<v-container fluid id="conSettings" v-show="page_visible==PAGE_QRCODE" class="white-container">
 				<div style="text-align: center; margin-top: 100px;">
-				<canvas id="qr"></canvas>
+					<canvas id="qr"></canvas>
 				</div>
 			</v-container>
 
@@ -434,7 +453,8 @@
 
 				<div style="padding: 30px;"></div>
 				<v-text-field label="Password" id="settings_password" type="password" v-model="password"></v-text-field>
-				<v-text-field label="Confirmation" id="settings_confirm" type="confirm" v-model="confirm"></v-text-field>
+				<v-text-field label="Confirmation" id="settings_confirm" type="confirm"
+							  v-model="confirm"></v-text-field>
 
 				<div style="text-align:center;">
 					<v-btn flat>Change Password</v-btn>
@@ -452,19 +472,83 @@
 			</v-snackbar>
 
 			<v-layout row justify-center v-if="show_spinner">
-				<v-progress-circular indeterminate v-bind:size="200" v-bind:width="10" color="blue"></v-progress-circular>
+				<v-progress-circular indeterminate v-bind:size="200" v-bind:width="10"
+									 color="blue"></v-progress-circular>
 			</v-layout>
 		</v-content>
 	</v-app>
 </div>
 
-
+<div id="mocha" style="display: none;"></div>
 </body>
 </html>
 
 
 <script>
 	let current_message_list = {};
+	let sandbox = null;
+	let assert = null;
+
+	function interface_test()
+	{
+		var head = document.getElementsByTagName('head')[0];
+		var css = document.createElement("link");
+
+		css.rel = 'stylesheet';
+		css.type = 'text/css';
+		css.href = 'https://cdn.rawgit.com/mochajs/mocha/2.2.5/mocha.css';
+		head.appendChild(css);
+
+		var js = document.createElement("script");
+		js.src = "../test/sinon-4.1.3.js";
+		head.appendChild(js);
+
+		js = document.createElement("script");
+		js.src = "../test/test_utilities.js";
+		head.appendChild(js);
+
+		js = document.createElement("script");
+		js.src = "../test/mocha-2.2.5.js";
+		head.appendChild(js);
+
+		js = document.createElement("script");
+		js.src = "../test/chai-4.1.2.min.js";
+		head.appendChild(js);
+
+		$('#mocha')
+            .css('display','')
+            .css('margin','0')
+			.css('border','10px solid green')
+			.css('z-index','10000')
+			.css('position','absolute')
+			.css('top','80%')
+        	.css('width','100%')
+		    .css('height','400px')
+            .css('background','white')
+			.css('overflow-x','scroll');
+
+		logger.debug('Interface 1');
+		setTimeout(()=>{
+			mocha.setup('bdd');
+
+			js = document.createElement("script");
+			js.src = "../test/bindLogin_test.js";
+			head.appendChild(js);
+
+			mocha.checkLeaks();
+			mocha.globals(['jQuery']);
+			assert = chai.assert;
+
+			sandbox = sinon.createSandbox();
+		},1000);
+
+
+		logger.debug('Starting interface tests');
+		setTimeout(()=>{
+			mocha.run();
+        },2000);
+
+	}
 
 	let vm = new Vue({
 		el: '#app',
@@ -472,16 +556,16 @@
 
 			// try to catch the back button
 			// this doesn't seem to work...
-			document.addEventListener("deviceready", function(){
-				document.addEventListener("backbutton", function(){
+			document.addEventListener("deviceready", function () {
+				document.addEventListener("backbutton", function () {
 					if (this.page_visible > this.PAGE_MAIN_LIST) {
 						this.page_visible = this.PAGE_LOGIN;
-                    }
-                    else {
+					}
+					else {
 						this.page_visible = this.PAGE_MAIN_LIST;
-                    }
-                }, false);
-            }, false);
+					}
+				}, false);
+			}, false);
 
 
 			// set the initial page
@@ -494,11 +578,11 @@
 				this.email = current_user.email;
 
 				this.page_visible = this.PAGE_MAIN_LIST;
-				store.setItem('Clinicoin_First',1);
+				store.setItem('Clinicoin_First', 1);
 			}
 			else {
-				const BeenHereBefore = store.getItem('Clinicoin_First',0);
-				logger.debug("BeenHereBefore = "+BeenHereBefore);
+				const BeenHereBefore = store.getItem('Clinicoin_First', 0);
+				logger.debug("BeenHereBefore = " + BeenHereBefore);
 
 				if (!BeenHereBefore) {
 					this.page_visible = this.PAGE_INITIAL;
@@ -513,7 +597,7 @@
 			let data_list = [];
 			await channels.getChannels();
 
-			channels.channel_list.forEach((channel)=>{
+			channels.channel_list.forEach((channel) => {
 				const last_message = _.last(channel.messages);
 
 				data_list.push({
@@ -526,34 +610,28 @@
 			this.channels = data_list;
 		},
 		methods: {
-			showErrorToast: function(message)
-			{
+			showErrorToast: function (message) {
 				this.error_message = message;
 				this.show_error_toast_value = 1;
 				logger.error(message);
 			},
-			showInfoToast: function(message)
-			{
+			showInfoToast: function (message) {
 				this.info_message = message;
 				this.show_info_toast_value = 1;
 				logger.info(message);
 			},
-			showSuccessToast: function(message)
-			{
+			showSuccessToast: function (message) {
 				this.success_message = message;
 				this.show_success_toast_value = 1;
 				logger.debug(message);
 			},
-			skipTour: function()
-			{
+			skipTour: function () {
 				this.page_visible = this.PAGE_REGISTER;
 			},
-            changeCarouselItem: function()
-            {
-	            $('.carousel__right').find('button').click();
-            },
-			loginUser: async function()
-			{
+			changeCarouselItem: function () {
+				$('.carousel__right').find('button').click();
+			},
+			loginUser: async function () {
 				if (_.isEmpty(this.username)) {
 					this.showErrorToast('username cannot be empty');
 				}
@@ -563,18 +641,18 @@
 				else {
 					current_user.username = this.username;
 					current_user.setAwsPassword(this.password);
-
+/*
 					if (await current_user.login()) {
 						this.page_visible = this.PAGE_MAIN_LIST;
-						store.setItem('Clinicoin_First',1);
+						store.setItem('Clinicoin_First', 1);
 					}
 					else {
 						this.showErrorToast(current_user.last_error_message);
 					}
+*/
 				}
 			},
-			showforgotPasswordConfirm: function ()
-			{
+			showforgotPasswordConfirm: function () {
 				if (_.isEmpty(this.username)) {
 					this.showErrorToast('username cannot be empty');
 				}
@@ -582,13 +660,11 @@
 					this.show_forgot_password_dialog = true;
 				}
 			},
-			cancelForgotPassword: function()
-			{
+			cancelForgotPassword: function () {
 				this.show_forgot_password_dialog = false;
 				this.page_visible = this.PAGE_LOGIN;
 			},
-			sendforgotPassword: async function()
-			{
+			sendforgotPassword: async function () {
 				current_user.username = this.username;
 				const send_result = await current_user.userForgotPassword();
 				if (send_result) {
@@ -600,8 +676,7 @@
 				}
 				this.show_forgot_password_dialog = false;
 			},
-			resetForgotPassword: async function()
-			{
+			resetForgotPassword: async function () {
 				if (_.isEmpty(this.reset_code)) {
 					this.showErrorToast('code cannot be empty');
 				}
@@ -611,7 +686,7 @@
 				else if (this.password !== this.confirm) {
 					this.showErrorToast('password and confirmation do not match');
 				}
-				else if ( ! current_user.isComplexPassword(this.password)) {
+				else if (!current_user.isComplexPassword(this.password)) {
 					this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
 				}
 				else {
@@ -628,12 +703,10 @@
 					}
 				}
 			},
-			showRegistration: function()
-			{
+			showRegistration: function () {
 				this.page_visible = this.PAGE_REGISTER;
 			},
-			registerUser: async function()
-			{
+			registerUser: async function () {
 				if (_.isEmpty(this.username.trim())) {
 					this.showErrorToast('username cannot be empty');
 				}
@@ -643,7 +716,7 @@
 				else if (this.password.trim() !== this.confirm.trim()) {
 					this.showErrorToast('password and confirmation do not match');
 				}
-				else if ( ! current_user.isComplexPassword(this.password.trim())) {
+				else if (!current_user.isComplexPassword(this.password.trim())) {
 					this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
 				}
 				else {
@@ -662,22 +735,19 @@
 					}
 				}
 			},
-            isPasswordComplex: function()
-            {
-            	if (!current_user.isComplexPassword(this.password.trim())) {
-            		return 'Password is not sufficiently complex';
-                }
-                return true;
-            },
-			isPasswordAndConfirmMatched: function()
-			{
-				if (this.password !== this.confirm){
-					return "Password and confirmation do not match";
-                }
-                return true;
+			isPasswordComplex: function () {
+				if (!current_user.isComplexPassword(this.password.trim())) {
+					return 'Password is not sufficiently complex';
+				}
+				return true;
 			},
-			confirmUserRegistration: async function()
-			{
+			isPasswordAndConfirmMatched: function () {
+				if (this.password !== this.confirm) {
+					return "Password and confirmation do not match";
+				}
+				return true;
+			},
+			confirmUserRegistration: async function () {
 				if (_.isEmpty(this.register_code.trim())) {
 					this.showErrorToast('code cannot be empty');
 				}
@@ -695,8 +765,7 @@
 					}
 				}
 			},
-			resendConfirmation: async function()
-			{
+			resendConfirmation: async function () {
 				const result = await current_user.resendConfirmationCode();
 				if (result) {
 					this.showInfoToast('Registration confirmation code re-sent');
@@ -705,15 +774,14 @@
 					this.showErrorToast(current_user.last_error_message);
 				}
 			},
-			messageListSelected: function(selected_user)
-			{
+			messageListSelected: function (selected_user) {
 				this.page_visible = this.PAGE_MESSAGING;
-				current_message_list = _.find(channels.channel_list, { "recipient_user_id": selected_user });
+				current_message_list = _.find(channels.channel_list, {"recipient_user_id": selected_user});
 				this.active_channel.username = current_message_list.recipient_user_id;
 				this.active_channel.friendly_name = current_message_list.friendly_name;
 
 				let message_list = [];
-				current_message_list.messages.forEach(function(msg){
+				current_message_list.messages.forEach(function (msg) {
 					message_list.push({
 						Sender: msg.Sender,
 						Body: msg.Body,
@@ -723,36 +791,33 @@
 				this.active_channel.messages = message_list;
 
 				// scroll to bottom
-                setTimeout(()=> {
-                	$('#messaging_list').scrollTop($('#messaging_list')[0].scrollHeight);
-                }, 100);
+				setTimeout(() => {
+					$('#messaging_list').scrollTop($('#messaging_list')[0].scrollHeight);
+				}, 100);
 			},
 			sendUserMessage: async function () {
-				if (this.outgoing_message.trim().length===0) {
+				if (this.outgoing_message.trim().length === 0) {
 					this.showErrorToast('No message to send');
 				}
-				else if (await current_message_list.sendMessage(this.outgoing_message)==='Sent') {
+				else if (await current_message_list.sendMessage(this.outgoing_message) === 'Sent') {
 					this.showSuccessToast('Message Sent');
 				}
 				else {
 					this.showErrorToast(current_message_list.last_error_message);
 				}
 			},
-			showQRCode: function()
-			{
+			showQRCode: function () {
 				this.page_visible = this.PAGE_QRCODE;
 				const qr = new QRious({
 					element: document.getElementById('qr'),
-					value: 'https://www.clinicoin.com/connect/'+vm.username,
+					value: 'https://www.clinicoin.com/connect/' + vm.username,
 					size: 300
 				});
 			},
-			showAddConnection: function()
-			{
+			showAddConnection: function () {
 				this.page_visible = this.PAGE_CONNECT;
 			},
-			showScanBarcode: function()
-			{
+			showScanBarcode: function () {
 				if (window.plugins !== undefined) {
 					window.plugins.barcodeScanner.scan(function (result) {
 						if (!result.cancelled) {
@@ -768,8 +833,7 @@
 					this.showErrorToast('Barcode scanner plugin not loaded');
 				}
 			},
-			connectUser: async function()
-			{
+			connectUser: async function () {
 				if (_.isEmpty(this.add_name.trim())) {
 					this.showErrorToast('username cannot be empty');
 				}
@@ -786,13 +850,11 @@
 					}
 				}
 			},
-			logoutUser: function ()
-			{
+			logoutUser: function () {
 				current_user.logout();
 				this.page_visible = this.PAGE_LOGIN;
 			},
-			updateSettings: function ()
-			{
+			updateSettings: function () {
 				if (_.isEmpty(this.email.trim())) {
 					this.showErrorToast('email cannot be empty');
 				}
@@ -805,8 +867,7 @@
 					this.showSuccessToast('User settings updated')
 				}
 			},
-			updatePassword: async function()
-			{
+			updatePassword: async function () {
 				if (_.isEmpty(this.username.trim())) {
 					this.showErrorToast('username cannot be empty');
 				}
@@ -816,7 +877,7 @@
 				else if (this.password.trim() !== this.confirm.trim()) {
 					this.showErrorToast('password and confirmation do not match');
 				}
-				else if ( ! current_user.isComplexPassword(this.password.trim())) {
+				else if (!current_user.isComplexPassword(this.password.trim())) {
 					this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
 				}
 				else {
@@ -836,7 +897,8 @@
 				}
 			}
 		},
-		data() {
+		data()
+		{
 			return {
 				username: '',
 				email: 'me@them.com',
@@ -863,7 +925,7 @@
 				register_confirm_visible: false,
 
 				PAGE_INITIAL: 0,
-                PAGE_TOUR: 1,
+				PAGE_TOUR: 1,
 				PAGE_LOGIN: 2,
 				PAGE_REGISTER: 3,
 				PAGE_RESET_PASSWORD: 4,
@@ -875,25 +937,23 @@
 				PAGE_SETTINGS: 10,
 
 				tour_images: [
-                    { src: 'img/tour1.png' },
-					{ src: 'img/tour2.png' },
-					{ src: 'img/tour3.png' },
-					{ src: 'img/tour4.png' }
-                ],
+					{src: 'img/tour1.png'},
+					{src: 'img/tour2.png'},
+					{src: 'img/tour3.png'},
+					{src: 'img/tour4.png'}
+				],
 
-				channels: [ ],
+				channels: [],
 				active_channel: {
 					username: "demouser",
 					friendly_name: "channel",
-					messages: [
-					]
+					messages: []
 				}
 			};
 		}
 	});
 
-	const writeTestData = function()
-	{
+	const writeTestData = function () {
 		current_user.username = 'demouser';
 		current_user.awsSub = 'awssub';
 		current_user.email = 'demouser@mailsac.com';

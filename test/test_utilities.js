@@ -162,27 +162,3 @@ const waitForElement = async function(search_element, seconds)
 		}
 	}
 };
-
-const getSpiedToast = function()
-{
-	const called = ons.notification.toast.getCall(0);
-	const msg = called.args[0].message;
-	logger.debug('Spied Toast: '+msg);
-	return msg;
-};
-
-const getSpiedConfirmText = function()
-{
-	const called = ons.notification.confirm.getCall(0);
-	const msg = called.args[0].message;
-	logger.debug('Spied Confirm: '+msg);
-	return msg;
-};
-
-const getSpiedConfirmFunction = function()
-{
-	const called = ons.notification.confirm.getCall(0);
-	const fcn = called.args[0].callback;
-	logger.debug('returning function');
-	return fcn;
-};

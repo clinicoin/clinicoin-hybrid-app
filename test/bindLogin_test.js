@@ -1,79 +1,82 @@
 
 describe('login', function() {
+	this.timeout(20000);
+
 	beforeEach(async function () {
 		await waitForElement('#btnLogin');
-		setPageVisible(PAGE_LOGIN);
-
-		// spy on the toast
-		sandbox.spy(ons.notification, "toast");
+		vm.page_visible = vm.PAGE_LOGIN;
 	});
 
 	afterEach(function () {
 		// completely restore all fakes created through the sandbox
 		sandbox.restore();
 	});
-
+/*
 	it('should go to main on successful login', async ()=>{
 		sandbox.stub(current_user, 'login').returns(true);
-
-		$('#username').val('demouser');
-		$('#password').val('password');
+		$('#login_username').val('demouser');
+		$('#login_password').val('password');
 		$('#btnLogin').click();
 		await sleep(1000);
-		assert(getPageVisible() === PAGE_MAIN_LIST, "Main not visible");
+		assert(vm.page_visible === vm.PAGE_MAIN_LIST, "Main not visible");
 	});
-
-	it('should show error on login blank username', ()=>{
-		$('#username').val('');
-		$('#password').val('');
+*/
+	it('should show error on login blank username', async ()=>{
+		vm.username = '';
+		await Vue.nextTick();
+		assert.equal('', $('#login_username').val(), "username not blank");
+		$("#btnLogin").click();
+		assert(vm.error_message === "username cannot be empty", "toast text does not match-- "+vm.error_message);
+	});
+	it('should show error on login blank password', async ()=>{
+		vm.username = 'demouser';
+		vm.password = '';
+		await Vue.nextTick();
 		$('#btnLogin').click();
-		assert(getSpiedToast() === "username cannot be empty", "toast text does not match");
+		assert(vm.error_message === "password cannot be empty", "toast text does not match-- "+vm.error_message);
 	});
 
-	it('should show error on login blank password', ()=>{
-		$('#username').val('demouser');
-		$('#password').val('');
-		$('#btnLogin').click();
-		assert(getSpiedToast() === "password cannot be empty", "toast text does not match");
+	it('should show error on forgot password blank username', async ()=>{
+		vm.username = '';
+		await Vue.nextTick();
+		$('#btnForgot').click();
+		assert(vm.error_message === "username cannot be empty", "toast text does not match-- "+vm.error_message);
 	});
 
-	it('should go to register', async ()=>{
-		$('#divRegister').click();
-		await sleep(1000);
-		assert(getPageVisible() === PAGE_REGISTER, "Registration not visible");
-	});
+	it('should confirm on forgot password (no confirmation)', async ()=>{
+		vm.username = 'demouser';
+		await Vue.nextTick();
 
-	it('should show error on forgot password blank username', ()=>{
-		$('#username').val('');
-		$('#divForgot').click();
-		assert(getSpiedToast() === "username cannot be empty", "toast text does not match");
-	});
+		$('#btnForgot').click();
+		await Vue.nextTick();
 
-	it('should confirm on forgot password (no confirmation)', ()=>{
-		$('#username').val('demouser');
+		assert.isTrue(vm.show_forgot_password_dialog, "confirm not showing");
 
-		// stub forgot confirmation
-		sandbox.stub(ons.notification, 'confirm').returns(false);
+		$("#btnCancelForgotPassword").click();
+		await Vue.nextTick();
 
-		$('#divForgot').click();
-		assert(getSpiedConfirmText() === "Really reset your password?", "confirm text does not match");
+		assert.isFalse(vm.show_forgot_password_dialog, "confirm still showing");
 	});
 
 	it('should confirm on forgot password (confirmed)', async ()=>{
-		$('#username').val('demouser');
+		vm.username = 'demouser';
+		await Vue.nextTick();
 
 		// stub forgot confirmation
-		sandbox.stub(ons.notification, 'confirm').returns(true);
 		sandbox.stub(current_user, 'userForgotPassword').returns(true);
 
-		$('#divForgot').click();
+		$('#btnForgot').click();
+		await Vue.nextTick();
 
-		assert(getSpiedConfirmText() === "Really reset your password?", "confirm text does not match");
-		await getSpiedConfirmFunction()(true); // call the returned function with true confirmed
+		assert.isTrue(vm.show_forgot_password_dialog, "confirm not showing");
 
-		assert(getSpiedToast() === "Password reset message sent", "toast text does not match");
+		$("#btnSendForgotPassword").click();
+		await Vue.nextTick();
 
-		assert(getPageVisible() === PAGE_RESET_PASSWORD, "Registration not visible");
+		assert(vm.info_message === "Password reset message sent", "toast text does not match-- "+vm.info_message);
+
+		assert.isFalse(vm.show_forgot_password_dialog, "confirm still showing");
+
+		assert(vm.page_visible === vm.PAGE_RESET_PASSWORD, "Registration not visible");
 	});
-
 });

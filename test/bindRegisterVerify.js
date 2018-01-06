@@ -1,9 +1,10 @@
 
+
 describe('reset password', function() {
 
 	beforeEach(async function () {
 		await waitForElement('#btnLogin');
-		setPageVisible(PAGE_REGISTER_VERIFY);
+		vm.page_visible = vm.PAGE_REGISTER_VERIFY;
 		await sleep(1000);
 
 		// spy on the toast
