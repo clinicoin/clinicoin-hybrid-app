@@ -18,5 +18,6 @@
     "url": "https://github.com/clinicoin/clinicoin-hybrid-app"
   },
   "dependencies": {
+    "mdi": "^2.1.19"
   }
 }

@@ -5,14 +5,8 @@ describe('register', function() {
 
 	beforeEach(async function () {
 		await waitForElement('#btnLogin');
-		setPageVisible(PAGE_REGISTER);
+		vm.page_visible = vm.PAGE_LOGIN;
 		await sleep(1000);
-
-		// stub forgot confirmation
-		sandbox.stub(ons.notification, 'confirm').returns(true);
-
-		// spy on the toast
-		sandbox.spy(ons.notification, "toast");
 	});
 
 	afterEach(function () {
@@ -21,55 +15,67 @@ describe('register', function() {
 	});
 
 	it('should confirm on full entry', async ()=>{
-		$('#reg_email').val('');
-		$('#reg_phone').val('');
-		$('#reg_username').val('demouser');
-		$('#reg_password').val('AcomplexP@$$911');
-		$('#reg_confirm').val('AcomplexP@$$911');
+		vm.username = 'demouser';
+		vm.password = 'AcomplexP@$$911';
+		vm.confirm  = 'AcomplexP@$$911';
+		vm.email = '';
+		vm.phone = '';
+		await Vue.nextTick();
+
+		assert.equal(vm.username, $('#reg_username').val(), "username doesn't match");
+		assert.equal(vm.password, $('#reg_password').val(), "password doesn't match");
+		assert.equal(vm.confirm,  $('#reg_confirm').val(),  "confirm doesn't match");
+		assert.equal(vm.phone,    $('#reg_phone').val(),    "phone doesn't match");
+		assert.equal(vm.email,    $('#reg_email').val(),    "email doesn't match");
 
 		sandbox.stub(current_user, 'registerUser').resolves(true);
 
+		await Vue.nextTick();
 		$('#btnRegister').click();
-		await sleep(1000); // this bounces from login to main
-		assert(getPageVisible() === PAGE_REGISTER_VERIFY, "Register verify not visible");
+		await Vue.nextTick();
+		assert(vm.page_visible === vm.PAGE_REGISTER_VERIFY, "Register verify not visible");
 	});
 
-	it('should show error on blank user', ()=>{
-		$('#reg_username').val('');
-		$('#reg_password').val('AcomplexP@$$911');
-		$('#reg_confirm').val('AcomplexP@$$911');
+	it('should show error on blank user', async ()=>{
+		vm.username = '';
+		vm.password = '';
+		await Vue.nextTick();
 		$('#btnRegister').click();
-		assert(getSpiedToast() === "username cannot be empty", "toast text does not match");
+		await Vue.nextTick();
+
+		assert(vm.error_message === "username cannot be empty", "toast text does not match");
 	});
 
-	it('should show error on password', ()=>{
-		$('#reg_username').val('demouser');
-		$('#reg_password').val('');
-		$('#reg_confirm').val('AcomplexP@$$911');
+	it('should show error on password', async ()=>{
+		vm.username = 'demouser';
+		vm.password = '';
+		await Vue.nextTick();
 		$('#btnRegister').click();
-		assert(getSpiedToast() === "password cannot be empty", "toast text does not match");
+		await Vue.nextTick();
+
+		assert(vm.error_message === "password cannot be empty", "toast text does not match");
 	});
 
-	it('should show error on confirm not matching', ()=>{
-		$('#reg_username').val('demouser');
-		$('#reg_password').val('AcomplexP@$$911');
-		$('#reg_confirm').val('');
+	it('should show error on confirm not matching', async ()=>{
+		vm.username = 'demouser';
+		vm.password = 'AcomplexP@$$911';
+		vm.confirm  = '';
+
+		await Vue.nextTick();
 		$('#btnRegister').click();
-		assert(getSpiedToast() === "password and confirmation do not match", "toast text does not match");
+		await Vue.nextTick();
+		assert(vm.error_message === "password and confirmation do not match", "toast text does not match");
 	});
 
-	it('should show error on insufficient complexity', ()=>{
-		$('#reg_username').val('demouser');
-		$('#reg_password').val('boring');
-		$('#reg_confirm').val('boring');
-		$('#btnRegister').click();
-		assert(/Password is not sufficiently complex/.test(getSpiedToast()), "toast text does not match");
-	});
+	it('should show error on insufficient complexity', async ()=>{
+		vm.username = 'demouser';
+		vm.password = 'boring';
+		vm.confirm  = 'boring';
 
-	it('should go back', async ()=>{
-		$('#btnBackRegister').click();
-		await sleep(1000);
-		assert(getPageVisible() === PAGE_LOGIN, "Login not visible");
+		await Vue.nextTick();
+		$('#btnRegister').click();
+		await Vue.nextTick();
+		assert(/Password is not sufficiently complex/.test(vm.error_message), "toast text does not match");
 	});
 
 });

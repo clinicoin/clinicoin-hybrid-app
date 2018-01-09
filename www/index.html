@@ -40,7 +40,7 @@
 
 	<link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
 	<link href="css/vuetify-0.17.6.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="css/materialdesignicons-2.1.19.min.css">
+	<link rel="stylesheet" href="css/materialdesignicons-2.1.19.min.css" media="all" type="text/css" />
 
 	<link rel="stylesheet" href="components/loader.css">
 	<link rel="stylesheet" href="css/style.css">
@@ -73,6 +73,28 @@
 			padding-top: 5px;
 			cursor: pointer;
 		}
+
+        .message-out {
+            border-radius: 20px 20px 20px 20px;
+            -moz-border-radius: 20px 20px 20px 20px;
+            -webkit-border-radius: 20px 20px 20px 20px;
+            border: 0px solid #000000;
+            background-color: blue;
+            float:right;
+            padding: 5px;
+            color: white;
+        }
+
+        .message-in {
+            border-radius: 20px 20px 20px 20px;
+            -moz-border-radius: 20px 20px 20px 20px;
+            -webkit-border-radius: 20px 20px 20px 20px;
+            border: 0px solid #000000;
+            background-color: red;
+            float:left;
+            padding: 5px;
+            color: white;
+        }
 
 		.white-container {
 			background: white;
@@ -271,12 +293,12 @@
 
 				<v-card color="grey lighten-4" flat>
 					<v-card-text>
-						<v-text-field label="Email" prepend-icon="mail_outline" v-model="email"></v-text-field>
-						<v-text-field label="Phone" prepend-icon="phone" v-model="phone"></v-text-field>
-						<v-text-field label="Username" prepend-icon="account_box" v-model="username"></v-text-field>
+						<v-text-field id="reg_email" label="Email" prepend-icon="mail_outline" v-model="email"></v-text-field>
+						<v-text-field id="reg_phone" label="Phone" prepend-icon="phone" v-model="phone"></v-text-field>
+						<v-text-field id="reg_username" label="Username" prepend-icon="account_box" v-model="username"></v-text-field>
 						<v-text-field
 								label="Password"
-								id="register_password"
+								id="reg_password"
 								type="password"
 								v-model="password"
 								hint="At least 8 characters, a number, upper- and lower-case, and a special character"
@@ -287,7 +309,7 @@
 						></v-text-field>
 						<v-text-field
 								label="Confirmation"
-								id="register_confirm"
+								id="reg_confirm"
 								v-model="confirm"
 								type="password"
 								hint="Must match the password"
@@ -299,7 +321,7 @@
 					</v-card-text>
 				</v-card>
 				<div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
-					<div class="local-rounded-button"
+					<div class="local-rounded-button" id="btnRegister"
 						 style="background-color: transparent; color: white; border-color: white;"
 						 @click="registerUser">
 						Sign Up
@@ -372,6 +394,9 @@
 						<v-icon>account_circle</v-icon>
 						<v-icon>close</v-icon>
 					</v-btn>
+                    <v-btn fab dark color="green" @click="showEngagement">
+                        <v-icon>mdi-run</v-icon>
+                    </v-btn>
 					<v-btn fab dark color="green" @click="showQRCode">
 						<v-icon>mdi-qrcode-scan</v-icon>
 					</v-btn>
@@ -392,14 +417,14 @@
 						<template v-for="item in active_channel.messages">
 							<v-list-tile v-show="item.Sender=='me'">
 								<div style="width:100%;">
-									<div style="float:right; border: 1px solid red; padding: 5px;">
+									<div class="message-out">
 										{{ item.Body }}
 									</div>
 								</div>
 							</v-list-tile>
 							<v-list-tile v-show="item.Sender!='me'">
 								<div style="width:100%;">
-									<div style="float:left; border: 1px solid blue; padding: 5px;">
+									<div class="message-in">
 										{{ item.Body }}
 									</div>
 								</div>
@@ -441,6 +466,34 @@
 					<canvas id="qr"></canvas>
 				</div>
 			</v-container>
+
+            <v-container fluid id="conSettings" v-show="page_visible==PAGE_ENGAGEMENT" class="white-container">
+                <div style="text-align:center; font-size:large; margin-bottom:20px;">Activity</div>
+                <div>
+                    Today I
+                    <v-select
+                            v-bind:items="activity_type_list"
+                            v-model="activity_type"
+                            label="Select"
+                            autocomplete
+                    ></v-select>
+                    for
+                </div>
+                <div>
+                    <v-text-field id="activity_amount" label="Amount" v-model="activity_amount"></v-text-field>
+                    <v-select
+                            v-bind:items="activity_unit_list"
+                            v-model="activity_unit"
+                            label="Select"
+                            autocomplete
+                    ></v-select>
+                </div>
+                <div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
+                    <div class="local-rounded-button" style="" @click="logActivity">
+                        Log Activity
+                    </div>
+                </div>
+            </v-container>
 
 			<v-container fluid id="conSettings" v-show="page_visible==PAGE_SETTINGS" class="white-container">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Settings</div>
@@ -907,7 +960,15 @@
 						this.showErrorToast(current_user.last_error_message);
 					}
 				}
-			}
+			},
+            showActivity: function()
+            {
+            	this.page_visible = PAGE_ENGAGEMENT;
+            },
+            logActivity: function()
+            {
+            	// where are we logging?
+            }
 		},
 		data()
 		{
@@ -931,6 +992,12 @@
 				info_message: 'some info',
 				success_message: 'success',
 				outgoing_message: '',
+
+				activity_type: '',
+                activity_unit: '',
+                activity_amount: 0,
+				activity_unit_list:[],
+                activity_type_list:[],
 
 				login_pw_visible: false,
 				register_pw_visible: false,

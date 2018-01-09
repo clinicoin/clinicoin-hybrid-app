@@ -3,14 +3,8 @@ describe('reset password', function() {
 
 	beforeEach(async function () {
 		await waitForElement('#btnLogin');
-		setPageVisible(PAGE_RESET_PASSWORD);
+		vm.page_visible = vm.PAGE_RESET_PASSWORD;
 		await sleep(1000);
-
-		// stub forgot confirmation
-		sandbox.stub(ons.notification, 'confirm').returns(true);
-
-		// spy on the toast
-		sandbox.spy(ons.notification, "toast");
 	});
 
 	afterEach(function () {
@@ -19,55 +13,67 @@ describe('reset password', function() {
 	});
 
 	it('should confirm on full entry', async ()=>{
-		$('#username').val('demouser');
-		$('#reset_code').val('123456');
-		$('#reset_password').val('AcomplexP@$$911');
-		$('#reset_confirm').val('AcomplexP@$$911');
+		vm.username = 'demouser';
+		vm.password = 'AcomplexP@$$911';
+		vm.confirm  = 'AcomplexP@$$911';
+		vm.reset_code = '123456';
+		await Vue.nextTick();
 
-		sandbox.stub(current_user, 'forgotPasswordReset').resolves(true);
+		assert.equal(vm.password,   $('#reset_password').val(), "password doesn't match");
+		assert.equal(vm.confirm,    $('#reset_confirm').val(),  "confirm doesn't match");
+		assert.equal(vm.reset_code, $('#reset_code').val(),   "phone doesn't match");
+
+		sandbox.stub(current_user, 'resetForgotPassword').resolves(true);
 		sandbox.stub(current_user, 'login').resolves(true);
 
+		await Vue.nextTick();
 		$('#btnReset').click();
-		await sleep(1000); // this bounces from login to main
-		assert(getPageVisible() === PAGE_MAIN_LIST, "Main not visible");
+		await Vue.nextTick();
+		assert(vm.page_visible === vm.PAGE_MAIN_LIST, "Main not visible");
 	});
 
-	it('should show error on blank code', ()=>{
-		$('#reset_code').val('');
-		$('#reset_password').val('AcomplexP@$$911');
-		$('#reset_confirm').val('AcomplexP@$$911');
+	it('should show error on blank code', async ()=>{
+		vm.username = 'demouser';
+		vm.password = 'AcomplexP@$$911';
+		vm.confirm  = 'AcomplexP@$$911';
+		vm.reset_code = '';
+		await Vue.nextTick();
 		$('#btnReset').click();
-		assert(getSpiedToast() === "code cannot be empty", "toast text does not match");
+		await Vue.nextTick();
+		assert(vm.error_message === "code cannot be empty", "toast text does not match");
 	});
 
-	it('should show error on password', ()=>{
-		$('#reset_code').val('123456');
-		$('#reset_password').val('');
-		$('#reset_confirm').val('');
+	it('should show error on password', async ()=>{
+		vm.username = 'demouser';
+		vm.password = '';
+		vm.confirm  = '';
+		vm.reset_code = '123456';
+		await Vue.nextTick();
 		$('#btnReset').click();
-		assert(getSpiedToast() === "password cannot be empty", "toast text does not match");
+		await Vue.nextTick();
+		assert(vm.error_message === "password cannot be empty", "toast text does not match");
 	});
 
-	it('should show error on confirm not matching', ()=>{
-		$('#reset_code').val('123456');
-		$('#reset_password').val('AcomplexP@$$911');
-		$('#reset_confirm').val('');
+	it('should show error on confirm not matching', async ()=>{
+		vm.username = 'demouser';
+		vm.password = 'AcomplexP@$$911';
+		vm.confirm  = 'not matching';
+		vm.reset_code = '';
+		await Vue.nextTick();
 		$('#btnReset').click();
-		assert(getSpiedToast() === "password and confirmation do not match", "toast text does not match");
+		await Vue.nextTick();
+		assert(vm.error_message === "password and confirmation do not match", "toast text does not match");
 	});
 
-	it('should show error on insufficient complexity', ()=>{
-		$('#reset_code').val('123456');
-		$('#reset_password').val('password');
-		$('#reset_confirm').val('password');
+	it('should show error on insufficient complexity', async ()=>{
+		vm.username = 'demouser';
+		vm.password = 'password';
+		vm.confirm  = 'password';
+		vm.reset_code = '';
+		await Vue.nextTick();
 		$('#btnReset').click();
-		assert(/Password is not sufficiently complex/.test(getSpiedToast()), "toast text does not match");
-	});
-
-	it('should go back', async ()=>{
-		$('#btnBackResetPassword').click();
-		await sleep(1000);
-		assert(getPageVisible() === PAGE_LOGIN, "Login not visible");
+		await Vue.nextTick();
+		assert(/Password is not sufficiently complex/.test(vm.error_message), "toast text does not match");
 	});
 
 });

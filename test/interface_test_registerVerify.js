@@ -6,9 +6,6 @@ describe('reset password', function() {
 		await waitForElement('#btnLogin');
 		vm.page_visible = vm.PAGE_REGISTER_VERIFY;
 		await sleep(1000);
-
-		// spy on the toast
-		sandbox.spy(ons.notification, "toast");
 	});
 
 	afterEach(function () {
@@ -17,33 +14,39 @@ describe('reset password', function() {
 	});
 
 	it('should confirm on full entry', async () => {
-		$('#registration_code').val('123456');
+		vm.register_code = '123456';
+		await Vue.nextTick();
+		assert.equal(vm.register_code, $('#registration_code').val(), "registration doesn't match");
 
 		sandbox.stub(current_user, 'verifyConfirmationCode').resolves(true);
 		sandbox.stub(current_user, 'login').resolves(true);
 
 		$('#btnConfirmRegistration').click();
-		await sleep(1000); // this bounces from login to main
-		assert(getPageVisible() === PAGE_MAIN_LIST, "Main not visible");
+		await Vue.nextTick();
+		assert(vm.page_visible === vm.PAGE_MAIN_LIST, "Main not visible");
 	});
 
-	it('should show error on empty code', ()=>{
-		$('#registration_code').val('');
+	it('should show error on empty code', async ()=>{
+		vm.register_code = '123456';
+		await Vue.nextTick();
 		$('#btnConfirmRegistration').click();
-		assert(getSpiedToast() === "code cannot be empty", "toast text does not match");
+		await Vue.nextTick();
+		assert(vm.error_message === "code cannot be empty", "text does not match");
 	});
 
 	it('should show error on bad code', async () => {
-		$('#registration_code').val('123456');
+		$('#registration_code').val('111111');
 
 		sandbox.stub(current_user, 'verifyConfirmationCode').resolves(false);
 
 		$('#btnConfirmRegistration').click();
-		assert(/Verify Failed:/.test(getSpiedToast()), "toast text does not match");
+		await Vue.nextTick();
+		assert(/Verify Failed:/.test(vm.error_message), "text does not match");
 	});
 
-	it('should be able to resend', ()=>{
+	it('should be able to resend', async ()=>{
 		$('#divResendConfirmation').click();
-		assert(getSpiedToast() === "Registration confirmation code re-sent", "toast text does not match");
+		await Vue.nextTick();
+		assert(vm.info_message === "Registration confirmation code re-sent", "toast text does not match");
 	});
 });
