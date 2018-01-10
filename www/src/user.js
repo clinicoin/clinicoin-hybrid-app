@@ -12,6 +12,7 @@ function User() {
 	this.name = '';
 	this.last_error_code = '';
 	this.last_error_message = '';
+	this.is_first_login = false;
 
 	this.cognitoUser = null;
 	this.jwtToken = '';
@@ -77,8 +78,8 @@ function User() {
 			phone: this.phone,
 			phone_verified: this.phone_verified,
 			name: this.name,
-			private_key: this.private_key,
-			public_key: this.public_key,
+			private_key: this.getPrivateKey(),
+			public_key: this.getPublicKey(),
 			jwt_token: this.jwtToken
 		});
 	};
@@ -96,8 +97,8 @@ function User() {
 		this.phone = data.phone;
 		this.phone_verified = data.phone_verified;
 		this.name = data.name;
-		this.private_key = data.private_key;
-		this.public_key = data.public_key;
+		this.setPrivateKey(data.private_key);
+		this.setPublicKey(data.public_key);
 		this.jwtToken = data.jwt_token;
 	};
 }
@@ -164,7 +165,7 @@ User.prototype.registerUser = async function()
 		return false;
 	}
 
-	if (this.phone.length == 10 && ! _.startsWith(this.phone, '+')) {
+	if (this.phone.length === 10 && ! _.startsWith(this.phone, '+')) {
 		// assume it's a NADP number
 		this.phone = '+1'+this.phone;
 	}
@@ -380,10 +381,43 @@ User.prototype.login = async function()
 	}
 	else {
 		logger.info('login success');
+
+		if (this.is_first_login) {
+			this.provisionUser();
+		}
+
 		return true;
 	}
 };
 
+User.prototype.provisionUser = async function()
+{
+	logger.debug('provisioning user');
+
+	await this.generateKey();
+
+	Promise.all([
+		this.createUserQueue(),
+		this.updatePublicKey(),
+		this.setInStorage()
+	]).then(async ()=>{
+		// welcome message
+		await this.sendWelcomeMessage();
+		channels.checkForMessages();
+	})
+};
+
+User.prototype.sendWelcomeMessage = async function()
+{
+	let msg_list = new MessageList();
+	msg_list.recipient_user_id = this.username;
+	msg_list.recipient_public_key = this.getPublicKey();
+	let msg = new Message();
+	msg.Sender = "Mosio-Clinicoin";
+	msg.Receiver = this.username;
+	const welcome = await msg_list.encryptMessage("Lame welcome message", false);
+	await msg_list.sendToServer(msg.getEnvelope()+"\n\n"+welcome);
+};
 
 /**
  * touch the credentials on AWS to refresh
@@ -425,10 +459,6 @@ User.prototype.verifyConfirmationCode = async function(confirmation_code)
 	}
 	else {
 		logger.info('Registration Confirm: '+result.data);
-		this.generateKey().then(()=>{
-			this.updatePublicKey();
-			this.setInStorage();
-		});
 		return true;
 	}
 };
@@ -725,8 +755,6 @@ User.prototype.callLambda = async function(invoke_params)
 	logger.debug(invoke_params);
 
 	const lambda = new AWS.Lambda({region: AWS_REGION, apiVersion: '2015-03-31'});
-
-	AWSCognito.config.update({accessKeyId: 'anything', secretAccessKey: 'anything'});
 
 	const lambda_promise = new Promise((resolve) => {
 		lambda.invoke(invoke_params, function(err, data) {

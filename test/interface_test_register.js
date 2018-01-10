@@ -18,7 +18,7 @@ describe('register', function() {
 		vm.username = 'demouser';
 		vm.password = 'AcomplexP@$$911';
 		vm.confirm  = 'AcomplexP@$$911';
-		vm.email = '';
+		vm.email = 'demouser@mailsac.com';
 		vm.phone = '';
 		await Vue.nextTick();
 
@@ -38,7 +38,8 @@ describe('register', function() {
 
 	it('should show error on blank user', async ()=>{
 		vm.username = '';
-		vm.password = '';
+		vm.password = 'AcomplexP@$$911';
+		vm.email = 'demouser@mailsac.com';
 		await Vue.nextTick();
 		$('#btnRegister').click();
 		await Vue.nextTick();
@@ -49,11 +50,34 @@ describe('register', function() {
 	it('should show error on password', async ()=>{
 		vm.username = 'demouser';
 		vm.password = '';
+		vm.email = 'demouser@mailsac.com';
 		await Vue.nextTick();
 		$('#btnRegister').click();
 		await Vue.nextTick();
 
 		assert(vm.error_message === "password cannot be empty", "toast text does not match");
+	});
+
+	it('should show error on no email', async ()=>{
+		vm.username = 'demouser';
+		vm.password = 'AcomplexP@$$911';
+		vm.email = '';
+		await Vue.nextTick();
+		$('#btnRegister').click();
+		await Vue.nextTick();
+
+		assert(vm.error_message === "email cannot be empty", "toast text does not match");
+	});
+
+	it('should show error on bad email', async ()=>{
+		vm.username = 'demouser';
+		vm.password = 'AcomplexP@$$911';
+		vm.email = 'email';
+		await Vue.nextTick();
+		$('#btnRegister').click();
+		await Vue.nextTick();
+
+		assert(vm.error_message === "email pattern not matched", "toast text does not match");
 	});
 
 	it('should show error on confirm not matching', async ()=>{

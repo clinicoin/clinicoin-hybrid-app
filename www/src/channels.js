@@ -7,6 +7,10 @@ const Channels = function() {
 	};
 };
 
+Channels.prototype.newChannelEventDelegate = null;
+
+Channels.prototype.newMessageEventDelegate = null;
+
 /**
  * get all channels in storage
  * @returns {item}
@@ -49,6 +53,10 @@ Channels.prototype.addChannel = async function(username)
 
 	this.channel_list.push(channel);
 
+	if (this.newChannelEventDelegate != null && typeof this.newChannelEventDelegate === "function") {
+		this.newChannelEventDelegate(channel);
+	}
+
 	return channel;
 };
 
@@ -65,49 +73,63 @@ Channels.prototype.checkForMessages = async function()
 	logger.debug(list);
 
 	for (let msg of list) {
-		const parts = _.split(msg.Body, '-----BEGIN PGP MESSAGE');
-
-		const obj = JSON.parse(parts[0]);
-		msg.Username = obj.Sender;
-		msg.Sender = obj.Sender;
-		msg.SentDate = obj.Sent;
-
-		msg.Body = '';
-		msg.EncryptedBody = '-----BEGIN PGP MESSAGE'+parts[1];
-
-
-		// find the list this belongs to
-		let msg_list = this.findByUsername(msg.Username);
-
-		// create a msglist for those without one
-		if (_.isEmpty(msg_list)) {
-			msg_list = await this.addChannel(msg.Username);
-		}
-
-		// decrypt
-		const decrypted_obj = await this.decryptMessage(msg.EncryptedBody);
-
-		msg.Body = decrypted_obj.data;
-
-		if (decrypted_obj.signatures.length > 0 && decrypted_obj.signatures[0].valid) {
-			logger.info("valid signature");
-			msg.Signed = true;
-		}
-
-		msg.EncryptedBody = '';  // stripping off to reduce size
-
-		if (typeof msg_list.message_receive_event === "function") {
-			msg_list.message_receive_event(msg);
-		}
-
-		// save (ok to be async)
-		await msg_list.saveMessage(msg);
-
-		// mark as received (ok to be async)
-		await this.deleteReceivedMessage(msg.ReceiptHandle);
+		this.processMessage(msg);
 	}
 
 	return true;
+};
+
+Channels.prototype.processMessage = async function(msg)
+{
+	// split text of message into component parts
+	const parts = _.split(msg.Body, '-----BEGIN PGP MESSAGE');
+
+	// header of message has some meta data
+	const obj = JSON.parse(parts[0]);
+	msg.Receiver = obj.Receiver;
+	msg.Sender = obj.Sender;
+	if ( ! _.isEmpty(obj.Sent)) {
+		msg.SentDate = moment(obj.Sent);
+	}
+	else {
+		msg.SentDate = moment();
+	}
+
+	msg.Body = '';
+	msg.EncryptedBody = '-----BEGIN PGP MESSAGE'+parts[1];
+	msg.ReceiveDate = moment();
+
+	// find the list this belongs to
+	let msg_list = this.findByUsername(msg.Sender);
+
+	// create a msglist for those without one
+	if (_.isEmpty(msg_list)) {
+		msg_list = await this.addChannel(msg.Sender);
+	}
+
+	// decrypt
+	const decrypted_obj = await this.decryptMessage(msg.EncryptedBody);
+
+	msg.Body = decrypted_obj.data;
+
+	if (decrypted_obj.signatures.length > 0 && decrypted_obj.signatures[0].valid) {
+		logger.info("valid signature");
+		msg.Signed = true;
+	}
+
+	msg.EncryptedBody = '';  // stripping off to reduce size
+
+	// swap (for the saving)
+	msg.Receiver = obj.Sender;
+	msg.Sender = obj.Receiver;
+	await msg_list.saveMessage(msg);
+
+	// mark as received (ok to be async)
+	await this.deleteReceivedMessage(msg.ReceiptHandle);
+
+	if (this.newMessageEventDelegate != null && typeof this.newMessageEventDelegate === "function") {
+		this.newMessageEventDelegate(msg_list, msg);
+	}
 };
 
 Channels.prototype.findByUsername = function(username)
@@ -119,7 +141,7 @@ Channels.prototype.retrieveMessagesFromServer = async function()
 {
 	logger.debug('Retrieving messages');
 
-	const queue_url = this.getUrl(current_user.user_id);
+	const queue_url = this.getUrl(current_user.username);
 	logger.debug('URL = '+queue_url);
 
 	const params = {
@@ -174,7 +196,7 @@ Channels.prototype.deleteReceivedMessage = async function(receipt_handle)
 	logger.debug('Deleting message: '+receipt_handle);
 
 	const params = {
-		QueueUrl: this.getUrl(current_user.user_id),
+		QueueUrl: this.getUrl(current_user.username),
 		ReceiptHandle: receipt_handle
 	};
 

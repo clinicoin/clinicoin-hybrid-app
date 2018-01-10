@@ -68,33 +68,33 @@
 			color: #483ebb;
 			text-align: center;
 			background-color: white;
-			font-size: xx-large;
+			font-size: x-large;
 			height: 60px;
-			padding-top: 5px;
+			padding-top: 10px;
 			cursor: pointer;
 		}
 
-        .message-out {
-            border-radius: 20px 20px 20px 20px;
-            -moz-border-radius: 20px 20px 20px 20px;
-            -webkit-border-radius: 20px 20px 20px 20px;
-            border: 0px solid #000000;
-            background-color: blue;
-            float:right;
-            padding: 5px;
-            color: white;
-        }
+		.message-out {
+			border-radius: 20px 20px 20px 20px;
+			-moz-border-radius: 20px 20px 20px 20px;
+			-webkit-border-radius: 20px 20px 20px 20px;
+			border: 0px solid #000000;
+			background-color: #483EBB;
+			float:right;
+			padding: 5px;
+			color: white;
+		}
 
-        .message-in {
-            border-radius: 20px 20px 20px 20px;
-            -moz-border-radius: 20px 20px 20px 20px;
-            -webkit-border-radius: 20px 20px 20px 20px;
-            border: 0px solid #000000;
-            background-color: red;
-            float:left;
-            padding: 5px;
-            color: white;
-        }
+		.message-in {
+			border-radius: 20px 20px 20px 20px;
+			-moz-border-radius: 20px 20px 20px 20px;
+			-webkit-border-radius: 20px 20px 20px 20px;
+			border: 0px solid #000000;
+			background-color: #E8EDF3;
+			float:left;
+			padding: 5px;
+			color: black;
+		}
 
 		.white-container {
 			background: white;
@@ -125,6 +125,7 @@
 			<v-toolbar-title>CliniCoin</v-toolbar-title>
 
 			<v-spacer></v-spacer>
+            <v-icon v-if="is_updating">swap_vert</v-icon>
 			<v-btn icon v-show="page_visible == PAGE_MAIN_LIST" @click="page_visible=PAGE_SETTINGS">
 				<v-icon>settings</v-icon>
 			</v-btn>
@@ -178,6 +179,9 @@
 				</div>
 			</v-container>
 			<v-container fluid id="conLogin" v-show="page_visible==PAGE_LOGIN">
+                <v-btn icon light color="white" @click="page_visible=PAGE_INITIAL">
+                    <v-icon>keyboard_arrow_left</v-icon>
+                </v-btn>
 				<div style="margin-top: 50%;">
 					<img src="img/logo.png" style="width: 72%; margin-left: 12%;">
 				</div>
@@ -189,7 +193,7 @@
 				<div style="text-align:center;">
 					<v-card>
 						<v-card-text>
-							<v-text-field label="Username" ref="login_username" id="login_username" v-model="username"></v-text-field>
+							<v-text-field label="Username" ref="login_username" id="login_username" v-bind:disabled="is_username_disabled" v-model="username"></v-text-field>
 
 							<v-text-field
 									label="Password"
@@ -208,11 +212,15 @@
 
 					<div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
 						<div id="btnLogin"
-                             class="local-rounded-button"
+							 class="local-rounded-button"
 							 style="background-color: transparent; color: white; border-color: white;"
 							 @click="loginUser">
 							Sign In
 						</div>
+					</div>
+
+					<div>
+						<v-btn id="btnFrontLogout" flat dark @click="logoutUser" v-if="is_username_disabled" style="margin-top: 30px;">Global Logout</v-btn>
 					</div>
 				</div>
 			</v-container>
@@ -374,17 +382,30 @@
 			<v-container fluid id="conMainList" v-show="page_visible==PAGE_MAIN_LIST" class="white-container">
 
 				<v-list two-line>
-					<template v-for="item in channels">
-						<v-list-tile v-bind:key="item.title" @click="messageListSelected(item.username)">
+					<template v-for="(item, index) in channels">
+						<v-list-tile
+								ripple
+								@click="messageListSelected(item.username)"
+								:key="item.title"
+						>
 							<v-list-tile-content>
-								<v-list-tile-title v-html="item.title"></v-list-tile-title>
-								<v-list-tile-sub-title v-html="item.subtitle"></v-list-tile-sub-title>
+								<v-list-tile-title>{{ item.title }}</v-list-tile-title>
+								<v-list-tile-sub-title class="grey--text text--darken-4">{{ item.headline }}</v-list-tile-sub-title>
+								<v-list-tile-sub-title>{{ item.subtitle }}</v-list-tile-sub-title>
 							</v-list-tile-content>
-							<v-badge color="indigo">
-								<span slot="badge">{{item.count}}</span>
-								<v-icon color="grey">chat</v-icon>
-							</v-badge>
+							<v-list-tile-action>
+								<v-list-tile-action-text>{{ item.message_time }}</v-list-tile-action-text>
+								<v-icon
+									color="grey lighten-1"
+									v-if="item.isRead"
+								>mail_outline</v-icon>
+								<v-icon
+										color="yellow darken-2"
+										v-else
+								>mail</v-icon>
+							</v-list-tile-action>
 						</v-list-tile>
+						<v-divider v-if="index + 1 < channels.length" :key="item.title + '-separator'"></v-divider>
 					</template>
 				</v-list>
 
@@ -394,10 +415,10 @@
 						<v-icon>account_circle</v-icon>
 						<v-icon>close</v-icon>
 					</v-btn>
-                    <v-btn fab dark color="green" @click="showEngagement">
-                        <v-icon>mdi-run</v-icon>
-                    </v-btn>
-					<v-btn fab dark color="green" @click="showQRCode">
+					<v-btn fab dark color="green" @click="showActivity">
+						<v-icon>mdi-run</v-icon>
+					</v-btn>
+					<v-btn fab dark color="purple" @click="showQRCode">
 						<v-icon>mdi-qrcode-scan</v-icon>
 					</v-btn>
 					<v-btn fab dark color="indigo" @click="showAddConnection">
@@ -410,19 +431,28 @@
 			</v-container>
 
 			<v-container fluid id="conMessages" v-show="page_visible==PAGE_MESSAGING" class="white-container">
-				<div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}
-				</div>
+                <table>
+                    <tr>
+                        <td><v-btn icon light color="white" @click="checkQueue">
+                            <v-icon>refresh</v-icon>
+                        </v-btn></td>
+                        <td>
+                            <div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
+                        </td>
+                    </tr>
+                </table>
+
 				<div id="messaging_list" style="height: 60%; overflow-y: scroll;">
 					<v-list>
 						<template v-for="item in active_channel.messages">
-							<v-list-tile v-show="item.Sender=='me'">
+							<v-list-tile v-show="item.Sender==currentUserData.username">
 								<div style="width:100%;">
 									<div class="message-out">
 										{{ item.Body }}
 									</div>
 								</div>
 							</v-list-tile>
-							<v-list-tile v-show="item.Sender!='me'">
+							<v-list-tile v-show="item.Sender!=currentUserData.username">
 								<div style="width:100%;">
 									<div class="message-in">
 										{{ item.Body }}
@@ -467,33 +497,33 @@
 				</div>
 			</v-container>
 
-            <v-container fluid id="conSettings" v-show="page_visible==PAGE_ENGAGEMENT" class="white-container">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Activity</div>
-                <div>
-                    Today I
-                    <v-select
-                            v-bind:items="activity_type_list"
-                            v-model="activity_type"
-                            label="Select"
-                            autocomplete
-                    ></v-select>
-                    for
-                </div>
-                <div>
-                    <v-text-field id="activity_amount" label="Amount" v-model="activity_amount"></v-text-field>
-                    <v-select
-                            v-bind:items="activity_unit_list"
-                            v-model="activity_unit"
-                            label="Select"
-                            autocomplete
-                    ></v-select>
-                </div>
-                <div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
-                    <div class="local-rounded-button" style="" @click="logActivity">
-                        Log Activity
-                    </div>
-                </div>
-            </v-container>
+			<v-container fluid id="conSettings" v-show="page_visible==PAGE_ACTIVITY" class="white-container">
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">Activity</div>
+				<div>
+					Today I
+					<v-select
+							v-bind:items="activity_type_list"
+							v-model="activity_type"
+							label="Select"
+							autocomplete
+					></v-select>
+					for
+				</div>
+				<div>
+					<v-text-field id="activity_amount" label="Amount" v-model="activity_amount"></v-text-field>
+					<v-select
+							v-bind:items="activity_unit_list"
+							v-model="activity_unit"
+							label="Select"
+							autocomplete
+					></v-select>
+				</div>
+				<div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
+					<div class="local-rounded-button" style="" @click="logActivity">
+						Log Activity
+					</div>
+				</div>
+			</v-container>
 
 			<v-container fluid id="conSettings" v-show="page_visible==PAGE_SETTINGS" class="white-container">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Settings</div>
@@ -524,9 +554,9 @@
 				{{ success_message }}
 			</v-snackbar>
 
-			<v-layout row justify-center v-if="show_spinner">
+			<v-layout style="position: absolute; top:30%; left:30%; z-index: 100000;" v-if="show_spinner">
 				<v-progress-circular indeterminate v-bind:size="200" v-bind:width="10"
-									 color="blue"></v-progress-circular>
+									 color="grey"></v-progress-circular>
 			</v-layout>
 		</v-content>
 	</v-app>
@@ -569,15 +599,15 @@
 		head.appendChild(js);
 
 		$('#mocha')
-            .css('display','')
-            .css('margin','0')
+			.css('display','')
+			.css('margin','0')
 			.css('border','10px solid green')
 			.css('z-index','10000')
 			.css('position','absolute')
 			.css('top','80%')
-        	.css('width','100%')
-		    .css('height','400px')
-            .css('background','white')
+			.css('width','100%')
+			.css('height','400px')
+			.css('background','white')
 			.css('overflow-x','scroll');
 
 		logger.debug('Interface 1');
@@ -611,9 +641,12 @@
 		logger.debug('Starting interface tests');
 		setTimeout(()=>{
 			mocha.run();
-        },2000);
+		},2000);
 
 	}
+
+
+	let queueCheckTimer = null;
 
 	let vm = new Vue({
 		el: '#app',
@@ -634,45 +667,28 @@
 
 
 			// set the initial page
+			this.page_visible = this.PAGE_LOGIN;
 			if (await current_user.isLoggedIn()) {
-
 				// retrieve user info from storage
 				await current_user.getFromStorage();
 				this.username = current_user.username;
 				this.phone = current_user.phone;
 				this.email = current_user.email;
-
-				this.page_visible = this.PAGE_MAIN_LIST;
+				this.is_username_disabled = true;
 				store.setItem('Clinicoin_First', 1);
 			}
 			else {
-				const BeenHereBefore = store.getItem('Clinicoin_First', 0);
+				const BeenHereBefore = await store.getItem('Clinicoin_First', 0);
 				logger.debug("BeenHereBefore = " + BeenHereBefore);
 
-				if (!BeenHereBefore) {
+				if (BeenHereBefore==null || BeenHereBefore==0) {
 					this.page_visible = this.PAGE_INITIAL;
-				}
-				else {
-					this.page_visible = this.PAGE_LOGIN;
 				}
 			}
 
-
-			// fill channel list data
-			let data_list = [];
-			await channels.getChannels();
-
-			channels.channel_list.forEach((channel) => {
-				const last_message = _.last(channel.messages);
-
-				data_list.push({
-					title: channel.friendly_name,
-					username: channel.recipient_user_id,
-					subtitle: last_message.Body,
-					count: channel.messages.length
-				});
-			});
-			this.channels = data_list;
+			// attach the delegates
+			channels.newChannelEventDelegate = this.newChannelEvent;
+			channels.newMessageEventDelegate = this.newMessageEvent;
 		},
 		methods: {
 			showErrorToast: function (message) {
@@ -696,6 +712,48 @@
 			changeCarouselItem: function () {
 				$('.carousel__right').find('button').click();
 			},
+			updateChannels: async function()
+			{
+				// fill channel list data
+				let data_list = [];
+				await channels.getChannels();
+
+				channels.channel_list.forEach((channel) => {
+					let last_message = _.last(channel.messages);
+
+					if (_.isEmpty(last_message)) {
+						last_message = new Message();
+						last_message.Body = '(no messages)';
+						last_message.SentDate = moment().toISOString();
+						last_message.ReadDate = moment().toISOString();
+					}
+
+					data_list.push({
+						title: channel.friendly_name,
+						username: channel.recipient_user_id,
+						subtitle: last_message.Body,
+						message_time: last_message.getFriendlyTime(),
+						isRead: last_message.ReadDate != null,
+						count: channel.messages.length
+					});
+				});
+				this.channels = data_list;
+			},
+			newChannelEvent: function()
+			{
+				logger.debug("newChannelEvent Fired");
+				this.updateChannels();
+			},
+			newMessageEvent: function(channel, message)
+			{
+				logger.debug("newMessageEvent Fired "+channel.recipient_user_id);
+				logger.debug("active channel "+this.active_channel.username);
+				if (channel.recipient_user_id === this.active_channel.username) {
+					logger.debug("adding to active list");
+					this.refreshActiveList();
+                }
+				this.updateChannels();
+			},
 			loginUser: async function () {
 				if (_.isEmpty(this.username)) {
 					this.showErrorToast('username cannot be empty');
@@ -706,17 +764,27 @@
 				else {
 					current_user.username = this.username;
 					current_user.setAwsPassword(this.password);
-/*
+
 					if (await current_user.login()) {
+						this.updateChannels();
 						this.page_visible = this.PAGE_MAIN_LIST;
 						store.setItem('Clinicoin_First', 1);
+
+						// set check timer
+						queueCheckTimer = setInterval(this.checkQueue, 30000);
 					}
 					else {
 						this.showErrorToast(current_user.last_error_message);
 					}
-*/
+					this.show_spinner = false;
 				}
 			},
+            checkQueue: async function()
+            {
+	            vm.is_updating = true;
+	            await channels.checkForMessages();
+	            vm.is_updating = false;
+            },
 			showforgotPasswordConfirm: function () {
 				if (_.isEmpty(this.username)) {
 					this.showErrorToast('username cannot be empty');
@@ -775,6 +843,15 @@
 				if (_.isEmpty(this.username.trim())) {
 					this.showErrorToast('username cannot be empty');
 				}
+				else if (_.isEmpty(this.email.trim())) {
+					this.showErrorToast('email cannot be empty');
+				}
+				else if (!/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(this.email.trim())) {
+					this.showErrorToast('email pattern not matched');
+				}
+				else if (_.isEmpty(this.phone.trim())) {
+					this.showErrorToast('phone cannot be empty');
+				}
 				else if (_.isEmpty(this.password.trim())) {
 					this.showErrorToast('password cannot be empty');
 				}
@@ -785,6 +862,8 @@
 					this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
 				}
 				else {
+					this.show_spinner = true;
+
 					current_user.email = this.email.trim();
 					current_user.phone = this.phone.trim();
 					current_user.username = this.username.trim();
@@ -798,6 +877,8 @@
 					else {
 						this.showErrorToast(current_user.last_error_message);
 					}
+
+					this.show_spinner = false;
 				}
 			},
 			isPasswordComplex: function () {
@@ -817,17 +898,20 @@
 					this.showErrorToast('code cannot be empty');
 				}
 				else {
+					this.show_spinner = true;
 					const result = await current_user.verifyConfirmationCode(this.register_code.trim());
 					if (result) {
 						this.showSuccessToast('Code confirmation successful');
 
 						// try to log them in
+						current_user.is_first_login = true;
 						this.page_visible = this.PAGE_LOGIN;
 						this.loginUser();
 					}
 					else {
 						this.showErrorToast(current_user.last_error_message);
 					}
+					this.show_spinner = false;
 				}
 			},
 			resendConfirmation: async function () {
@@ -844,6 +928,26 @@
 				current_message_list = _.find(channels.channel_list, {"recipient_user_id": selected_user});
 				this.active_channel.username = current_message_list.recipient_user_id;
 				this.active_channel.friendly_name = current_message_list.friendly_name;
+				this.refreshActiveList();
+			},
+			sendUserMessage: async function () {
+				if (this.outgoing_message.trim().length === 0) {
+					this.showErrorToast('No message to send');
+				}
+				else {
+					const msg = await current_message_list.sendMessage(this.outgoing_message);
+					if (msg.SendStatus === 'Sent') {
+						this.showSuccessToast('Message Sent');
+						this.refreshActiveList();
+					}
+					else {
+						this.showErrorToast(current_message_list.last_error_message);
+					}
+				}
+			},
+			refreshActiveList: function()
+			{
+				const active_channel = channels.findByUsername(this.active_channel.username);
 
 				let message_list = [];
 				current_message_list.messages.forEach(function (msg) {
@@ -859,17 +963,6 @@
 				setTimeout(() => {
 					$('#messaging_list').scrollTop($('#messaging_list')[0].scrollHeight);
 				}, 100);
-			},
-			sendUserMessage: async function () {
-				if (this.outgoing_message.trim().length === 0) {
-					this.showErrorToast('No message to send');
-				}
-				else if (await current_message_list.sendMessage(this.outgoing_message) === 'Sent') {
-					this.showSuccessToast('Message Sent');
-				}
-				else {
-					this.showErrorToast(current_message_list.last_error_message);
-				}
 			},
 			showQRCode: function () {
 				this.page_visible = this.PAGE_QRCODE;
@@ -903,21 +996,27 @@
 					this.showErrorToast('username cannot be empty');
 				}
 				else {
+					this.show_spinner = true;
 					const list = new MessageList();
 					list.recipient_user_id = this.add_name.trim();
+					list.friendly_name = this.add_name.trim();
 					if (await list.getRecipientPublicKey()) {
 						this.showSuccessToast('Connected Successfully to ' + this.add_name.trim());
+						list.saveSettings();
 						channels.channel_list.push(list);
 						this.messageListSelected(this.add_name.trim());
 					}
 					else {
 						this.showErrorToast('Could not connect to ' + this.add_name.trim() + ', ' + list.last_error_message);
 					}
+					this.show_spinner = false;
 				}
 			},
 			logoutUser: function () {
+				this.is_username_disabled = false;
 				current_user.logout();
-				this.page_visible = this.PAGE_LOGIN;
+				this.page_visible = this.PAGE_INITIAL;
+				this.showInfoToast('User signed out');
 			},
 			updateSettings: function () {
 				if (_.isEmpty(this.email.trim())) {
@@ -946,6 +1045,7 @@
 					this.showErrorToast('Password is not sufficiently complex. It requires at least 8 letters, upper and lower case, numbers, and non-letter/number characters.');
 				}
 				else {
+					this.show_spinner = true;
 					current_user.email = this.email.trim();
 					current_user.phone = this.phone.trim();
 					current_user.username = this.username.trim();
@@ -959,26 +1059,28 @@
 					else {
 						this.showErrorToast(current_user.last_error_message);
 					}
+					this.show_spinner = false;
 				}
 			},
-            showActivity: function()
-            {
-            	this.page_visible = PAGE_ENGAGEMENT;
-            },
-            logActivity: function()
-            {
-            	// where are we logging?
-            }
+			showActivity: function()
+			{
+				this.page_visible = vm.PAGE_ACTIVITY;
+			},
+			logActivity: function()
+			{
+				// where are we logging?
+			}
 		},
 		data()
 		{
 			return {
-				username: '',
-				email: 'me@them.com',
+				username: 'ffdemo10',
+				is_username_disabled: false,
+				email: 'ffdemo10@mailsac.com',
 				phone: '9995551212',
-				password: 'aGreatPhrase321!',
+				password: 'ffDemo@1234',
 				new_password: '',
-				confirm: '',
+				confirm: 'ffDemo@1234',
 				reset_code: '',
 				register_code: '',
 				add_name: '',
@@ -994,14 +1096,15 @@
 				outgoing_message: '',
 
 				activity_type: '',
-                activity_unit: '',
-                activity_amount: 0,
+				activity_unit: '',
+				activity_amount: 0,
 				activity_unit_list:[],
-                activity_type_list:[],
+				activity_type_list:[],
 
 				login_pw_visible: false,
 				register_pw_visible: false,
 				register_confirm_visible: false,
+				is_updating: false,
 
 				PAGE_INITIAL: 0,
 				PAGE_TOUR: 1,
@@ -1013,7 +1116,8 @@
 				PAGE_MESSAGING: 7,
 				PAGE_CONNECT: 8,
 				PAGE_QRCODE: 9,
-				PAGE_SETTINGS: 10,
+				PAGE_ACTIVITY: 10,
+				PAGE_SETTINGS: 11,
 
 				tour_images: [
 					{src: 'img/tour1.png'},
@@ -1029,6 +1133,13 @@
 					messages: []
 				}
 			};
+		},
+		computed: {
+			// a computed getter
+			currentUserData: function () {
+				// `this` points to the vm instance
+				return current_user;
+			}
 		}
 	});
 

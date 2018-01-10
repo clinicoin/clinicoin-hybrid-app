@@ -6,7 +6,6 @@ function MessageList()
 	this.last_public_key_retrieval = '2017-01-01';
 	this.message_group_id = '1';
 	this.messages = [];
-	this.message_receive_event = null;
 
 	this.getUrl = function(user){
 		return 'https://sqs.'+AWS_REGION+'.amazonaws.com/'+AWS_ACCOUNT+'/Clinicoin-Mosio-'+user+'.fifo';
@@ -153,18 +152,18 @@ MessageList.prototype.sendMessage = async function(message_data)
 {
 	let msg = new Message();
 	msg.Body = message_data;
-	msg.Username = this.recipient_user_id;
+	msg.Sender = current_user.username;
+	msg.Receiver = this.recipient_user_id;
 
-	this.messages.push(message_data);
+	this.messages.push(msg);
 
 	// get the recipient's public key if more than 24 hours old
-	let key_result = false;
 	if (moment(this.last_public_key_retrieval).isBefore(moment().subtract(24, 'hours'))) {
-		key_result = await this.getRecipientPublicKey();
-	}
-
-	if (!key_result) {
-		return msg;
+		let key_result = await this.getRecipientPublicKey();
+		if (!key_result) {
+			logger.info('Key retrieval failure');
+			return msg;
+		}
 	}
 
 	// encrypt the message, sending signed
@@ -187,7 +186,7 @@ MessageList.prototype.sendMessage = async function(message_data)
 
 MessageList.prototype.removeAllMessages = async function()
 {
-	const exp = new RegExp('^ch_'+this.recipient_user_id+'_\d+');
+	const exp = new RegExp('^ch_'+this.recipient_user_id+'_[a-e0-9]+');
 	//await store.removeItemsExpression(exp);
 };
 
@@ -197,7 +196,7 @@ MessageList.prototype.loadMessages = async function()
 
 	const self = this;
 	this.messages = [];
-	const exp = new RegExp('^ch_'+this.recipient_user_id+'_\\d+');
+	const exp = new RegExp('^ch_'+this.recipient_user_id+'_[a-e0-9]+');
 	const key_list = await store.getFilteredData(exp);
 	key_list.forEach(async function(json) {
 		const msg = new Message();
@@ -212,7 +211,8 @@ MessageList.prototype.loadMessages = async function()
 MessageList.prototype.saveMessage = async function(msg)
 {
 	logger.info('save message '+msg.MessageId);
-	await store.setItem('ch_' + this.recipient_user_id + '_' + msg.ReceiveDate, msg.toJSON());
+	const json = msg.toJSON();  // converting first allows the dates to be set properly
+	await store.setItem('ch_' + msg.Receiver + '_' + msg.MessageId, json);
 	return true;
 };
 

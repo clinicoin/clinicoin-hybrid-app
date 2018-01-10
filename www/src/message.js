@@ -1,11 +1,10 @@
 
 function Message() {
-	this.Username = '';
 	this.Sender = 'me';
 	this.Body = '';
 	this.EncryptedBody = '';
 	this.Signed = false;
-	this.MessageId = '';
+	this.MessageId = moment().format('x');
 	this.ReceiptHandle = '';
 	this.ReceiveDate = {};
 	this.SentDate = {};
@@ -22,7 +21,7 @@ function Message() {
 			MessageId: this.MessageId,
 			ReceiveDate: moment(this.ReceiveDate).format('YYYY-MM-DD HH:mm:ss'),
 			SentDate: moment(this.SentDate).format('YYYY-MM-DD HH:mm:ss'),
-			ReadDate: moment(this.SentDate).format('YYYY-MM-DD HH:mm:ss'),
+			ReadDate: moment(this.ReadDate).format('YYYY-MM-DD HH:mm:ss'),
 			SendStatus: this.SendStatus
 		});
 	};
@@ -35,6 +34,7 @@ function Message() {
 		this.Signed = data.Signed;
 		this.MessageId = data.MessageId;
 		this.ReceiveDate = moment(data.ReceiveDate);
+		this.SentDate = moment(data.SentDate);
 		this.ReadDate = data.ReadDate;
 		this.SendStatus = data.SendStatus;
 	};
@@ -42,9 +42,19 @@ function Message() {
 	this.getEnvelope = function()
 	{
 		return JSON.stringify({
-			Sender: current_user.user_id,
-			Receiver: this.Username,
-			Sent: moment().format("YYYY-MM-DD HH:mm:ss ZZ")
+			Sender: this.Sender,
+			Receiver: this.Receiver,
+			Sent: moment().toISOString()
 		});
 	};
+
+	this.isRead = function()
+	{
+		return this.ReadDate !== {};
+	};
+
+	this.getFriendlyTime = function()
+	{
+		return moment(this.SentDate).fromNow();
+	}
 }
