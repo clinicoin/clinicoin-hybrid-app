@@ -186,8 +186,8 @@ MessageList.prototype.sendMessage = async function(message_data)
 
 MessageList.prototype.removeAllMessages = async function()
 {
-	const exp = new RegExp('^ch_'+this.recipient_user_id+'_[a-e0-9]+');
-	//await store.removeItemsExpression(exp);
+	const exp = new RegExp('^ch_'+current_user.username+'_'+this.recipient_user_id+'_[a-f0-9]+', 'i');
+	await store.removeItemsExpression(exp);
 };
 
 MessageList.prototype.loadMessages = async function()
@@ -196,7 +196,7 @@ MessageList.prototype.loadMessages = async function()
 
 	const self = this;
 	this.messages = [];
-	const exp = new RegExp('^ch_'+this.recipient_user_id+'_[a-e0-9]+');
+	const exp = new RegExp('^ch_'+current_user.username+'_'+this.recipient_user_id+'_[a-f0-9]+', 'i');
 	const key_list = await store.getFilteredData(exp);
 	key_list.forEach(async function(json) {
 		const msg = new Message();
@@ -205,6 +205,8 @@ MessageList.prototype.loadMessages = async function()
 	 	self.messages.push(msg);
 	});
 
+	self.messages = _.sortBy(self.messages, ['MessageId']);
+
 	return true;
 };
 
@@ -212,25 +214,25 @@ MessageList.prototype.saveMessage = async function(msg)
 {
 	logger.info('save message '+msg.MessageId);
 	const json = msg.toJSON();  // converting first allows the dates to be set properly
-	await store.setItem('ch_' + msg.Receiver + '_' + msg.MessageId, json);
+	await store.setItem('ch_' +current_user.username+'_'+ this.recipient_user_id + '_' + msg.MessageId, json);
 	return true;
 };
 
 MessageList.prototype.loadSettings = async function()
 {
-	const settings = await store.getItem('ch_'+this.recipient_user_id+'_Settings');
+	const settings = await store.getItem('ch_'+current_user.username+'_'+this.recipient_user_id+'_Settings');
 	this.fromJSONString(settings);
 	return true;
 };
 
 MessageList.prototype.saveSettings = async function()
 {
-	await store.setItem('ch_'+this.recipient_user_id+'_Settings', this.toJSON());
+	await store.setItem('ch_'+current_user.username+'_'+this.recipient_user_id+'_Settings', this.toJSON());
 	return true;
 };
 
 MessageList.prototype.removeSettings = async function()
 {
-	await store.removeItem('ch_'+this.recipient_user_id+'_Settings');
+	await store.removeItem('ch_'+current_user.username+'_'+this.recipient_user_id+'_Settings');
 	return true;
 };

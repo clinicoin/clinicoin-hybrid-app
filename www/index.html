@@ -122,7 +122,7 @@
 				<v-icon>keyboard_arrow_left</v-icon>
 			</v-btn>
 
-			<v-toolbar-title>CliniCoin</v-toolbar-title>
+			<v-toolbar-title>CliniCoin - {{ currentUserData.username }}</v-toolbar-title>
 
 			<v-spacer></v-spacer>
             <v-icon v-if="is_updating">swap_vert</v-icon>
@@ -733,7 +733,7 @@
 						username: channel.recipient_user_id,
 						subtitle: last_message.Body,
 						message_time: last_message.getFriendlyTime(),
-						isRead: last_message.ReadDate != null,
+						isRead: last_message.isRead(),
 						count: channel.messages.length
 					});
 				});
@@ -774,11 +774,22 @@
 						queueCheckTimer = setInterval(this.checkQueue, 30000);
 					}
 					else {
-						this.showErrorToast(current_user.last_error_message);
+						if (current_user.is_first_login) {
+							// try again if this is our first time
+                            await this.sleep(1000);
+							this.loginUser();
+                        }
+                        else {
+							this.showErrorToast(current_user.last_error_message);
+						}
 					}
 					this.show_spinner = false;
 				}
 			},
+            sleep: async function(ms)
+            {
+	            return new Promise(resolve => setTimeout(resolve, ms));
+            },
             checkQueue: async function()
             {
 	            vm.is_updating = true;
@@ -901,7 +912,10 @@
 					this.show_spinner = true;
 					const result = await current_user.verifyConfirmationCode(this.register_code.trim());
 					if (result) {
-						this.showSuccessToast('Code confirmation successful');
+						this.showSuccessToast('Code confirmation successful, attempting login');
+
+						await Vue.nextTick();
+						await this.sleep(1000);
 
 						// try to log them in
 						current_user.is_first_login = true;
@@ -1074,9 +1088,9 @@
 		data()
 		{
 			return {
-				username: 'ffdemo10',
+				username: 'ffdemo20',
 				is_username_disabled: false,
-				email: 'ffdemo10@mailsac.com',
+				email: 'ffdemo20@mailsac.com',
 				phone: '9995551212',
 				password: 'ffDemo@1234',
 				new_password: '',

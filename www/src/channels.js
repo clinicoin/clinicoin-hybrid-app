@@ -19,7 +19,7 @@ Channels.prototype.getChannels = async function()
 {
 	logger.info('Retriving Channels');
 
-	const exp = new RegExp('^ch_.+_Settings');
+	const exp = new RegExp('^ch_'+current_user.username+'_.+_Settings');
 
 	const list = await store.getFilteredData(exp);
 
@@ -99,14 +99,6 @@ Channels.prototype.processMessage = async function(msg)
 	msg.EncryptedBody = '-----BEGIN PGP MESSAGE'+parts[1];
 	msg.ReceiveDate = moment();
 
-	// find the list this belongs to
-	let msg_list = this.findByUsername(msg.Sender);
-
-	// create a msglist for those without one
-	if (_.isEmpty(msg_list)) {
-		msg_list = await this.addChannel(msg.Sender);
-	}
-
 	// decrypt
 	const decrypted_obj = await this.decryptMessage(msg.EncryptedBody);
 
@@ -119,9 +111,16 @@ Channels.prototype.processMessage = async function(msg)
 
 	msg.EncryptedBody = '';  // stripping off to reduce size
 
-	// swap (for the saving)
-	msg.Receiver = obj.Sender;
-	msg.Sender = obj.Receiver;
+	// find the list this belongs to
+	let msg_list = this.findByUsername(msg.Sender);
+
+	// create a msglist for those without one
+	if (_.isEmpty(msg_list)) {
+		msg_list = await this.addChannel(msg.Sender);
+	}
+
+	msg_list.messages.push(msg);
+
 	await msg_list.saveMessage(msg);
 
 	// mark as received (ok to be async)
@@ -178,7 +177,6 @@ Channels.prototype.retrieveMessagesFromServer = async function()
 		result.data.Messages.forEach((qm)=>{
 			let msg = new Message();
 			msg.Body = qm.Body;
-			msg.MessageId = qm.MessageId;
 			msg.ReceiptHandle = qm.ReceiptHandle;
 			list.push(msg);
 		});

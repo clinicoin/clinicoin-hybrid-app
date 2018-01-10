@@ -6,10 +6,10 @@ function Message() {
 	this.Signed = false;
 	this.MessageId = moment().format('x');
 	this.ReceiptHandle = '';
-	this.ReceiveDate = {};
-	this.SentDate = {};
+	this.ReceiveDate =  moment('1999-01-01');
+	this.SentDate = moment('1999-01-01');
 	this.SendStatus = 'Unsent';
-	this.ReadDate = {};
+	this.ReadDate = moment('1999-01-01');
 
 	this.toJSON = function()
 	{
@@ -50,7 +50,7 @@ function Message() {
 
 	this.isRead = function()
 	{
-		return this.ReadDate !== {};
+		return moment(this.ReadDate).format('YYYY-MM-DD') !== moment('1999-01-01').format('YYYY-MM-DD');
 	};
 
 	this.getFriendlyTime = function()

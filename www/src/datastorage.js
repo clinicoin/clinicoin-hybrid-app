@@ -14,7 +14,7 @@ DataStorage.prototype.getItem = async function(key, default_value)
 	let value = default_value;
 	try {
 		value = await localforage.getItem(key);
-		logger.debug("getItem: "+key+" = "+value);
+		//logger.debug("getItem: "+key+" = "+value);
 	} catch (ex) {
 		logger.error(ex);
 		logger.warn('using default, '+key+" = "+value);
@@ -81,7 +81,7 @@ DataStorage.prototype.getFilteredData = async function(expression, decode_json)
 	let key_list = await localforage.keys();
 	//logger.debug(key_list);
 	key_list = _.filter(key_list, key => expression.test(key));
-	logger.debug("getKeys items: "+key_list.length);
+	//logger.debug("getKeys items: "+key_list.length);
 
 	let data_list = [];
 	for (let key of key_list) {
