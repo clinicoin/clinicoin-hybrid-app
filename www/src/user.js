@@ -264,10 +264,10 @@ User.prototype.isLoggedIn = async function()
 							self.jwtToken = session.getIdToken().getJwtToken();
 
 							AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-								IdentityPoolId: 'us-east-1:d94bc2ab-8203-4105-9013-4cffe559f6ad', // your identity pool id here
+								IdentityPoolId: AWS_IDENTITY_POOL_ID, // your identity pool id here
 								Logins: {
 									// Change the key below according to the specific region your user pool is in.
-									'cognito-idp.us-east-1.amazonaws.com/us-east-1_QCQ5kVlpW': self.jwtToken
+									'cognito-idp.us-east-1.amazonaws.com/us-east-1_bI9yWquBE': self.jwtToken
 								}
 							});
 						}
@@ -339,10 +339,10 @@ User.prototype.login = async function()
 				AWS.config.region = AWS_REGION;
 
 				AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-					IdentityPoolId: 'us-east-1:d94bc2ab-8203-4105-9013-4cffe559f6ad', // your identity pool id here
+					IdentityPoolId: AWS_IDENTITY_POOL_ID, // your identity pool id here
 					Logins: {
 						// Change the key below according to the specific region your user pool is in.
-						'cognito-idp.us-east-1.amazonaws.com/us-east-1_QCQ5kVlpW': result.getIdToken().getJwtToken()
+						'cognito-idp.us-east-1.amazonaws.com/us-east-1_bI9yWquBE': result.getIdToken().getJwtToken()
 					}
 				});
 
@@ -519,7 +519,7 @@ User.prototype.changeUserPassword = async function(new_password)
 {
 	logger.info('changing password');
 
-	if (this.isComplexPassword(new_password)) {
+	if (!this.isComplexPassword(new_password)) {
 		logger.error('passphrase does not match having at least 8 letters, numbers, mixed case, and special characters');
 		return false;
 	}
@@ -647,8 +647,11 @@ User.prototype.logout = async function()
 	const cognitoUser = userPool.getCurrentUser();
 	if (!_.isEmpty(cognitoUser)) {
 		cognitoUser.signOut();
-		cognitoUser.globalSignOut();
-		logger.info('user logged out');
+
+		cognitoUser.globalSignOut({
+			onFailure: e =>   logger.error(e),
+			onSuccess: r => logger.debug(data)
+		});
 	}
 	else {
 		logger.info('user not logged in in order to log out')
@@ -710,7 +713,7 @@ User.prototype.forgotPasswordReset = async function(confirmation_code, new_passw
 		return false;
 	}
 
-	if (this.isComplexPassword(new_password)) {
+	if (!this.isComplexPassword(new_password)) {
 		logger.error('passphrase does not match having at least 8 letters, numbers, mixed case, and special characters');
 		return false;
 	}
@@ -796,7 +799,7 @@ User.prototype.createUserQueue = async function()
 	}
 
 	const result = await this.callLambda({
-		FunctionName : 'cloud9-Clinicoin-createQueue-O14FSFTX9EGF',
+		FunctionName : 'Clinicoin-createQueue',
 		InvocationType : 'RequestResponse',
 		Payload: JSON.stringify({queueName: this.username}),
 		LogType : 'None'
@@ -817,7 +820,7 @@ User.prototype.updatePublicKey = async function()
 	}
 
 	const result = await this.callLambda({
-		FunctionName : 'cloud9-Clinicoin-updatePublicKey-OW1U84LZV9EB',
+		FunctionName : 'Clinicoin-updatePublicKey',
 		InvocationType : 'RequestResponse',
 		Payload: JSON.stringify({username: this.username, sub: this.awsSub, publicKey: key}),
 		LogType : 'None'
@@ -836,7 +839,7 @@ User.prototype.deleteUser = async function()
 	}
 
 	const result = await this.callLambda({
-		FunctionName : 'cloud9-Clinicoin-deleteUser-PFK481I0CRNP',
+		FunctionName : 'Clinicoin-deleteUser',
 		InvocationType : 'RequestResponse',
 		Payload: JSON.stringify({username: this.username}),
 		LogType : 'None'
@@ -878,7 +881,29 @@ User.prototype.setInStorage = async function()
 	return await store.setItem('User_'+this.username, this.toJSON());
 };
 
-User.prototype.setDefaultUser = async function()
+User.prototype.setDefaultUser = function()
 {
 	store.setItem('default_user', this.username);
+};
+
+User.prototype.getActivityTypes = async function()
+{
+	let default_types = ["Biked","Danced","Exercise Class’d","Gym’d","Hiked","Lifted Weights","Martial Arts’d","Meditated","Parkour’d","Played a Sport","Ran","Surfed","Swam","Walked","Yoga’d","Other"];
+	return await store.getItem('activity_types_'+this.username, default_types);
+};
+
+User.prototype.setActivityTypes = async function(types_list)
+{
+	await store.setItem('activity_types_'+this.username, types_list);
+};
+
+User.prototype.getActivityUnits = async function()
+{
+	let default_units = ["Minutes","Hours","Miles","Kilometers","Meters","Reps","Sets","Laps","Steps"];
+	return await store.getItem('activity_units_'+this.username, default_units);
+};
+
+User.prototype.setActivityUnits = async function(units_list)
+{
+	await store.setItem('activity_units_'+this.username, units_list);
 };

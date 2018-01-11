@@ -652,6 +652,8 @@
 		el: '#app',
 		created: async function () {
 
+			this.show_spinner = true;
+
 			// try to catch the back button
 			document.addEventListener("backbutton", function () {
 				logger.info('back button used');
@@ -686,6 +688,8 @@
 			// attach the delegates
 			channels.newChannelEventDelegate = this.newChannelEvent;
 			channels.newMessageEventDelegate = this.newMessageEvent;
+
+			this.show_spinner = false;
 		},
 		methods: {
 			showErrorToast: function (message) {
@@ -1110,9 +1114,9 @@
 		data()
 		{
 			return {
-				username: 'ffdemo20',
+				username: 'chdemo30',
 				is_username_disabled: false,
-				email: 'ffdemo20@mailsac.com',
+				email: 'chdemo30@mailsac.com',
 				phone: '9995551212',
 				password: 'ffDemo@1234',
 				new_password: '',
@@ -1134,8 +1138,8 @@
 				activity_type: '',
 				activity_unit: '',
 				activity_amount: 0,
-				activity_unit_list:[],
-				activity_type_list:[],
+				activity_unit_list:["Minutes","Hours","Miles","Kilometers","Meters","Reps","Sets","Laps","Steps"],
+				activity_type_list:["Biked","Danced","Exercise Class’d","Gym’d","Hiked","Lifted Weights","Martial Arts’d","Meditated","Parkour’d","Played a Sport","Ran","Surfed","Swam","Walked","Yoga’d","Other"],
 
 				login_pw_visible: false,
 				register_pw_visible: false,
