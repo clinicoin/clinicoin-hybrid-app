@@ -184,6 +184,11 @@ User.prototype.registerUser = async function()
 		return false;
 	}
 
+	if (this.username.replace(/\W+/ig, "") !== this.username) {
+		logger.error('username contains non-word characters');
+		return false;
+	}
+
 	let poolData = {
 		UserPoolId : USER_POOL_ID,
 		ClientId : CLIENT_ID

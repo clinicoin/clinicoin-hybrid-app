@@ -18,12 +18,14 @@
     "url": "https://github.com/clinicoin/clinicoin-hybrid-app"
   },
   "dependencies": {
+    "cordova-plugin-local-notification": "^0.9.0-beta.1",
     "mdi": "^2.1.19",
     "phonegap-plugin-barcodescanner": "^7.0.1"
   },
   "cordova": {
     "plugins": {
-      "phonegap-plugin-barcodescanner": {}
+      "phonegap-plugin-barcodescanner": {},
+      "cordova-plugin-local-notification": {}
     }
   }
 }

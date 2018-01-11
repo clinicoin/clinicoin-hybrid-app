@@ -98,7 +98,8 @@
     <preference name="Orientation" value="default" />
     <preference name="SplashScreenDelay" value="1000" />
     <preference name="Fullscreen" value="false" />
-    <plugin name="phonegap-plugin-barcodescanner">
+    <plugin name="phonegap-plugin-barcodescanner" spec="6.0.5">
         <param name="CAMERA_USAGE_DESCRIPTION" value="To scan barcodes." />
     </plugin>
+    <plugin name="cordova-plugin-local-notification" spec="^0.9.0-beta.1" />
 </widget>

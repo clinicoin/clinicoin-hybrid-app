@@ -653,18 +653,15 @@
 		created: async function () {
 
 			// try to catch the back button
-			// this doesn't seem to work...
-			document.addEventListener("deviceready", function () {
-				document.addEventListener("backbutton", function () {
-					if (this.page_visible > this.PAGE_MAIN_LIST) {
-						this.page_visible = this.PAGE_LOGIN;
-					}
-					else {
-						this.page_visible = this.PAGE_MAIN_LIST;
-					}
-				}, false);
+			document.addEventListener("backbutton", function () {
+				logger.info('back button used');
+				if (vm.page_visible > vm.PAGE_MAIN_LIST) {
+					vm.page_visible = vm.PAGE_LOGIN;
+				}
+				else {
+					vm.page_visible = vm.PAGE_MAIN_LIST;
+				}
 			}, false);
-
 
 			// set the initial page
 			this.page_visible = this.PAGE_LOGIN;
@@ -753,6 +750,14 @@
 					this.refreshActiveList();
                 }
 				this.updateChannels();
+
+				cordova.plugins.notification.local.schedule({
+					title: 'Clinicoin - '+channel.friendly_name,
+					text: message.Body,
+					foreground: true,
+					led: { color: '#00FF00', on: 500, off: 500 },
+					vibrate: false
+				});
 			},
 			loginUser: async function () {
 				if (_.isEmpty(this.username)) {
@@ -991,10 +996,12 @@
 			},
 			showScanBarcode: function () {
 				cordova.plugins.barcodeScanner.scan(
-					function (result) {
+					async function (result) {
 						if (!result.cancelled) {
 							logger.debug("Result: " + result.text + ", format: " + result.format);
-							this.add_name = result.text;
+							vm.add_name = result.text;
+							await Vue.nextTick();
+							vm.connectUser();
                         }
                         else {
 							logger.debug('Scan canelled');
@@ -1005,10 +1012,10 @@
 						this.showErrorToast("Scanning failed: " + error);
 					},
 					{
-						preferFrontCamera : true, // iOS and Android
+						preferFrontCamera : false, // iOS and Android
 						showFlipCameraButton : true, // iOS and Android
 						showTorchButton : true, // iOS and Android
-						torchOn: true, // Android, launch with the torch switched on (if available)
+						torchOn: false, // Android, launch with the torch switched on (if available)
 						saveHistory: true, // Android, save scan history (default false)
 						prompt : "Place a barcode inside the scan area", // Android
 						resultDisplayDuration: 500, // Android, display scanned text for X ms. 0 suppresses it entirely, default 1500
@@ -1025,6 +1032,7 @@
 				}
 				else {
 					this.show_spinner = true;
+					this.add_name = this.add_name.replace(/https:\/\/www\.clinicoin\.com\/connect\//i, "");
 					const list = new MessageList();
 					list.recipient_user_id = this.add_name.trim();
 					list.friendly_name = this.add_name.trim();
