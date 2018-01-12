@@ -124,7 +124,7 @@ const getDemoUser = function()
 	test_user.username = 'demouser'; // random username
 	test_user.email = test_user.username+"@mailsac.com";
 	test_user.phone = '+12125551217';
-	test_user.setAwsPassword('aGreatPhrase321!');
+	test_user.setAwsPassword('ffDemo@1234');
 	return test_user;
 };
 
@@ -132,7 +132,7 @@ const loginDemoUser = async function()
 {
 	let test_user = new User();
 	test_user.username = 'demouser';
-	test_user.setAwsPassword('aGreatPhrase321!');
+	test_user.setAwsPassword('ffDemo@1234');
 	let login_result = await test_user.login();
 	if (!login_result) {
 		login_result = await test_user.login();

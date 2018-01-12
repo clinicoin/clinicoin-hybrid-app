@@ -46,7 +46,7 @@ MessageList.prototype.getRecipientPublicKey = async function()
 	}
 
 	const response = await current_user.callLambda({
-		FunctionName : Clinicoin-getPublicKey,
+		FunctionName : 'Clinicoin-getPublicKey',
 		InvocationType : 'RequestResponse',
 		Payload: JSON.stringify({username: this.recipient_user_id}),
 		LogType : 'None'

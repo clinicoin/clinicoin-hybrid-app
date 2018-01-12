@@ -1,6 +1,6 @@
 
 describe('retrieveMessagesFromServer', function() {
-	this.timeout(5000);
+	this.timeout(10000);
 
 	beforeEach(function () {
 		Minilog.backends.array.empty();
@@ -10,7 +10,7 @@ describe('retrieveMessagesFromServer', function() {
 		await loginDemoUser();
 		let test_list = new MessageList();
 		test_list.recipient_user_id = 'demouser';
-		current_user.user_id = 'demouser';
+		current_user.username = 'demouser';
 		const d = new Date();
 		const msg = 'message '+d.getTime().toString();
 		const send_result = await test_list.sendToServer(msg);
