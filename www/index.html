@@ -27,11 +27,13 @@
 	<script src="lib/qrious-4.0.2.min.js"></script>
 	<script src="lib/vuetify-0.17.6.js"></script>
 
+
 	<!-- source files -->
 	<script src="src/constants.js"></script>
 	<script src="src/user.js"></script>
 	<script src="src/messagelist.js"></script>
 	<script src="src/message.js"></script>
+    <script src="src/activity.js"></script>
 	<script src="src/datastorage.js"></script>
 	<script>
 		let store = new DataStorage();
@@ -74,27 +76,55 @@
 			cursor: pointer;
 		}
 
-		.message-out {
-			border-radius: 20px 20px 20px 20px;
-			-moz-border-radius: 20px 20px 20px 20px;
-			-webkit-border-radius: 20px 20px 20px 20px;
-			border: 0px solid #000000;
-			background-color: #483EBB;
-			float:right;
-			padding: 5px;
-			color: white;
-		}
 
-		.message-in {
-			border-radius: 20px 20px 20px 20px;
-			-moz-border-radius: 20px 20px 20px 20px;
-			-webkit-border-radius: 20px 20px 20px 20px;
-			border: 0px solid #000000;
-			background-color: #E8EDF3;
-			float:left;
-			padding: 5px;
-			color: black;
-		}
+        .message-out {
+            position: relative;
+            background: #483EBB;
+            border-radius: .4em;
+            color: white;
+            float: right;
+            padding: 5px;
+            font-size: smaller;
+        }
+
+        .message-out:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 95%;
+            width: 0;
+            height: 0;
+            border: 10px solid transparent;
+            border-top-color: #483EBB;
+            border-bottom: 0;
+            border-right: 0;
+            margin-left: -10px;
+            margin-bottom: -10px;
+        }
+
+        .message-in {
+            position: relative;
+            background: #E8EDF3;
+            border-radius: .4em;
+            float: left;
+            padding: 5px;
+            font-size: smaller;
+        }
+
+        .message-in:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 5%;
+            width: 0;
+            height: 0;
+            border: 10px solid transparent;
+            border-top-color: #E8EDF3;
+            border-bottom: 0;
+            border-left: 0;
+            margin-left: -10px;
+            margin-bottom: -10px;
+        }
 
 		.white-container {
 			background: white;
@@ -113,7 +143,7 @@
 <div id="app">
 	<v-app v-cloak>
 		<v-toolbar class="fade-background" dark v-if="page_visible >= PAGE_MAIN_LIST">
-			<v-btn icon v-show="page_visible > PAGE_MAIN_LIST" @click="page_visible=PAGE_MAIN_LIST">
+			<v-btn icon v-show="page_visible > PAGE_MAIN_LIST && page_visible <= PAGE_SETTINGS" @click="page_visible=PAGE_MAIN_LIST">
 				<v-icon>home</v-icon>
 			</v-btn>
 
@@ -122,7 +152,12 @@
 				<v-icon>keyboard_arrow_left</v-icon>
 			</v-btn>
 
-			<v-toolbar-title>CliniCoin - {{ currentUserData.username }}</v-toolbar-title>
+            <v-btn icon v-show="page_visible > PAGE_SETTINGS"
+                   @click="page_visible=PAGE_SETTINGS">
+                <v-icon>keyboard_arrow_left</v-icon>
+            </v-btn>
+
+			<v-toolbar-title>CliniCoin</v-toolbar-title>
 
 			<v-spacer></v-spacer>
             <v-icon v-if="is_updating">swap_vert</v-icon>
@@ -418,31 +453,17 @@
 					<v-btn fab dark color="green" @click="showActivity">
 						<v-icon>mdi-run</v-icon>
 					</v-btn>
-					<v-btn fab dark color="purple" @click="showQRCode">
-						<v-icon>mdi-qrcode-scan</v-icon>
-					</v-btn>
 					<v-btn fab dark color="indigo" @click="showAddConnection">
-						<v-icon>supervisor_account</v-icon>
-					</v-btn>
-					<v-btn fab dark color="red" @click="logoutUser">
-						<v-icon>cloud_off</v-icon>
+						<v-icon>mdi-account-plus</v-icon>
 					</v-btn>
 				</v-speed-dial>
 			</v-container>
 
 			<v-container fluid id="conMessages" v-show="page_visible==PAGE_MESSAGING" class="white-container">
-                <table>
-                    <tr>
-                        <td><v-btn icon light color="white" @click="checkQueue">
-                            <v-icon>refresh</v-icon>
-                        </v-btn></td>
-                        <td>
-                            <div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
-                        </td>
-                    </tr>
-                </table>
 
-				<div id="messaging_list" style="height: 60%; overflow-y: scroll;">
+                <div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
+
+				<div id="messaging_list" style="height: 80%; overflow-y: auto;">
 					<v-list>
 						<template v-for="item in active_channel.messages">
 							<v-list-tile v-show="item.Sender==currentUserData.username">
@@ -463,15 +484,19 @@
 					</v-list>
 				</div>
 				<v-footer style="background-color:white;" v-bind:app="true">
-					<v-text-field
-							name="input-1"
-							label="Message"
-							textarea
-							clearable
-							auto-grow
-							v-model="outgoing_message"
-					></v-text-field>
-					<v-btn outline large fab color="indigo" @click="sendUserMessage">
+
+                    <v-btn icon disabled>
+                        <v-icon>photo_camera</v-icon>
+                    </v-btn>
+
+                    <v-text-field
+                            label="Message"
+                            auto-grow
+                            light
+                            v-model="outgoing_message"
+                    ></v-text-field>
+
+					<v-btn fab small dark color="indigo" @click="sendUserMessage">
 						<v-icon>send</v-icon>
 					</v-btn>
 				</v-footer>
@@ -479,6 +504,10 @@
 
 			<v-container fluid id="conSettings" v-show="page_visible==PAGE_CONNECT" class="white-container">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Connect With People</div>
+
+                <div style="text-align:center;">
+                    <v-btn outline color="indigo" @click="showQRCode">Show My QR Code</v-btn>
+                </div>
 
 				<div style="text-align:center;">
 					<v-btn outline color="indigo" @click="showScanBarcode">Scan QR Code</v-btn>
@@ -497,35 +526,156 @@
 				</div>
 			</v-container>
 
-			<v-container fluid id="conSettings" v-show="page_visible==PAGE_ACTIVITY" class="white-container">
+			<v-container fluid id="conSettings" v-show="page_visible==PAGE_ACTIVITY" class="white-container" style="background-color: #EDF2F8;">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Activity</div>
-				<div>
-					Today I
-					<v-select
-							v-bind:items="activity_type_list"
-							v-model="activity_type"
-							label="Select"
-							autocomplete
-					></v-select>
-					for
-				</div>
-				<div>
-					<v-text-field id="activity_amount" label="Amount" v-model="activity_amount"></v-text-field>
-					<v-select
-							v-bind:items="activity_unit_list"
-							v-model="activity_unit"
-							label="Select"
-							autocomplete
-					></v-select>
-				</div>
-				<div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
-					<div class="local-rounded-button" style="" @click="logActivity">
-						Log Activity
-					</div>
-				</div>
+                <div>What did you do today?</div>
+                <v-card hover>
+                    <v-card-text>
+                        <v-layout row wrap>
+                            <v-flex xs2 sm2 md1 lg1>
+                                <div style="margin-top: 15px;">Today I</div>
+                            </v-flex>
+
+                            <v-flex xs9 sm8 md6 lg6>
+                                <v-select v-bind:items="activity_type_list" label="Activity" editable item-value="activity_type" v-model="activity_type"></v-select>
+                            </v-flex>
+
+                            <v-flex xs1 sm1 md1 lg1>
+                                <div style="margin-left: 10px; margin-top: 15px;">for</div>
+                            </v-flex>
+                        </v-layout>
+
+                        <v-layout row wrap>
+                            <v-flex xs6 sm6 md6 lg6>
+                                <v-select type="numeric" v-bind:items="activity_amount_list" label="Amount" editable item-value="activity_amount" v-model="activity_amount"></v-select>
+                            </v-flex>
+                            <v-flex xs6 sm6 md6 lg6>
+                                <v-select v-bind:items="activity_unit_list" label="Activity" editable item-value="activity_unit" v-model="activity_unit" style="margin-left: 10px;"></v-select>
+                            </v-flex>
+                        </v-layout>
+
+                    <div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
+                        <div class="local-rounded-button" style="color:white; background-color: #483ebb;" @click="logActivity">
+                            Log Activity
+                        </div>
+                    </div>
+                    </v-card-text>
+                </v-card>
+
+                <div style="margin-top: 30px;">Activity History</div>
+                <div style="height: 40%; overflow-y: auto;">
+                    <template v-for="item in user_activity_history">
+                        <v-card raised>
+                            <v-card-text>
+                                <div class="title">{{ item.getActivityLine() }}</div>
+                                <div class="caption">{{ item.getFriendlyTime() }}</div>
+                            </v-card-text>
+                        </v-card>
+                        <div style="margin-top: 10px;"></div>
+                    </template>
+                    <template v-if="user_activity_history.length == 0">
+                        <v-card raised>
+                            <v-card-text>
+                                <div class="caption">No activities yet</div>
+                            </v-card-text>
+                        </v-card>
+                    </template>
+                </div>
 			</v-container>
 
-			<v-container fluid id="conSettings" v-show="page_visible==PAGE_SETTINGS" class="white-container">
+            <v-container fluid id="conSettings" v-show="page_visible==PAGE_SETTINGS" class="white-container">
+                <div style="text-align:center; font-size:large; margin-bottom:20px;">Settings</div>
+
+                <v-card flat>
+                    <v-card-text>
+                        <div class="title">{{ real_name }}</div>
+                        <div class="caption">{{ email }}</div>
+                    </v-card-text>
+                </v-card>
+
+                <v-list>
+                    <v-list-tile @click="page_visible=PAGE_ACCOUNT_SETTINGS">
+                        <v-list-tile-avatar>
+                            <v-btn fab dark small color="green">
+                                <v-icon>face</v-icon>
+                            </v-btn>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>My Account</v-list-tile-title>
+                        </v-list-tile-content>
+
+                        <v-list-tile-action>
+                            <v-btn flat icon color="green">
+                                <v-icon>chevron_right</v-icon>
+                            </v-btn>
+                        </v-list-tile-action>
+                    </v-list-tile>
+
+                    <v-spacer class="mb-4"></v-spacer>
+
+                    <v-list-tile>
+                        <v-list-tile-avatar>
+                            <v-btn fab dark small color="red">
+                                <v-icon>add_alert</v-icon>
+                            </v-btn>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Notifications</v-list-tile-title>
+                        </v-list-tile-content>
+
+                    </v-list-tile>
+
+                    <v-spacer class="mb-2"></v-spacer>
+                    <v-divider></v-divider>
+                    <v-spacer class="mb-2"></v-spacer>
+
+                    <v-list-tile>
+                        <v-list-tile-avatar>
+                            <v-btn fab dark small color="orange">
+                                <v-icon>build</v-icon>
+                            </v-btn>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Support</v-list-tile-title>
+                        </v-list-tile-content>
+
+                        <v-list-tile-action>
+                            <v-btn flat icon color="orange">
+                                <v-icon>chevron_right</v-icon>
+                            </v-btn>
+                        </v-list-tile-action>
+                    </v-list-tile>
+
+                    <v-spacer class="mb-2"></v-spacer>
+                    <v-divider></v-divider>
+                    <v-spacer class="mb-2"></v-spacer>
+
+                    <v-list-tile>
+                        <v-list-tile-avatar>
+                            <v-btn fab dark small color="blue">
+                                <v-icon>info</v-icon>
+                            </v-btn>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>About</v-list-tile-title>
+                        </v-list-tile-content>
+
+                        <v-list-tile-action>
+                            <v-btn flat icon color="blue">
+                                <v-icon>chevron_right</v-icon>
+                            </v-btn>
+                        </v-list-tile-action>
+                    </v-list-tile>
+                </v-list>
+
+                <div class="text-xs-center" style="margin-top: 20%; padding-left: 10%; padding-right: 10%;">
+                    <v-btn round color="error" dark @click="logoutUser"><v-icon>cloud_off</v-icon> Sign Out</v-btn>
+                </div>
+
+
+            </v-container>
+
+			<v-container fluid id="conSettings" v-show="page_visible==PAGE_ACCOUNT_SETTINGS" class="white-container">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Settings</div>
 
 				<v-text-field label="Email" v-model="email"></v-text-field>
@@ -571,6 +721,12 @@
 	let current_message_list = {};
 	let sandbox = null;
 	let assert = null;
+
+	$(function() {
+		for(let i=1; i <= 100; i++) {
+			vm.activity_amount_list.push(i);
+        }
+	});
 
 	function interface_test()
 	{
@@ -651,7 +807,7 @@
 	let vm = new Vue({
 		el: '#app',
 		created: async function () {
-
+			const self = this;
 			this.show_spinner = true;
 
 			// try to catch the back button
@@ -670,6 +826,10 @@
 			if (await current_user.isLoggedIn()) {
 				// retrieve user info from storage
 				await current_user.getFromStorage();
+				this.real_name = current_user.name;
+				if (_.isEmpty(this.real_name)) {
+					this.real_name = current_user.username;
+                }
 				this.username = current_user.username;
 				this.phone = current_user.phone;
 				this.email = current_user.email;
@@ -771,6 +931,8 @@
 					this.showErrorToast('password cannot be empty');
 				}
 				else {
+					this.show_spinner = true;
+
 					current_user.username = this.username;
 					current_user.setAwsPassword(this.password);
 
@@ -779,8 +941,18 @@
 						this.page_visible = this.PAGE_MAIN_LIST;
 						store.setItem('Clinicoin_First', 1);
 
+						await current_user.getFromStorage();
+						this.phone = current_user.phone;
+						this.email = current_user.email;
+
 						// set check timer
 						queueCheckTimer = setInterval(this.checkQueue, 30000);
+
+						current_user.getActivityTypes().then((result)=>{ self.activity_type_list = result; });
+						current_user.getActivityUnits().then((result)=>{ self.activity_unit_list = result; });
+						current_user.getActivities().then((result)=>{
+							vm.user_activity_history = result;
+						});
 					}
 					else {
 						if (current_user.is_first_login) {
@@ -1106,14 +1278,28 @@
 			{
 				this.page_visible = vm.PAGE_ACTIVITY;
 			},
-			logActivity: function()
+			logActivity: async function()
 			{
-				// where are we logging?
+				if (_.isEmpty(this.activity_type.trim())) {
+					this.showErrorToast('activity type cannot be empty');
+				}
+				else if (_.isEmpty(this.activity_unit.trim())) {
+					this.showErrorToast('activity unit cannot be empty');
+				}
+				else if (_.isEmpty(this.activity_amount.trim())) {
+					this.showErrorToast('activity amount cannot be empty');
+				}
+				else {
+					const act = await current_user.addActivity(this.activity_type.trim(), this.activity_amount.trim(), this.activity_unit.trim());
+                    this.user_activity_history.push(act);
+					this.showSuccessToast('Activity Logged');
+				}
 			}
 		},
 		data()
 		{
 			return {
+				real_name: '',
 				username: 'chdemo30',
 				is_username_disabled: false,
 				email: 'chdemo30@mailsac.com',
@@ -1140,6 +1326,8 @@
 				activity_amount: 0,
 				activity_unit_list:["Minutes","Hours","Miles","Kilometers","Meters","Reps","Sets","Laps","Steps"],
 				activity_type_list:["Biked","Danced","Exercise Class’d","Gym’d","Hiked","Lifted Weights","Martial Arts’d","Meditated","Parkour’d","Played a Sport","Ran","Surfed","Swam","Walked","Yoga’d","Other"],
+                activity_amount_list: [],
+                user_activity_history: [],
 
 				login_pw_visible: false,
 				register_pw_visible: false,
@@ -1158,6 +1346,7 @@
 				PAGE_QRCODE: 9,
 				PAGE_ACTIVITY: 10,
 				PAGE_SETTINGS: 11,
+				PAGE_ACCOUNT_SETTINGS: 12,
 
 				tour_images: [
 					{src: 'img/tour1.png'},

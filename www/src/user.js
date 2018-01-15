@@ -894,7 +894,7 @@ User.prototype.getActivityTypes = async function()
 
 User.prototype.setActivityTypes = async function(types_list)
 {
-	await store.setItem('activity_types_'+this.username, types_list);
+	await store.setItem('activity_types_'+this.username, JSON.stringify(types_list));
 };
 
 User.prototype.getActivityUnits = async function()
@@ -905,5 +905,34 @@ User.prototype.getActivityUnits = async function()
 
 User.prototype.setActivityUnits = async function(units_list)
 {
-	await store.setItem('activity_units_'+this.username, units_list);
+	await store.setItem('activity_units_'+this.username, JSON.stringify(units_list));
+};
+
+User.prototype.getActivities = async function()
+{
+	logger.info('loading activities');
+
+	const self = this;
+	let activities = [];
+	const exp = new RegExp('^act_'+this.username+'_[a-f0-9]+', 'i');
+	const key_list = await store.getFilteredData(exp);
+	key_list.forEach(async function(json) {
+		const act = new Activity();
+		act.fromJSONString(json);
+		activities.push(act);
+	});
+
+	activities = _.sortBy(activities, ['ActivityDate']);
+
+	return activities;
+};
+
+User.prototype.addActivity = async function(activity_type, amount, units)
+{
+	let act = new Activity();
+	act.ActivityType = activity_type;
+	act.Amount = amount;
+	act.Units = units;
+	await store.setItem('act_'+this.username+'_'+act.Id, act.toJSON());
+	return act;
 };

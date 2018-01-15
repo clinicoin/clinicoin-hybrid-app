@@ -583,5 +583,52 @@ describe('setInStorage/getFromStorage', function() {
 		const result = await actual_user.getFromStorage('fake_user');
 		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
 	});
+});
 
+describe('getActivityTypes / setActivityTypes', function() {
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should get a list with no user', async function (done) {
+		let actual_user = new User();
+		actual_user.username = 'empty';
+		let list = await actual_user.getActivityTypes();
+		assert(list.length > 4, "result length less than 4\n\n" + getLastConsoleMessage());
+		done();
+	});
+
+	it('should get a list for user', async function (done) {
+		let actual_user = new User();
+		actual_user.username = 'listuser';
+		await actual_user.setActivityTypes(['1','2','3','4']);
+		let list = await actual_user.getActivityTypes();
+		assert(list.length === 4, "result length not 4\n\n" + getLastConsoleMessage());
+		assert(list[3] === '4', "last item not 4\n\n" + getLastConsoleMessage());
+		done();
+	});
+});
+
+describe('getActivityUnits / setActivityUnits', function() {
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should get a list with no user', async function (done) {
+		let actual_user = new User();
+		actual_user.username = 'empty';
+		let list = await actual_user.getActivityUnits();
+		assert(list.length > 4, "result length less than 4\n\n" + getLastConsoleMessage());
+		done();
+	});
+
+	it('should get a list for user', async function (done) {
+		let actual_user = new User();
+		actual_user.username = 'listuser';
+		await actual_user.setActivityUnits(['1','2','3','4']);
+		let list = await actual_user.getActivityUnits();
+		assert(list.length === 4, "result length not 4\n\n" + getLastConsoleMessage());
+		assert(list[3] === '4', "last item not 4\n\n" + getLastConsoleMessage());
+		done();
+	});
 });
