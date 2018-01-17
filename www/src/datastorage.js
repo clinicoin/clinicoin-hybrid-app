@@ -14,6 +14,11 @@ DataStorage.prototype.getItem = async function(key, default_value)
 	let value = default_value;
 	try {
 		value = await localforage.getItem(key);
+
+		if (value == null) {
+			value = default_value;
+		}
+
 		//logger.debug("getItem: "+key+" = "+value);
 	} catch (ex) {
 		logger.error(ex);

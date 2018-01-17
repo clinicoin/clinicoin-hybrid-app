@@ -167,6 +167,12 @@ Channels.prototype.retrieveMessagesFromServer = async function()
 		logger.error(result.error.code + " - " + result.error.message);
 		this.last_error_code = result.error.code;
 		this.last_error_message = result.error.message;
+
+		// if it failed for credentials, try logging in for next time
+		if (result.error.code === 'CredentialsError') {
+			current_user.login();
+		}
+
 		return false;
 	}
 	else {

@@ -432,6 +432,12 @@ User.prototype.verifyConfirmationCode = async function(confirmation_code)
 {
 	logger.info('confirming user code');
 
+	if (confirmation_code.length != 6) {
+		this.last_error_message = 'confirmation code length not good';
+		logger.error('confirmation code length not good');
+		return false;
+	}
+
 	let poolData = {
 		UserPoolId : USER_POOL_ID,
 		ClientId : CLIENT_ID
@@ -886,28 +892,6 @@ User.prototype.setDefaultUser = function()
 	store.setItem('default_user', this.username);
 };
 
-User.prototype.getActivityTypes = async function()
-{
-	let default_types = ["Biked","Danced","Exercise Class’d","Gym’d","Hiked","Lifted Weights","Martial Arts’d","Meditated","Parkour’d","Played a Sport","Ran","Surfed","Swam","Walked","Yoga’d","Other"];
-	return await store.getItem('activity_types_'+this.username, default_types);
-};
-
-User.prototype.setActivityTypes = async function(types_list)
-{
-	await store.setItem('activity_types_'+this.username, JSON.stringify(types_list));
-};
-
-User.prototype.getActivityUnits = async function()
-{
-	let default_units = ["Minutes","Hours","Miles","Kilometers","Meters","Reps","Sets","Laps","Steps"];
-	return await store.getItem('activity_units_'+this.username, default_units);
-};
-
-User.prototype.setActivityUnits = async function(units_list)
-{
-	await store.setItem('activity_units_'+this.username, JSON.stringify(units_list));
-};
-
 User.prototype.getActivities = async function()
 {
 	logger.info('loading activities');
@@ -935,4 +919,32 @@ User.prototype.addActivity = async function(activity_type, amount, units)
 	act.Units = units;
 	await store.setItem('act_'+this.username+'_'+act.Id, act.toJSON());
 	return act;
+};
+
+User.prototype.sendSupportRequest = async function(subject, message)
+{
+	if (_.isEmpty(subject.trim())) {
+		logger.error('subject cannot be empty');
+	}
+	else if (_.isEmpty(message.trim())) {
+		logger.error('message cannot be empty');
+	}
+	else {
+		message += "\n\n\n" + _.takeRight(Minilog.backends.array.get(), 100);
+
+		const data = {
+			name: this.name,
+			email: this.email,
+			subject: subject,
+			message: message
+		};
+
+		axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
+
+		const result = await axios.post('https://devdaaron.mosio.com/c/support_entry', data);
+
+		return result.status == 200;
+	}
+
+	return false;
 };

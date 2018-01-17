@@ -236,3 +236,13 @@ MessageList.prototype.removeSettings = async function()
 	await store.removeItem('ch_'+current_user.username+'_'+this.recipient_user_id+'_Settings');
 	return true;
 };
+
+MessageList.prototype.markRead = function()
+{
+	this.messages.forEach((msg)=> {
+		if ( ! msg.isRead()) {
+			msg.ReadDate = moment({});
+			this.saveMessage(msg);
+		}
+	});
+};

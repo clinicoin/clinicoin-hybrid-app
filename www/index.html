@@ -318,6 +318,7 @@
 
 				<div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
 					<div class="local-rounded-button"
+                         id="btnReset"
 						 style="background-color: transparent; color: white; border-color: white;"
 						 @click="resetForgotPassword">
 						Reset Password
@@ -401,12 +402,16 @@
 				</v-card>
 
 				<div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
-					<div class="local-rounded-button" style="" @click="confirmUserRegistration">
+					<div id="btnConfirmRegistration"
+                         class="local-rounded-button"
+                         style=""
+                         @click="confirmUserRegistration">
 						Enter Confirmation
 					</div>
 				</div>
 				<div class="text-xs-center" style="margin-top: 15%; padding-left: 10%; padding-right: 10%;">
-					<div class="local-rounded-button"
+					<div id="divResendConfirmation"
+                         class="local-rounded-button"
 						 style="background-color: transparent; color: white; border-color: white;"
 						 @click="resendConfirmation">
 						Re-Send Confirmation
@@ -418,11 +423,7 @@
 
 				<v-list two-line>
 					<template v-for="(item, index) in channels">
-						<v-list-tile
-								ripple
-								@click="messageListSelected(item.username)"
-								:key="item.title"
-						>
+						<v-list-tile :key="item.title" ripple @click="messageListSelected(item.username)">
 							<v-list-tile-content>
 								<v-list-tile-title>{{ item.title }}</v-list-tile-title>
 								<v-list-tile-sub-title class="grey--text text--darken-4">{{ item.headline }}</v-list-tile-sub-title>
@@ -506,7 +507,7 @@
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Connect With People</div>
 
                 <div style="text-align:center;">
-                    <v-btn outline color="indigo" @click="showQRCode">Show My QR Code</v-btn>
+                    <v-btn id="btnShowQR" outline color="indigo" @click="showQRCode">Show My QR Code</v-btn>
                 </div>
 
 				<div style="text-align:center;">
@@ -516,7 +517,7 @@
 				<v-text-field label="Clinicoin URL" v-model="add_name"></v-text-field>
 
 				<div style="text-align:center;">
-					<v-btn color="primary" @click="connectUser">Connect</v-btn>
+					<v-btn id="btnConnectUser" color="primary" @click="connectUser">Connect</v-btn>
 				</div>
 			</v-container>
 
@@ -629,7 +630,7 @@
                     <v-divider></v-divider>
                     <v-spacer class="mb-2"></v-spacer>
 
-                    <v-list-tile>
+                    <v-list-tile @click="page_visible = PAGE_SUPPORT">
                         <v-list-tile-avatar>
                             <v-btn fab dark small color="orange">
                                 <v-icon>build</v-icon>
@@ -650,7 +651,7 @@
                     <v-divider></v-divider>
                     <v-spacer class="mb-2"></v-spacer>
 
-                    <v-list-tile>
+                    <v-list-tile @click="page_visible=PAGE_ABOUT">
                         <v-list-tile-avatar>
                             <v-btn fab dark small color="blue">
                                 <v-icon>info</v-icon>
@@ -693,6 +694,20 @@
 					<v-btn flat>Change Password</v-btn>
 				</div>
 			</v-container>
+
+            <v-container fluid v-show="page_visible==PAGE_SUPPORT" class="white-container">
+                <div style="text-align:center; font-size:large; margin-bottom:20px;">Support</div>
+                <v-text-field label="Subject" v-model="support_subject"></v-text-field>
+                <v-text-field light multi-line label="Message" v-model="support_message"></v-text-field>
+                <div style="text-align:center;">
+                    <v-btn color="primary" @click="sendSupportMessage">Send Support Message</v-btn>
+                </div>
+            </v-container>
+
+            <v-container fluid v-show="page_visible==PAGE_ABOUT" class="white-container">
+                <div style="text-align:center; font-size:large; margin-bottom:20px;">About</div>
+
+            </v-container>
 
 			<v-snackbar id="errorSnack" bottom color="red" :timeout=5000 v-model="show_error_toast_value">
 				{{ error_message }}
@@ -773,7 +788,7 @@
 			js = document.createElement("script");
 			js.src = "../test/interface_test_login.js";
 			head.appendChild(js);
-/*
+
 			js = document.createElement("script");
 			js.src = "../test/interface_test_resetPassword.js";
 			head.appendChild(js);
@@ -785,7 +800,7 @@
 			js = document.createElement("script");
 			js.src = "../test/interface_test_registerVerify.js";
 			head.appendChild(js);
-*/
+
 			mocha.checkLeaks();
 			mocha.globals(['jQuery']);
 			assert = chai.assert;
@@ -948,8 +963,6 @@
 						// set check timer
 						queueCheckTimer = setInterval(this.checkQueue, 30000);
 
-						current_user.getActivityTypes().then((result)=>{ self.activity_type_list = result; });
-						current_user.getActivityUnits().then((result)=>{ self.activity_unit_list = result; });
 						current_user.getActivities().then((result)=>{
 							vm.user_activity_history = result;
 						});
@@ -1019,9 +1032,12 @@
 					if (result) {
 						this.showSuccessToast('Password reset successful');
 
-						// try to log them in
 						this.page_visible = this.PAGE_LOGIN;
-						this.loginUser();
+
+						// try to log them in?
+						if (this.auto_login) {
+							this.loginUser();
+						}
 					}
 					else {
 						this.showErrorToast("Reset Failed: " + current_user.last_error_message);
@@ -1098,10 +1114,13 @@
 						await Vue.nextTick();
 						await this.sleep(1000);
 
-						// try to log them in
 						current_user.is_first_login = true;
 						this.page_visible = this.PAGE_LOGIN;
-						this.loginUser();
+
+						// try to log them in?
+						if (this.auto_login) {
+							this.loginUser();
+						}
 					}
 					else {
 						this.showErrorToast(current_user.last_error_message);
@@ -1153,6 +1172,8 @@
 					})
 				});
 				this.active_channel.messages = message_list;
+
+				current_message_list.markRead();
 
 				// scroll to bottom
 				setTimeout(() => {
@@ -1209,23 +1230,23 @@
 				else {
 					this.show_spinner = true;
 					this.add_name = this.add_name.replace(/https:\/\/www\.clinicoin\.com\/connect\//i, "");
-					const list = new MessageList();
-					list.recipient_user_id = this.add_name.trim();
-					list.friendly_name = this.add_name.trim();
-					if (await list.getRecipientPublicKey()) {
+					current_message_list.recipient_user_id = this.add_name.trim();
+					current_message_list.friendly_name = this.add_name.trim();
+					if (await current_message_list.getRecipientPublicKey()) {
 						this.showSuccessToast('Connected Successfully to ' + this.add_name.trim());
-						list.saveSettings();
-						channels.channel_list.push(list);
+						current_message_list.saveSettings();
+						channels.channel_list.push(current_message_list);
 						this.messageListSelected(this.add_name.trim());
 					}
 					else {
-						this.showErrorToast('Could not connect to ' + this.add_name.trim() + ', ' + list.last_error_message);
+						this.showErrorToast('Could not connect to ' + this.add_name.trim() + ', ' + current_message_list.last_error_message);
 					}
 					this.show_spinner = false;
 				}
 			},
 			logoutUser: function () {
 				this.is_username_disabled = false;
+				clearInterval(queueCheckTimer);
 				current_user.logout();
 				this.page_visible = this.PAGE_INITIAL;
 				this.showInfoToast('User signed out');
@@ -1294,13 +1315,26 @@
                     this.user_activity_history.push(act);
 					this.showSuccessToast('Activity Logged');
 				}
-			}
+			},
+			sendSupportMessage: function()
+			{
+				if (_.isEmpty(this.support_subject.trim())) {
+					this.showErrorToast('subject cannot be empty');
+				}
+				else if (_.isEmpty(this.support_message.trim())) {
+					this.showErrorToast('message cannot be empty');
+				}
+				else {
+					current_user.sendSupportRequest(this.support_subject.trim(), this.support_message.trim());
+					this.showSuccessToast('Support request sent');
+				}
+			},
 		},
 		data()
 		{
 			return {
 				real_name: '',
-				username: 'chdemo30',
+				username: 'demouser',
 				is_username_disabled: false,
 				email: 'chdemo30@mailsac.com',
 				phone: '9995551212',
@@ -1313,6 +1347,7 @@
 				page_visible: 0,
 				show_spinner: 0,
 				show_forgot_password_dialog: 0,
+
 				show_error_toast_value: 0,
 				show_info_toast_value: 0,
 				show_success_toast_value: 0,
@@ -1320,6 +1355,7 @@
 				info_message: 'some info',
 				success_message: 'success',
 				outgoing_message: '',
+                auto_login: true,
 
 				activity_type: '',
 				activity_unit: '',
@@ -1328,6 +1364,9 @@
 				activity_type_list:["Biked","Danced","Exercise Class’d","Gym’d","Hiked","Lifted Weights","Martial Arts’d","Meditated","Parkour’d","Played a Sport","Ran","Surfed","Swam","Walked","Yoga’d","Other"],
                 activity_amount_list: [],
                 user_activity_history: [],
+
+				support_message: '',
+				support_subject: '',
 
 				login_pw_visible: false,
 				register_pw_visible: false,
@@ -1347,6 +1386,8 @@
 				PAGE_ACTIVITY: 10,
 				PAGE_SETTINGS: 11,
 				PAGE_ACCOUNT_SETTINGS: 12,
+				PAGE_SUPPORT: 13,
+				PAGE_ABOUT: 14,
 
 				tour_images: [
 					{src: 'img/tour1.png'},

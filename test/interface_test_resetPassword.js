@@ -1,5 +1,11 @@
 
 describe('reset password', function() {
+	this.timeout(5000);
+
+	before(()=>{
+		logger.debug('ARE YOU LOGGED OUT? It will not work otherwise...');
+		current_user.logout();
+	});
 
 	beforeEach(async function () {
 		await waitForElement('#btnLogin');
@@ -23,11 +29,13 @@ describe('reset password', function() {
 		assert.equal(vm.confirm,    $('#reset_confirm').val(),  "confirm doesn't match");
 		assert.equal(vm.reset_code, $('#reset_code').val(),   "phone doesn't match");
 
-		sandbox.stub(current_user, 'resetForgotPassword').resolves(true);
+		sandbox.stub(current_user, 'forgotPasswordReset').resolves(true);
 		sandbox.stub(current_user, 'login').resolves(true);
 
 		await Vue.nextTick();
 		$('#btnReset').click();
+		await Vue.nextTick();
+		await sleep(1000);
 		await Vue.nextTick();
 		assert(vm.page_visible === vm.PAGE_MAIN_LIST, "Main not visible");
 	});
@@ -40,7 +48,7 @@ describe('reset password', function() {
 		await Vue.nextTick();
 		$('#btnReset').click();
 		await Vue.nextTick();
-		assert(vm.error_message === "code cannot be empty", "toast text does not match");
+		assert(vm.error_message === "code cannot be empty", "toast text does not match: "+vm.error_message);
 	});
 
 	it('should show error on password', async ()=>{
@@ -51,29 +59,29 @@ describe('reset password', function() {
 		await Vue.nextTick();
 		$('#btnReset').click();
 		await Vue.nextTick();
-		assert(vm.error_message === "password cannot be empty", "toast text does not match");
+		assert(vm.error_message === "password cannot be empty", "toast text does not match: "+vm.error_message);
 	});
 
 	it('should show error on confirm not matching', async ()=>{
 		vm.username = 'demouser';
 		vm.password = 'AcomplexP@$$911';
 		vm.confirm  = 'not matching';
-		vm.reset_code = '';
+		vm.reset_code = '1234';
 		await Vue.nextTick();
 		$('#btnReset').click();
 		await Vue.nextTick();
-		assert(vm.error_message === "password and confirmation do not match", "toast text does not match");
+		assert(vm.error_message === "password and confirmation do not match", "toast text does not match: "+vm.error_message);
 	});
 
 	it('should show error on insufficient complexity', async ()=>{
 		vm.username = 'demouser';
 		vm.password = 'password';
 		vm.confirm  = 'password';
-		vm.reset_code = '';
+		vm.reset_code = '1234';
 		await Vue.nextTick();
 		$('#btnReset').click();
 		await Vue.nextTick();
-		assert(/Password is not sufficiently complex/.test(vm.error_message), "toast text does not match");
+		assert(/Password is not sufficiently complex/.test(vm.error_message), "toast text does not match: "+vm.error_message);
 	});
 
 });
