@@ -601,6 +601,49 @@ User.prototype.getAwsUserAttributes = async function()
 	}
 };
 
+User.prototype.updateDynamoAttribute = async function(attribute_name, attribute_value)
+{
+	logger.info('updating attributes');
+
+	if (_.isEmpty(attribute_name)) {
+		logger.error('attribute name is blank');
+		return false;
+	}
+
+	const dynamodb = new AWS.DynamoDB({apiVersion: '2012-08-10'});
+
+	const params = {
+		ExpressionAttributeNames: { "#Y": attribute_name },
+		ExpressionAttributeValues: { ":y": { S: attribute_value } },
+		Key: { "UserId": { S: this.username } },
+		ReturnValues: "UPDATED_NEW",
+		TableName: "ClinicoinDirectory",
+		UpdateExpression: "SET #Y = :y"
+	};
+
+	const attr_promise = new Promise((resolve) => {
+		dynamodb.updateItem(params, function(err, result) {
+			if (err) {
+				resolve({error:err});
+			} else {
+				resolve({});
+			}
+		});
+	});
+
+	const result = await attr_promise;
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+		return false;
+	}
+	else {
+		logger.info('attribute changed');
+		return true;
+	}
+};
+
 User.prototype.updateUserAttribute = async function(attribute_name, attribute_value)
 {
 	logger.info('updating attributes');
@@ -825,10 +868,18 @@ User.prototype.updatePublicKey = async function()
 		return false;
 	}
 
+	const payload = JSON.stringify({
+		username: this.username,
+		sub: this.awsSub,
+		publicKey: key,
+		phone: this.phone,
+		email: this.email
+	});
+
 	const result = await this.callLambda({
 		FunctionName : 'Clinicoin-updatePublicKey',
 		InvocationType : 'RequestResponse',
-		Payload: JSON.stringify({username: this.username, sub: this.awsSub, publicKey: key}),
+		Payload: payload,
 		LogType : 'None'
 	});
 

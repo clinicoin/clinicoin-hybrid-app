@@ -1260,7 +1260,9 @@
 				}
 				else {
 					current_user.updateUserAttribute('email', this.email);
+					current_user.updateDynamoAttribute('email', this.email);
 					current_user.updateUserAttribute('phone_number', this.phone);
+					current_user.updateDynamoAttribute('phone_number', this.phone);
 					this.showSuccessToast('User settings updated')
 				}
 			},
