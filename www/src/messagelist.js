@@ -6,6 +6,7 @@ function MessageList()
 	this.last_public_key_retrieval = '2017-01-01';
 	this.message_group_id = '1';
 	this.messages = [];
+	this.is_group = false;
 
 	this.getUrl = function(user){
 		return 'https://sqs.'+AWS_REGION+'.amazonaws.com/'+AWS_ACCOUNT+'/Clinicoin-Mosio-'+user+'.fifo';
@@ -18,7 +19,8 @@ function MessageList()
 			recipient_user_id: this.recipient_user_id,
 			recipient_public_key: this.recipient_public_key,
 			message_group_id: this.message_group_id,
-			last_public_key_retrieval: this.last_public_key_retrieval
+			last_public_key_retrieval: this.last_public_key_retrieval,
+			is_group: this.is_group
 		});
 	};
 
@@ -33,6 +35,7 @@ function MessageList()
 		this.recipient_public_key = data.recipient_public_key;
 		this.message_group_id = data.message_group_id;
 		this.last_public_key_retrieval = data.last_public_key_retrieval;
+		this.is_group = data.is_group;
 	};
 }
 
@@ -73,7 +76,7 @@ MessageList.prototype.getRecipientPublicKey = async function()
 	return false;
 };
 
-MessageList.prototype.encryptMessage = async function(data_to_encrypt, signed)
+MessageList.prototype.encryptMessage = async function(data_to_encrypt, signed, admin_key_obj)
 {
 	if (_.isEmpty(data_to_encrypt)) {
 		logger.error('nothing to encrypt');
@@ -94,6 +97,10 @@ MessageList.prototype.encryptMessage = async function(data_to_encrypt, signed)
 		let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
 		privKeyObj.decrypt(current_user.getPassphrase());
 		options.privateKeys = privKeyObj;
+
+		if ( ! _.isEmpty(admin_key_obj)) {
+			options.privateKeys = [ privKeyObj, admin_key_obj ];
+		}
 	}
 
 	const encrypt_promise = await openpgp.encrypt(options);

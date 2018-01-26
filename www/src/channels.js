@@ -99,29 +99,35 @@ Channels.prototype.processMessage = async function(msg)
 	msg.EncryptedBody = '-----BEGIN PGP MESSAGE'+parts[1];
 	msg.ReceiveDate = moment();
 
-	// decrypt
-	const decrypted_obj = await this.decryptMessage(msg.EncryptedBody);
-
-	msg.Body = decrypted_obj.data;
-
-	if (decrypted_obj.signatures.length > 0 && decrypted_obj.signatures[0].valid) {
-		logger.info("valid signature");
-		msg.Signed = true;
-	}
-
-	msg.EncryptedBody = '';  // stripping off to reduce size
-
 	// find the list this belongs to
 	let msg_list = this.findByUsername(msg.Sender);
 
-	// create a msglist for those without one
-	if (_.isEmpty(msg_list)) {
-		msg_list = await this.addChannel(msg.Sender);
+	if (msg_list.is_group) {
+		// process in the group
+		await msg_list.processIncoming(msg);
 	}
+	else {
+		// processing as a normal message
+		const decrypted_obj = await this.decryptMessage(msg.EncryptedBody);
 
-	msg_list.messages.push(msg);
+		msg.Body = decrypted_obj.data;
 
-	await msg_list.saveMessage(msg);
+		if (decrypted_obj.signatures.length > 0 && decrypted_obj.signatures[0].valid) {
+			logger.info("valid signature");
+			msg.Signed = true;
+		}
+
+		msg.EncryptedBody = '';  // stripping off to reduce size
+
+		// create a msglist for those without one
+		if (_.isEmpty(msg_list)) {
+			msg_list = await this.addChannel(msg.Sender);
+		}
+
+		msg_list.messages.push(msg);
+
+		await msg_list.saveMessage(msg);
+	}
 
 	// mark as received (ok to be async)
 	await this.deleteReceivedMessage(msg.ReceiptHandle);

@@ -10,6 +10,7 @@ function Message() {
 	this.SentDate = moment('1999-01-01');
 	this.SendStatus = 'Unsent';
 	this.ReadDate = moment('1999-01-01');
+	this.GroupMessageType = null;
 
 	this.toJSON = function()
 	{
@@ -22,7 +23,8 @@ function Message() {
 			ReceiveDate: moment(this.ReceiveDate).format('YYYY-MM-DD HH:mm:ss'),
 			SentDate: moment(this.SentDate).format('YYYY-MM-DD HH:mm:ss'),
 			ReadDate: moment(this.ReadDate).format('YYYY-MM-DD HH:mm:ss'),
-			SendStatus: this.SendStatus
+			SendStatus: this.SendStatus,
+			GroupMessageType: this.GroupMessageType
 		});
 	};
 
@@ -37,6 +39,7 @@ function Message() {
 		this.SentDate = moment(data.SentDate);
 		this.ReadDate = data.ReadDate;
 		this.SendStatus = data.SendStatus;
+		this.GroupMessageType = data.GroupMessageType;
 	};
 
 	this.getEnvelope = function()
@@ -44,7 +47,8 @@ function Message() {
 		return JSON.stringify({
 			Sender: this.Sender,
 			Receiver: this.Receiver,
-			Sent: moment().toISOString()
+			Sent: moment().toISOString(),
+			GroupMessageType: this.GroupMessageType
 		});
 	};
 
