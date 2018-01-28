@@ -36,6 +36,10 @@ class Group extends MessageList
 			// get the admin sender's latest public key
 			// separate into processing of add user, remove user, new key, change key, promote, demote
 		}
+
+		/*
+		TODO: functions for invite, request access, join (free group), refuse access, grant access
+		 */
 	};
 
 	receiveAddUser = function () {

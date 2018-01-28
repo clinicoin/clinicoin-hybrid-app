@@ -73,68 +73,18 @@ Channels.prototype.checkForMessages = async function()
 	logger.debug(list);
 
 	for (let msg of list) {
-		this.processMessage(msg);
+		// processing as a normal message
+		await this.decryptMessage(this);
+
+		// mark as received (ok to be async)
+		await this.deleteReceivedMessage(msg.ReceiptHandle);
+
+		if (this.newMessageEventDelegate != null && typeof this.newMessageEventDelegate === "function") {
+			this.newMessageEventDelegate(msg_list, msg);
+		}
 	}
 
 	return true;
-};
-
-Channels.prototype.processMessage = async function(msg)
-{
-	// split text of message into component parts
-	const parts = _.split(msg.Body, '-----BEGIN PGP MESSAGE');
-
-	// header of message has some meta data
-	const obj = JSON.parse(parts[0]);
-	msg.Receiver = obj.Receiver;
-	msg.Sender = obj.Sender;
-	if ( ! _.isEmpty(obj.Sent)) {
-		msg.SentDate = moment(obj.Sent);
-	}
-	else {
-		msg.SentDate = moment();
-	}
-
-	msg.Body = '';
-	msg.EncryptedBody = '-----BEGIN PGP MESSAGE'+parts[1];
-	msg.ReceiveDate = moment();
-
-	// find the list this belongs to
-	let msg_list = this.findByUsername(msg.Sender);
-
-	if (msg_list.is_group) {
-		// process in the group
-		await msg_list.processIncoming(msg);
-	}
-	else {
-		// processing as a normal message
-		const decrypted_obj = await this.decryptMessage(msg.EncryptedBody);
-
-		msg.Body = decrypted_obj.data;
-
-		if (decrypted_obj.signatures.length > 0 && decrypted_obj.signatures[0].valid) {
-			logger.info("valid signature");
-			msg.Signed = true;
-		}
-
-		msg.EncryptedBody = '';  // stripping off to reduce size
-
-		// create a msglist for those without one
-		if (_.isEmpty(msg_list)) {
-			msg_list = await this.addChannel(msg.Sender);
-		}
-
-		msg_list.messages.push(msg);
-
-		await msg_list.saveMessage(msg);
-	}
-
-	// mark as received (ok to be async)
-	await this.deleteReceivedMessage(msg.ReceiptHandle);
-
-	if (this.newMessageEventDelegate != null && typeof this.newMessageEventDelegate === "function") {
-		this.newMessageEventDelegate(msg_list, msg);
-	}
 };
 
 Channels.prototype.findByUsername = function(username)
@@ -233,44 +183,6 @@ Channels.prototype.deleteReceivedMessage = async function(receipt_handle)
 		logger.info('message delete success');
 		return true;
 	}
-};
-
-// request an encrypted string to decrypt
-Channels.prototype.decryptMessage = async function(encrypted_data)
-{
-	logger.info('Decrypting message');
-
-	if (_.isEmpty(encrypted_data)) {
-		logger.error('nothing to decrypt');
-		return false;
-	}
-
-	if (_.isEmpty(current_user.getPrivateKey())) {
-		logger.error('no private key');
-		return false;
-	}
-
-	let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
-	privKeyObj.decrypt(current_user.getPassphrase());
-
-	//logger.debug(encrypted_data);
-
-	let options = {
-		message: openpgp.message.readArmored(encrypted_data),     // parse armored message
-		privateKey: privKeyObj // for decryption
-	};
-
-	// only check for signing if we have key
-	if (_.isEmpty(this.recipient_public_key)) {
-		options.publicKeys = openpgp.key.readArmored(this.recipient_public_key).keys;
-	}
-
-	// returns object formatted with properties of data:string and signatures:[].valid
-	const decrypted_obj = await openpgp.decrypt(options);
-
-	logger.info("data decrypted");
-
-	return decrypted_obj;
 };
 
 

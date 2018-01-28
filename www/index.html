@@ -33,6 +33,7 @@
 	<script src="src/user.js"></script>
 	<script src="src/messagelist.js"></script>
 	<script src="src/message.js"></script>
+    <script src="src/group.js"></script>
     <script src="src/activity.js"></script>
 	<script src="src/datastorage.js"></script>
 	<script>
@@ -935,7 +936,7 @@
 					text: message.Body,
 					foreground: true,
 					led: { color: '#00FF00', on: 500, off: 500 },
-					vibrate: false
+					vibrate: true
 				});
 			},
 			loginUser: async function () {

@@ -76,38 +76,6 @@ MessageList.prototype.getRecipientPublicKey = async function()
 	return false;
 };
 
-MessageList.prototype.encryptMessage = async function(data_to_encrypt, signed, admin_key_obj)
-{
-	if (_.isEmpty(data_to_encrypt)) {
-		logger.error('nothing to encrypt');
-		return false;
-	}
-
-	if (_.isEmpty(this.recipient_public_key)) {
-		logger.error('no destination public key');
-		return false;
-	}
-
-	let options = {
-		data: data_to_encrypt,    // input as String (or Uint8Array)
-		publicKeys: openpgp.key.readArmored(this.recipient_public_key).keys,
-	};
-
-	if (signed) {
-		let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
-		privKeyObj.decrypt(current_user.getPassphrase());
-		options.privateKeys = privKeyObj;
-
-		if ( ! _.isEmpty(admin_key_obj)) {
-			options.privateKeys = [ privKeyObj, admin_key_obj ];
-		}
-	}
-
-	const encrypt_promise = await openpgp.encrypt(options);
-
-	return encrypt_promise.data;
-};
-
 MessageList.prototype.sendToServer = async function(data)
 {
 	if (_.isEmpty(data)) {
@@ -173,11 +141,14 @@ MessageList.prototype.sendMessage = async function(message_data)
 		}
 	}
 
-	// encrypt the message, sending signed
-	msg.EncryptedBody = await this.encryptMessage(message_data, true);
+	// encrypt the message, sending signed by current
+	let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
+	privKeyObj.decrypt(current_user.getPassphrase());
+
+	await msg.encryptMessage(this.recipient_public_key, [ privKeyObj ]);
 
 	// send it to the server
-	const send_success = await this.sendToServer(msg.getEnvelope()+"\n\n"+msg.EncryptedBody);
+	const send_success = await this.sendToServer(msg.EncryptedBody);
 
 	if (!send_success) {
 		return msg;
