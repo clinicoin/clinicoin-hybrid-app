@@ -88,20 +88,19 @@ MessageList.prototype.sendToServer = async function(data)
 		return false;
 	}
 
-	let queue_url = this.getUrl(this.recipient_user_id);
+	const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+
+	const key = this.recipient_user_id+'/msg_'+moment().format('x')+(_.random(100, 999).toString());
 
 	const params = {
-		MessageBody: data,
-		QueueUrl: queue_url,
-		DelaySeconds: 0,
-		MessageDeduplicationId: moment().format('x'),
-		MessageGroupId: this.message_group_id
+		Body: data,
+		Bucket: 'clinicoin-users',
+		Key: key,
+		Expires: moment().add(30, 'days').unix()
 	};
 
-	const sqs = new AWS.SQS({apiVersion: '2012-11-05', region:AWS_REGION});
-
 	const send_promise = new Promise((resolve) => {
-		sqs.sendMessage(params, function(error, data) {
+		s3.putObject(params, function(error, data) {
 			if (error) {
 				resolve({error:error});
 			} else {
@@ -142,10 +141,10 @@ MessageList.prototype.sendMessage = async function(message_data)
 	}
 
 	// encrypt the message, sending signed by current
-	let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
-	privKeyObj.decrypt(current_user.getPassphrase());
+	let signPrivateKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
+	signPrivateKeyObj.decrypt(current_user.getPassphrase());
 
-	await msg.encryptMessage(this.recipient_public_key, [ privKeyObj ]);
+	await msg.encryptMessage(this.recipient_public_key, [ signPrivateKeyObj ]);
 
 	// send it to the server
 	const send_success = await this.sendToServer(msg.EncryptedBody);

@@ -89,15 +89,8 @@ Message.prototype.decryptMessage = async function(channels)
 		privateKey: privKeyObj // for decryption
 	};
 
-	// only check for signing if we have key
-	if (_.isEmpty(this.recipient_public_key)) {
-		options.publicKeys = openpgp.key.readArmored(this.recipient_public_key).keys;
-	}
-
 	// returns object formatted with properties of data:string and signatures:[].valid
 	const decrypted_obj = await openpgp.decrypt(options);
-
-	// 		data: "----START ENVELOPE----\n\n" + this.getEnvelope() + "\n\n----END ENVELOPE----\n\n" + data_to_encrypt,
 
 	const parts = _.split(decrypted_obj.data, '----END ENVELOPE----');
 	const envelope = _.replace(parts[0],'----START ENVELOPE----','').trim();
@@ -107,22 +100,31 @@ Message.prototype.decryptMessage = async function(channels)
 
 	logger.info("data decrypted");
 
-
 	// find the list this belongs to
 	this.MessageList = channels.findByUsername(this.Sender);
 
 	// create a msglist for those without one
 	if (_.isEmpty(this.MessageList)) {
-		this.MessageList = await this.addChannel(msg.Sender);
+		this.MessageList = await this.addChannel(this.Sender);
 	}
 
-	this.MessageList.messages.push(msg);
+	this.MessageList.messages.push(this);
 
-	await this.MessageList.saveMessage(msg);
+	await this.MessageList.saveMessage(this);
 
-	if (decrypted_obj.signatures.length > 0 && decrypted_obj.signatures[0].valid) {
-		logger.info("valid signature");
-		this.Signed = true;
+	// only check for signing if we have key
+	let verified = null;
+	if ( ! _.isEmpty(this.MessageList.recipient_public_key)) {
+		let options = {
+			message: openpgp.cleartext.readArmored(this.EncryptedBody), // parse armored message
+			publicKeys: openpgp.key.readArmored(this.MessageList.recipient_public_key).keys   // for verification
+		};
+		verified = await openpgp.verify(options);
+
+		if (verified.signatures.length > 0 && verified.signatures[0].valid) {
+			logger.info("valid signature");
+			this.Signed = true;
+		}
 	}
 };
 
@@ -142,19 +144,20 @@ Message.prototype.encryptMessage = async function(recipient_public, signer_keys)
 		data: "----START ENVELOPE----\n\n"
 				+ this.getEnvelope()
 				+ "\n\n----END ENVELOPE----\n\n"
-				+ data_to_encrypt,
+				+ this.Body,
 		publicKeys: openpgp.key.readArmored(recipient_public).keys,
 	};
 
 	if ( ! _.isEmpty(signer_keys)) {
+		options.privateKeys = signer_keys;
+
+		/*
 		let privKeyObj = openpgp.key.readArmored(private_key).keys[0];
 		privKeyObj.decrypt(passphrase);
 		options.privateKeys = privKeyObj;
-
-		if ( ! _.isEmpty(admin_key_obj)) {
-			options.privateKeys = signer_keys;
-		}
+		*/
 	}
 
-	await openpgp.encrypt(options);
+	const enc_object = await openpgp.encrypt(options);
+	this.EncryptedBody = enc_object.data;
 };

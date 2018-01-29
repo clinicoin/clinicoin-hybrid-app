@@ -63,7 +63,7 @@ Channels.prototype.addChannel = async function(username)
 Channels.prototype.checkForMessages = async function()
 {
 	// get the list of messages
-	const list = await this.retrieveMessagesFromServer();
+	const list = await this.listServerMessages(current_user.username);
 
 	if (list === false) {
 		logger.debug('message retrieve returned false');
@@ -72,12 +72,11 @@ Channels.prototype.checkForMessages = async function()
 
 	logger.debug(list);
 
-	for (let msg of list) {
-		// processing as a normal message
-		await this.decryptMessage(this);
+	for (let result_obj of list) {
+		let msg = await this.retrieveMessage(result_obj.Key);
 
-		// mark as received (ok to be async)
-		await this.deleteReceivedMessage(msg.ReceiptHandle);
+		// processing as a normal message
+		await msg.decryptMessage(this);
 
 		if (this.newMessageEventDelegate != null && typeof this.newMessageEventDelegate === "function") {
 			this.newMessageEventDelegate(msg_list, msg);
@@ -92,24 +91,26 @@ Channels.prototype.findByUsername = function(username)
 	return _.find(this.channel_list, { 'recipient_user_id': username });
 };
 
-Channels.prototype.retrieveMessagesFromServer = async function()
+Channels.prototype.listServerMessages = async function(path)
 {
-	logger.debug('Retrieving messages');
+	logger.debug('Retrieving list');
 
-	const queue_url = this.getUrl(current_user.username);
-	logger.debug('URL = '+queue_url);
+	const last_message_key = await store.getItem(path+'_LastMessage', null);
+	logger.debug('Since key: '+last_message_key);
 
-	const params = {
-		QueueUrl: queue_url,
-		MaxNumberOfMessages: 10,
-		VisibilityTimeout: 30,
-		WaitTimeSeconds: 5
+	let params = {
+		Bucket: 'clinicoin-users',
+		Prefix: path+'/'
 	};
 
-	const sqs = new AWS.SQS({apiVersion: '2012-11-05', region:AWS_REGION});
+	if ( ! _.isEmpty(last_message_key)) {
+		params.StartAfter = last_message_key;
+	}
+
+	const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 	const retrieve_promise = new Promise((resolve) => {
-		sqs.receiveMessage(params, function(error, data) {
+		s3.listObjectsV2(params, function(error, data) {
 			if (error) {
 				resolve({error:error});
 			} else {
@@ -134,36 +135,64 @@ Channels.prototype.retrieveMessagesFromServer = async function()
 	else {
 		logger.info('message receive success');
 
-		// parse the incoming list
-		let list = [];
-		result.data.Messages.forEach((qm)=>{
-			let msg = new Message();
-			msg.Body = qm.Body;
-			msg.ReceiptHandle = qm.ReceiptHandle;
-			list.push(msg);
-		});
-
-		if (list.length > 0) {
-			logger.debug(list.length + " messages retrieved");
-		}
-
-		return list;
+		return result.data.Contents;
 	}
 };
 
-Channels.prototype.deleteReceivedMessage = async function(receipt_handle)
+Channels.prototype.retrieveMessage = async function(message_key)
 {
-	logger.debug('Deleting message: '+receipt_handle);
+	logger.debug('Retrieving message '+message_key);
 
 	const params = {
-		QueueUrl: this.getUrl(current_user.username),
-		ReceiptHandle: receipt_handle
+		Bucket: 'clinicoin-users',
+		Key: message_key
 	};
 
-	const sqs = new AWS.SQS({apiVersion: '2012-11-05', region:AWS_REGION});
+	const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+
+	const retrieve_promise = new Promise((resolve) => {
+		s3.getObject(params, function(error, data) {
+			if (error) {
+				resolve({error:error});
+			} else {
+				resolve({data:data});
+			}
+		});
+	});
+
+	const result = await retrieve_promise;
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+
+		// if it failed for credentials, try logging in for next time
+		if (result.error.code === 'CredentialsError') {
+			current_user.login();
+		}
+
+		return false;
+	}
+	else {
+		let msg = new Message();
+		msg.EncryptedBody = result.data.Body.toString();
+		return msg;
+	}
+};
+
+Channels.prototype.deleteMessage = async function(message_key)
+{
+	logger.debug('Delete message '+message_key);
+
+	const params = {
+		Bucket: 'clinicoin-users',
+		Key: message_key
+	};
+
+	const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
 	const delete_promise = new Promise((resolve) => {
-		sqs.deleteMessage(params, function(error, data) {
+		s3.deleteObject(params, function(error, data) {
 			if (error) {
 				resolve({error:error});
 			} else {
@@ -177,13 +206,16 @@ Channels.prototype.deleteReceivedMessage = async function(receipt_handle)
 		logger.error(result.error.code + " - " + result.error.message);
 		this.last_error_code = result.error.code;
 		this.last_error_message = result.error.message;
+
+		// if it failed for credentials, try logging in for next time
+		if (result.error.code === 'CredentialsError') {
+			current_user.login();
+		}
+
 		return false;
 	}
-	else {
-		logger.info('message delete success');
-		return true;
-	}
-};
 
+	return true;
+};
 
 let channels = new Channels();
