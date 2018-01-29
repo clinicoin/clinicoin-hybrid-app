@@ -117,6 +117,7 @@ describe('login', function() {
 	it('should login user', async function (done) {
 		setTimeout(done, 30000);
 		const test_user = await createConfirmLoginUser();
+		current_user = test_user;
 		const result = await test_user.isLoggedIn();
 		assert.isTrue(result, "result is false\n\n"+getLastConsoleMessage());
 		done();
@@ -476,24 +477,6 @@ describe('forgotPasswordReset', function() {
 	});
 });
 
-describe('createUserQueue', function() {
-	this.slow(30000);
-	this.timeout(30000); // A very long environment setup.
-
-	beforeEach(function () {
-		Minilog.backends.array.empty();
-	});
-
-	it('should create a queue', async function (done) {
-		setTimeout(done, 30000);
-		const test_user = await createConfirmLoginUser();
-		await sleep(2000);
-		const result = await test_user.createUserQueue();
-		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
-		done();
-	});
-});
-
 describe('updatePublicKey', function() {
 	this.slow(30000);
 	this.timeout(30000); // A very long environment setup.
@@ -584,4 +567,3 @@ describe('setInStorage/getFromStorage', function() {
 		assert.isTrue(result, "result is false\n\n" + getLastConsoleMessage());
 	});
 });
-

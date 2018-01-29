@@ -60,10 +60,14 @@ Channels.prototype.addChannel = async function(username)
 	return channel;
 };
 
-Channels.prototype.checkForMessages = async function()
+Channels.prototype.checkForMessages = async function(user_or_group_name)
 {
+	if (_.isEmpty(user_or_group_name)) {
+		user_or_group_name = current_user.username;
+	}
+
 	// get the list of messages
-	const list = await this.listServerMessages(current_user.username);
+	const list = await this.listServerMessages(user_or_group_name);
 
 	if (list === false) {
 		logger.debug('message retrieve returned false');
@@ -175,7 +179,14 @@ Channels.prototype.retrieveMessage = async function(message_key)
 	}
 	else {
 		let msg = new Message();
+
+		// parse the id out
+		const myregexp = /\/msg_(\d+)/i;
+		const match = myregexp.exec(message_key);
+		msg.MessageId = match[1];
+
 		msg.EncryptedBody = result.data.Body.toString();
+		msg.SendStatus = 'Received';
 		return msg;
 	}
 };

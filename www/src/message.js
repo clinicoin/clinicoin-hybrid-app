@@ -53,6 +53,15 @@ function Message() {
 		});
 	};
 
+	this.readEnvelope = function(json_string)
+	{
+		const data = JSON.parse(json_string);
+		this.Sender = data.Sender;
+		this.Receiver = data.Receiver;
+		this.SentDate = data.Sent;
+		this.GroupMessageType = data.GroupMessageType;
+	};
+
 	this.isRead = function()
 	{
 		return moment(this.ReadDate).format('YYYY-MM-DD') !== moment('1999-01-01').format('YYYY-MM-DD');
@@ -65,7 +74,7 @@ function Message() {
 }
 
 // request an encrypted string to decrypt
-Message.prototype.decryptMessage = async function(channels)
+Message.prototype.decryptMessage = async function(channels, private_key_obj)
 {
 	logger.info('Decrypting message');
 
@@ -74,19 +83,21 @@ Message.prototype.decryptMessage = async function(channels)
 		return false;
 	}
 
-	if (_.isEmpty(current_user.getPrivateKey())) {
+	if (_.isEmpty(private_key_obj) && ! _.isEmpty(current_user.getPrivateKey())) {
+		private_key_obj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
+		private_key_obj.decrypt(current_user.getPassphrase());
+	}
+
+	if (_.isEmpty(private_key_obj)) {
 		logger.error('no private key');
 		return false;
 	}
-
-	let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
-	privKeyObj.decrypt(current_user.getPassphrase());
 
 	//logger.debug(encrypted_data);
 
 	let options = {
 		message: openpgp.message.readArmored(this.EncryptedBody),     // parse armored message
-		privateKey: privKeyObj // for decryption
+		privateKey: private_key_obj // for decryption
 	};
 
 	// returns object formatted with properties of data:string and signatures:[].valid
@@ -94,9 +105,10 @@ Message.prototype.decryptMessage = async function(channels)
 
 	const parts = _.split(decrypted_obj.data, '----END ENVELOPE----');
 	const envelope = _.replace(parts[0],'----START ENVELOPE----','').trim();
-	this.fromJSONString(envelope);
+	this.readEnvelope(envelope);
+	logger.debug(envelope);
 
-	this.Body = parts[1];
+	this.Body = parts[1].trim();
 
 	logger.info("data decrypted");
 
@@ -105,25 +117,26 @@ Message.prototype.decryptMessage = async function(channels)
 
 	// create a msglist for those without one
 	if (_.isEmpty(this.MessageList)) {
-		this.MessageList = await this.addChannel(this.Sender);
+		this.MessageList = await channels.addChannel(this.Sender);
 	}
 
-	this.MessageList.messages.push(this);
+	if ( ! _.isEmpty(this.MessageList)) {
+		this.MessageList.messages.push(this);
+		await this.MessageList.saveMessage(this);
 
-	await this.MessageList.saveMessage(this);
+		// only check for signing if we have key
+		let verified = null;
+		if (!_.isEmpty(this.MessageList.recipient_public_key)) {
+			let options = {
+				message: openpgp.cleartext.readArmored(this.EncryptedBody), // parse armored message
+				publicKeys: openpgp.key.readArmored(this.MessageList.recipient_public_key).keys   // for verification
+			};
+			verified = await openpgp.verify(options);
 
-	// only check for signing if we have key
-	let verified = null;
-	if ( ! _.isEmpty(this.MessageList.recipient_public_key)) {
-		let options = {
-			message: openpgp.cleartext.readArmored(this.EncryptedBody), // parse armored message
-			publicKeys: openpgp.key.readArmored(this.MessageList.recipient_public_key).keys   // for verification
-		};
-		verified = await openpgp.verify(options);
-
-		if (verified.signatures.length > 0 && verified.signatures[0].valid) {
-			logger.info("valid signature");
-			this.Signed = true;
+			if (verified.signatures.length > 0 && verified.signatures[0].valid) {
+				logger.info("valid signature");
+				this.Signed = true;
+			}
 		}
 	}
 };

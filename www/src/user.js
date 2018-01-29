@@ -402,13 +402,11 @@ User.prototype.provisionUser = async function()
 	await this.generateKey();
 
 	Promise.all([
-		this.createUserQueue(),
 		this.updatePublicKey(),
 		this.setInStorage()
 	]).then(async ()=>{
-		// welcome message
 		await this.sendWelcomeMessage();
-		channels.checkForMessages();
+		channels.checkForMessages(this.username);
 	})
 };
 
@@ -420,8 +418,13 @@ User.prototype.sendWelcomeMessage = async function()
 	let msg = new Message();
 	msg.Sender = "Mosio-Clinicoin";
 	msg.Receiver = this.username;
-	const welcome = await msg_list.encryptMessage("Lame welcome message", false);
-	await msg_list.sendToServer(msg.getEnvelope()+"\n\n"+welcome);
+	msg.Body = "Lame welcome message";
+
+	let signPrivateKeyObj = openpgp.key.readArmored(this.getPrivateKey()).keys[0];
+	signPrivateKeyObj.decrypt(this.getPassphrase());
+
+	await msg.encryptMessage(this.getPublicKey(), [signPrivateKeyObj]);
+	await msg_list.sendToServer(msg.EncryptedBody);
 };
 
 /**
@@ -836,25 +839,6 @@ User.prototype.callLambda = async function(invoke_params)
 		logger.info('lambda success');
 		return JSON.parse(result.data.Payload);
 	}
-};
-
-User.prototype.createUserQueue = async function()
-{
-	logger.info('calling createUserQueue ('+this.username+')');
-
-	if (_.isEmpty(this.username)) {
-		logger.error('username is blank');
-		return false;
-	}
-
-	const result = await this.callLambda({
-		FunctionName : 'Clinicoin-createQueue',
-		InvocationType : 'RequestResponse',
-		Payload: JSON.stringify({queueName: this.username}),
-		LogType : 'None'
-	});
-
-	return result.statusCode === 200;
 };
 
 User.prototype.updatePublicKey = async function()

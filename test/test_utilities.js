@@ -75,6 +75,7 @@ const createAndConfirmUser = async function()
 {
 	// create a user
 	let user = new User();
+	user.is_first_login = true;
 	user.name = 'test';
 	user.username = 'test'+_.random(111111,999999); // random username
 	user.email = user.username+'@mailsac.com';
