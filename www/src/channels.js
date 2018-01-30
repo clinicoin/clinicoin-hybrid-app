@@ -17,11 +17,9 @@ Channels.prototype.newMessageEventDelegate = null;
  */
 Channels.prototype.getChannels = async function()
 {
-	logger.info('Retriving Channels');
+	logger.info('Retriving Individual Channels');
 
-	const exp = new RegExp('^ch_'+current_user.username+'_.+_Settings');
-
-	const list = await store.getFilteredData(exp);
+	let list = await store.getFilteredData(new RegExp('^ch_'+current_user.username+'_.+_Settings'));
 
 	let local_list = [];
 
@@ -32,23 +30,36 @@ Channels.prototype.getChannels = async function()
 		local_list.push(msglist);
 	}
 
+	logger.info('Retriving Group Channels');
+
+	list = await store.getFilteredData(new RegExp('^gr_'+current_user.username+'_.+_Settings'));
+
+	for (let json of list) {
+		let grp = new Group();
+		grp.fromJSONString(json);
+		grp.loadSettings();
+		await grp.loadMessages();
+		local_list.push(grp);
+	}
+
 	this.channel_list = local_list;
 
 	return this.channel_list;
 };
 
-Channels.prototype.addChannel = async function(username)
+Channels.prototype.addChannel = async function(name)
 {
-	logger.info('Adding Channel '+username);
+	logger.info('Adding Channel '+name);
 	let _list = await this.getChannels();
-	let item = _.find(_list, { recipient_user_id: username });
+	let item = _.find(_list, { recipient_user_id: name });
 	if ( ! _.isEmpty(item)) {
 		logger.warn('channel already exists');
 		return;
 	}
+
 	let channel = new MessageList();
-	channel.friendly_name = username;
-	channel.recipient_user_id = username;
+	channel.friendly_name = name;
+	channel.recipient_user_id = name;
 	await channel.saveSettings();
 
 	this.channel_list.push(channel);

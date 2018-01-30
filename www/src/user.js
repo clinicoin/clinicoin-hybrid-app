@@ -857,7 +857,8 @@ User.prototype.updatePublicKey = async function()
 		sub: this.awsSub,
 		publicKey: key,
 		phone: this.phone,
-		email: this.email
+		email: this.email,
+		is_group: 0
 	});
 
 	const result = await this.callLambda({

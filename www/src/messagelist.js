@@ -8,10 +8,6 @@ function MessageList()
 	this.messages = [];
 	this.is_group = false;
 
-	this.getUrl = function(user){
-		return 'https://sqs.'+AWS_REGION+'.amazonaws.com/'+AWS_ACCOUNT+'/Clinicoin-Mosio-'+user+'.fifo';
-	};
-
 	this.toJSON = function()
 	{
 		return JSON.stringify({
