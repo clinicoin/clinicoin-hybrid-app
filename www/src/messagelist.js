@@ -72,7 +72,7 @@ MessageList.prototype.getRecipientPublicKey = async function()
 	return false;
 };
 
-MessageList.prototype.sendToServer = async function(data)
+MessageList.prototype.sendToServer = async function(data, message_type)
 {
 	if (_.isEmpty(data)) {
 		logger.error('nothing to send');
@@ -86,7 +86,11 @@ MessageList.prototype.sendToServer = async function(data)
 
 	const s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
-	const key = this.recipient_user_id+'/msg_'+moment().format('x')+(_.random(100, 999).toString());
+	if (_.isEmpty(message_type)) {
+		message_type = 'msg';
+	}
+
+	const key = this.recipient_user_id+'/'+message_type+'_'+moment().format('x')+(_.random(100, 999).toString());
 
 	const params = {
 		Body: data,

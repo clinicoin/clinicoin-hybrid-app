@@ -1,17 +1,20 @@
 
 class Group extends MessageList
 {
-	async constructor()
+	constructor()
 	{
 		super();
 
 		this.friendly_name = '';
 		this.group_name = '';
+		this.admin_list = [];
 		this.user_list = [];
 		this.group_passphrase = '';
 		this.group_private_key = '';
 		this.group_public_key = '';
 		this.group_status = '';
+		this.group_type = 'open';
+		this.last_error = '';
 	}
 
 	toJSON()
@@ -23,6 +26,7 @@ class Group extends MessageList
 			group_private_key: this.group_private_key,
 			group_public_key: this.group_public_key,
 			group_status: this.group_status,
+			group_type: this.group_type,
 			is_group: true
 		});
 	};
@@ -38,7 +42,8 @@ class Group extends MessageList
 		this.group_passphrase = data.group_passphrase;
 		this.group_private_key = data.group_private_key;
 		this.group_public_key = data.group_public_key;
-		this.group_status = data.group_status
+		this.group_status = data.group_status;
+		this.group_type = data.group_type;
 		this.is_group = true;
 	};
 
@@ -89,101 +94,194 @@ class Group extends MessageList
 		 */
 	};
 
-	async createGroup(group_name)
+	static async createGroup(group_name, group_type)
 	{
 		logger.info('calling createGroup');
 
-		if (_.isEmpty(group_name.trim())) {
+		if (_.isEmpty(group_name) || _.isEmpty(group_name.trim())) {
 			logger.error("group name is empty");
-			return false;
+			return "group name is empty";
 		}
+
+		if (group_name.replace(/\W+/ig, "") !== group_name) {
+			logger.error('group name contains non-word characters');
+			return 'group name contains non-word characters';
+		}
+
+		if (channels.findByUsername(group_name)) {
+			logger.error('group name exists locally');
+			return 'group name exists locally';
+		}
+
+		// check if the group already exists
+		let group = new Group();
+		group.group_name = group_name;
+		group.group_type = group_type;
+		group.recipient_user_id = group_name;
+		const exists = await group.getRecipientPublicKey();
+
+		if (exists) {
+			logger.error("group with that name already exists");
+			return "group with that name already exists";
+		}
+
+		// good to go, create keys and save
+		group.group_passphrase = Group.randomPassword(30);
 
 		const options = {
 			userIds: [ {
-				name: this.group_name
+				name: group_name
 			} ], // multiple user IDs
 			numBits: 2048,                // RSA key size
-			passphrase: this.group_passphrase        // protects the private key
+			passphrase: group.group_passphrase        // protects the private key
 		};
 
 		const key_object = await openpgp.generateKey(options);
-		this.group_private_key = key_object.privateKeyArmored;
-		this.group_public_key = key_object.publicKeyArmored;
-
-		this.saveSettings();
+		group.group_private_key = key_object.privateKeyArmored;
+		group.group_public_key = key_object.publicKeyArmored;
 
 		const payload = JSON.stringify({
-			username: this.group_name,
-			publicKey: this.group_public_key,
-			is_group: 1
+			username: group.group_name,
+			publicKey: group.group_public_key,
+			is_group: "1",
+			sub: group.group_type,
+			phone: ' ',
+			email: current_user.username
 		});
 
-		const result = await this.callLambda({
+		const result = await current_user.callLambda({
 			FunctionName : 'Clinicoin-updatePublicKey',
 			InvocationType : 'RequestResponse',
 			Payload: payload,
 			LogType : 'None'
 		});
 
-		return result.statusCode === 200;
+		if (result.statusCode !== 200) {
+			logger.error("Unknown error setting public key");
+			return "Unknown error setting public key";
+		}
+
+		group.admin_list.push(current_user.username);
+
+		group.saveSettings();
+
+		channels.addGroupChannel(group);
+
+		return group;
 	};
 
-	async joinGroup(group_name)
+	static randomPassword(length) {
+		const chars = "abcdefghijklmnopqrstuvwxyz!@#$%^&*()-+<>ABCDEFGHIJKLMNOP1234567890";
+		let pass = "";
+		for (let x = 0; x < length; x++) {
+			let i = Math.floor(Math.random() * chars.length);
+			pass += chars.charAt(i);
+		}
+		return pass;
+	}
+
+	async getGroupKey()
 	{
 		logger.info('calling joinGroup');
 
-		if (_.isEmpty(group_name.trim())) {
+		if (_.isEmpty(this.group_name.trim())) {
 			logger.error("group name is empty");
 			return false;
 		}
-
-		let msg = new Message();
-		msg.Body = message_data;
-		msg.Sender = current_user.username;
-		msg.Receiver = group_name;
-
-		this.recipient_user_id = group_name;
-		await this.getRecipientPublicKey();
-		this.group_public_key = recipient_public_key;
-
-		await msg.encryptMessage(this.recipient_public_key, []);
-
-		// send it to the server
-		const send_success = await this.sendToServer(msg.EncryptedBody);
-
-		this.group_status = 'requested';
-
-		this.saveSettings();
-	}
+		this.recipient_user_id = this.group_name;
+		const result = await this.getRecipientPublicKey();
+		this.group_public_key = this.recipient_public_key;
+		return result;
+	};
 
 	async sendMemberMessage(message_json)
 	{
 		let msg = new Message();
 		msg.Body = message_json;
-		msg.Sender = group_name;
-		msg.Receiver = user_name;
+		msg.Sender = current_user.username;
+		msg.Receiver = this.group_name;
 
-		this.recipient_user_id = group_name;
+		this.recipient_user_id = this.group_name;
 		await this.getRecipientPublicKey();
-		this.group_public_key = recipient_public_key;
+		this.group_public_key = this.recipient_public_key;
 
-		let private_key_obj = openpgp.key.readArmored(this.group_private_key).keys[0];
-		private_key_obj.decrypt(this.group_passphrase);
-
-		await msg.encryptMessage(this.recipient_public_key, [private_key_obj]);
+		if ( ! _.isEmpty(this.group_private_key)) {
+			let private_key_obj = openpgp.key.readArmored(this.group_private_key).keys[0];
+			private_key_obj.decrypt(this.group_passphrase);
+			await msg.encryptMessage(this.recipient_public_key, [private_key_obj]);
+		}
+		else {
+			await msg.encryptMessage(this.recipient_public_key);
+		}
 
 		// send it to the server
-		const send_success = await this.sendToServer(msg.EncryptedBody);
+		const send_success = await this.sendToServer(msg.EncryptedBody, 'cmd');
+	}
+
+	async joinGroup(group_name)
+	{
+		logger.info('calling joinGroup');
+
+		if (_.isEmpty(group_name) || _.isEmpty(group_name.trim())) {
+			logger.error("group name is empty");
+			return 'group name is empty';
+		}
+
+		if (channels.findByUsername(group_name)) {
+			logger.error('group name exists locally');
+			return 'group name exists locally';
+		}
+
+		this.recipient_user_id = group_name;
+		const exists = await this.getRecipientPublicKey();
+
+		if ( ! exists) {
+			logger.error("group with that name does not exist");
+			return "group not found";
+		}
+
+		this.group_public_key = this.recipient_public_key;
+		this.group_name = group_name;
+
+		const msg = { command: "join "+group_name };
+		await this.sendMemberMessage(msg);
+
+		this.group_status = 'requested';
+
+		this.saveSettings();
+
+		channels.addGroupChannel(this);
 	}
 
 	async approveJoin(user_name)
 	{
-		const msg = { status: "approved", passphrase: this.group_passphrase, privatekey: this.group_private_key };
+		logger.info('approving join');
+		this.user_list.push(user_name);
+		const msg = {
+			status: "approved",
+			passphrase: this.group_passphrase,
+			privatekey: this.group_private_key,
+			admins: this.admin_list,
+			users: this.user_list
+		};
 		this.sendMemberMessage(msg);
+		this.saveSettings();
 	}
+
+	receiveApproval(msg)
+	{
+		this.group_status = msg.status;
+		this.group_passphrase = msg.passphrase;
+		this.group_private_key = msg.privatekey;
+		this.admin_list = msg.admins;
+		this.user_list = msg.users;
+		this.saveSettings();
+	};
 
 	async removeMember(user_name)
 	{
+		logger.info('removing member');
+
 		this.user_list = _.without(this.user_list, user_name);
 		this.saveSettings();
 

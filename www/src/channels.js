@@ -71,6 +71,15 @@ Channels.prototype.addChannel = async function(name)
 	return channel;
 };
 
+Channels.prototype.addGroupChannel = function(new_group)
+{
+	logger.info('Adding new group: '+new_group.group_name);
+	this.channel_list.push(new_group);
+	if (this.newChannelEventDelegate != null && typeof this.newChannelEventDelegate === "function") {
+		this.newChannelEventDelegate(new_group);
+	}
+};
+
 Channels.prototype.checkForMessages = async function(user_or_group_name)
 {
 	if (_.isEmpty(user_or_group_name)) {
@@ -192,9 +201,12 @@ Channels.prototype.retrieveMessage = async function(message_key)
 		let msg = new Message();
 
 		// parse the id out
-		const myregexp = /\/msg_(\d+)/i;
+		const myregexp = /(.+)\/msg_(\d+)/i;
 		const match = myregexp.exec(message_key);
-		msg.MessageId = match[1];
+		const path = match[1];
+		msg.MessageId = match[2];
+
+		store.setItem(path+'_LastMessage', null);
 
 		msg.EncryptedBody = result.data.Body.toString();
 		msg.SendStatus = 'Received';

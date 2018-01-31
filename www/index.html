@@ -520,13 +520,32 @@
 				<div style="text-align:center;">
 					<v-btn id="btnConnectUser" color="primary" @click="connectUser">Connect</v-btn>
 				</div>
+
+                <div style="padding-top: 30px; text-align:center;">
+                    <v-btn id="btnShowCreateGroup" outline color="indigo" @click="page_visible=PAGE_CREATE_GROUP">Create New Group</v-btn>
+                </div>
 			</v-container>
 
-			<v-container fluid id="conSettings" v-show="page_visible==PAGE_QRCODE" class="white-container">
-				<div style="text-align: center; margin-top: 100px;">
-					<canvas id="qr"></canvas>
-				</div>
-			</v-container>
+            <v-container fluid id="conSettings" v-show="page_visible==PAGE_QRCODE" class="white-container">
+                <div style="text-align: center; margin-top: 100px;">
+                    <canvas id="qr"></canvas>
+                </div>
+            </v-container>
+
+            <v-container fluid id="conCreateGroup" v-show="page_visible==PAGE_CREATE_GROUP" class="white-container">
+                <div style="text-align:center; font-size:large; margin-bottom:20px;">Create Group</div>
+
+                <v-text-field label="Group Name" v-model="new_group_name"></v-text-field>
+
+                <v-radio-group v-model="new_group_type">
+                    <v-radio label="Open Group (Automatic Entry)" value="1" checked></v-radio>
+                    <v-radio label="Closed Group (Member Approval)" value="2"></v-radio>
+                </v-radio-group>
+
+                <div style="text-align:center;">
+                    <v-btn id="btnCreateGroup" color="primary" @click="createGroup">Create Group</v-btn>
+                </div>
+            </v-container>
 
 			<v-container fluid id="conSettings" v-show="page_visible==PAGE_ACTIVITY" class="white-container" style="background-color: #EDF2F8;">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Activity</div>
@@ -1332,6 +1351,24 @@
 					this.showSuccessToast('Support request sent');
 				}
 			},
+			createGroup: async function()
+            {
+	            if (_.isEmpty(this.support_message.trim())) {
+		            this.showErrorToast('message cannot be empty');
+	            }
+	            else {
+	            	this.show_spinner = true;
+		            const result = await Group.createGroup(this.new_group_name);
+		            if (_.isString(result)) {
+			            this.showErrorToast('Group create failed: '+result);
+		            }
+		            else {
+			            this.showSuccessToast('New group created');
+		            	// go to the new group
+                    }
+                    this.show_spinner = false;
+	            }
+            }
 		},
 		data()
 		{
@@ -1368,6 +1405,9 @@
                 activity_amount_list: [],
                 user_activity_history: [],
 
+				new_group_name: '',
+				new_group_type: '1',
+
 				support_message: '',
 				support_subject: '',
 
@@ -1386,11 +1426,12 @@
 				PAGE_MESSAGING: 7,
 				PAGE_CONNECT: 8,
 				PAGE_QRCODE: 9,
-				PAGE_ACTIVITY: 10,
-				PAGE_SETTINGS: 11,
-				PAGE_ACCOUNT_SETTINGS: 12,
-				PAGE_SUPPORT: 13,
-				PAGE_ABOUT: 14,
+				PAGE_CREATE_GROUP: 10,
+				PAGE_ACTIVITY: 11,
+				PAGE_SETTINGS: 12,
+				PAGE_ACCOUNT_SETTINGS: 13,
+				PAGE_SUPPORT: 14,
+				PAGE_ABOUT: 15,
 
 				tour_images: [
 					{src: 'img/tour1.png'},

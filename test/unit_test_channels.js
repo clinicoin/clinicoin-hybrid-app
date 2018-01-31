@@ -1,5 +1,5 @@
 
-/*
+
 describe('listServerMessages', function() {
 	this.timeout(10000);
 
@@ -93,7 +93,7 @@ describe('addChannel', function() {
 	});
 
 });
-*/
+
 describe('end-to-end: sendMessage/checkForMessages', function() {
 	this.slow(30000);
 	this.timeout(30000); // A very long environment setup.
