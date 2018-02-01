@@ -223,3 +223,25 @@ MessageList.prototype.markRead = function()
 		}
 	});
 };
+
+MessageList.prototype.processMessage = async function(msg)
+{
+	this.messages.push(msg);
+
+	// only check for signing if we have key
+	let verified = null;
+	if (!_.isEmpty(this.recipient_public_key)) {
+		let options = {
+			message: openpgp.cleartext.readArmored(msg.EncryptedBody), // parse armored message
+			publicKeys: openpgp.key.readArmored(this.recipient_public_key).keys   // for verification
+		};
+		verified = await openpgp.verify(options);
+
+		if (verified.signatures.length > 0 && verified.signatures[0].valid) {
+			logger.info("valid signature");
+			msg.Signed = true;
+		}
+	}
+
+	await this.saveMessage(this);
+};

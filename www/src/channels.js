@@ -74,7 +74,11 @@ Channels.prototype.addChannel = async function(name)
 Channels.prototype.addGroupChannel = function(new_group)
 {
 	logger.info('Adding new group: '+new_group.group_name);
-	this.channel_list.push(new_group);
+
+	if (_.indexOf(this.channel_list, new_group) === -1) {
+		this.channel_list.push(new_group);
+	}
+
 	if (this.newChannelEventDelegate != null && typeof this.newChannelEventDelegate === "function") {
 		this.newChannelEventDelegate(new_group);
 	}
@@ -87,7 +91,8 @@ Channels.prototype.checkForMessages = async function(user_or_group_name)
 	}
 
 	// get the list of messages
-	const list = await this.listServerMessages(user_or_group_name);
+	let list = await this.listServerMessages(user_or_group_name);
+	list = list.sort();
 
 	if (list === false) {
 		logger.debug('message retrieve returned false');
@@ -144,6 +149,7 @@ Channels.prototype.listServerMessages = async function(path)
 	});
 
 	const result = await retrieve_promise;
+
 	if (result.error) {
 		logger.error(result.error.code + " - " + result.error.message);
 		this.last_error_code = result.error.code;
@@ -201,12 +207,22 @@ Channels.prototype.retrieveMessage = async function(message_key)
 		let msg = new Message();
 
 		// parse the id out
-		const myregexp = /(.+)\/msg_(\d+)/i;
-		const match = myregexp.exec(message_key);
-		const path = match[1];
-		msg.MessageId = match[2];
-
-		store.setItem(path+'_LastMessage', null);
+		let myregexp = /(.+)\/msg_(\d+)/i;
+		if (myregexp.test(message_key)) {
+			const match = myregexp.exec(message_key);
+			const path = match[1];
+			msg.MessageId = match[2];
+			store.setItem(path+'_LastMessage', null);
+		}
+		else {
+			myregexp = /(.+)\/cmd_(\d+)/i;
+			if (myregexp.test(message_key)) {
+				const match = myregexp.exec(message_key);
+				const path = match[1];
+				msg.MessageId = match[2];
+				store.setItem(path+'_LastMessage', null);
+			}
+		}
 
 		msg.EncryptedBody = result.data.Body.toString();
 		msg.SendStatus = 'Received';

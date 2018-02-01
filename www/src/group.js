@@ -72,27 +72,57 @@ class Group extends MessageList
 		return true;
 	};
 
-	async processIncoming(msg)
+	async processMessage(msg)
 	{
-		const decrypted_obj = await this.decryptMessage(msg.EncryptedBody);
+		// only check for signing if we have key
+		let verified = null;
+		if (!_.isEmpty(this.recipient_public_key)) {
+			let options = {
+				message: openpgp.cleartext.readArmored(msg.EncryptedBody), // parse armored message
+				publicKeys: openpgp.key.readArmored(this.recipient_public_key).keys   // for verification
+			};
+			verified = await openpgp.verify(options);
 
-		msg.Body = decrypted_obj.data;
-
-		if (decrypted_obj.signatures.length > 0 && decrypted_obj.signatures[0].valid) {
-			logger.info("valid signature");
-			msg.Signed = true;
+			if (verified.signatures.length > 0 && verified.signatures[0].valid) {
+				logger.info("valid signature");
+				msg.Signed = true;
+			}
 		}
 
-		if (_.isEmpty(msg.MessageType)) {
+		if (_.startsWith(msg.MessageId, 'msg_')) {
+			// regular message, so just push
 			this.messages.push(msg);
-			await msg_list.saveMessage(msg);
 		}
 
+		const data = JSON.parse(msg.Body);
+
+		if (data.command === 'join_request '+this.group_name && this.group_type === 'open') {
+			// auto-process for an open group
+			this.adminApproveJoin(msg.Sender);
+		}
+		else if (data.command === 'join_request '+this.group_name && isAdmin()) {
+			// user requested to join
+			msg.Command = {
+				request: 'join',
+				group: this.group_name,
+				sender: this.recipient_user_id
+			};
+
+			this.message_list.push(msg);
+		}
+		else if (data.command === 'join_approval') {
+			this.userJoinApprovalEvent(msg);
+		}
 
 		/*
 		TODO: functions for invite, request access, join (free group), refuse access, grant access
 		 */
 	};
+
+	isAdmin()
+	{
+		return _.indexOf(this.admin_list, current_user.username) > -1;
+	}
 
 	static async createGroup(group_name, group_type)
 	{
@@ -116,8 +146,9 @@ class Group extends MessageList
 		// check if the group already exists
 		let group = new Group();
 		group.group_name = group_name;
-		group.group_type = group_type;
+		group.friendly_name = group_name;
 		group.recipient_user_id = group_name;
+		group.group_type = group_type;
 		const exists = await group.getRecipientPublicKey();
 
 		if (exists) {
@@ -201,9 +232,7 @@ class Group extends MessageList
 		msg.Sender = current_user.username;
 		msg.Receiver = this.group_name;
 
-		this.recipient_user_id = this.group_name;
-		await this.getRecipientPublicKey();
-		this.group_public_key = this.recipient_public_key;
+		this.getGroupKey();
 
 		if ( ! _.isEmpty(this.group_private_key)) {
 			let private_key_obj = openpgp.key.readArmored(this.group_private_key).keys[0];
@@ -218,7 +247,7 @@ class Group extends MessageList
 		const send_success = await this.sendToServer(msg.EncryptedBody, 'cmd');
 	}
 
-	async joinGroup(group_name)
+	async userJoinRequest(group_name)
 	{
 		logger.info('calling joinGroup');
 
@@ -243,7 +272,9 @@ class Group extends MessageList
 		this.group_public_key = this.recipient_public_key;
 		this.group_name = group_name;
 
-		const msg = { command: "join "+group_name };
+		const msg = {
+			command: "join_request "+group_name
+		};
 		await this.sendMemberMessage(msg);
 
 		this.group_status = 'requested';
@@ -253,12 +284,12 @@ class Group extends MessageList
 		channels.addGroupChannel(this);
 	}
 
-	async approveJoin(user_name)
+	async adminApproveJoin(user_name)
 	{
 		logger.info('approving join');
 		this.user_list.push(user_name);
 		const msg = {
-			status: "approved",
+			status: "join_approved",
 			passphrase: this.group_passphrase,
 			privatekey: this.group_private_key,
 			admins: this.admin_list,
@@ -268,15 +299,23 @@ class Group extends MessageList
 		this.saveSettings();
 	}
 
-	receiveApproval(msg)
+	adminDenyJoin(user_name)
+	{
+		// not doing anything, currently...
+	}
+
+	userJoinApprovalEvent(msg)
 	{
 		this.group_status = msg.status;
 		this.group_passphrase = msg.passphrase;
 		this.group_private_key = msg.privatekey;
 		this.admin_list = msg.admins;
 		this.user_list = msg.users;
+
 		this.saveSettings();
-	};
+
+		channels.addChannel(this.group_name);
+	}
 
 	async removeMember(user_name)
 	{

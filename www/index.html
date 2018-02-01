@@ -504,6 +504,58 @@
 				</v-footer>
 			</v-container>
 
+            <v-container fluid id="conGroupMessages" v-show="page_visible==PAGE_GROUP_MESSAGING" class="white-container">
+
+                <div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
+
+                <div id="group_messaging_list" style="height: 80%; overflow-y: auto;">
+                    <v-list>
+                        <template v-for="item in active_channel.messages">
+                            <v-list-tile v-show="item.Sender==currentUserData.username && item.Command==null">
+                                <div style="width:100%;">
+                                    <div class="message-out">
+                                        {{ item.Body }}
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                            <v-list-tile v-show="item.Sender!=currentUserData.username && item.Command==null">
+                                <div style="width:100%;">
+                                    <div class="message-in">
+                                        {{ item.Body }}
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                            <v-list-tile v-show="item.Sender!=currentUserData.username && item.Command != null && item.Command.request == 'join'">
+                                <div style="width:100%;">
+                                    <div class="message-in">
+                                        {{ item.Sender }} has requested to join the group.
+                                        <v-btn color="primary" @click="joinApprove(item.Command.group, item.Sender, item.MessageId)">Approve</v-btn>
+                                        <v-btn outline color="indigo" @click="joinDeny(item.Command.group, item.Sender, item.MessageId)">Deny</v-btn>
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                        </template>
+                    </v-list>
+                </div>
+                <v-footer style="background-color:white;" v-bind:app="true">
+
+                    <v-btn icon disabled>
+                        <v-icon>photo_camera</v-icon>
+                    </v-btn>
+
+                    <v-text-field
+                            label="Message"
+                            auto-grow
+                            light
+                            v-model="outgoing_message"
+                    ></v-text-field>
+
+                    <v-btn fab small dark color="indigo" @click="sendUserMessage">
+                        <v-icon>send</v-icon>
+                    </v-btn>
+                </v-footer>
+            </v-container>
+
 			<v-container fluid id="conSettings" v-show="page_visible==PAGE_CONNECT" class="white-container">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Connect With People</div>
 
@@ -538,8 +590,8 @@
                 <v-text-field label="Group Name" v-model="new_group_name"></v-text-field>
 
                 <v-radio-group v-model="new_group_type">
-                    <v-radio label="Open Group (Automatic Entry)" value="1" checked></v-radio>
-                    <v-radio label="Closed Group (Member Approval)" value="2"></v-radio>
+                    <v-radio label="Open Group (Automatic Entry)" value="open" checked></v-radio>
+                    <v-radio label="Closed Group (Member Approval)" value="closed"></v-radio>
                 </v-radio-group>
 
                 <div style="text-align:center;">
@@ -1157,9 +1209,16 @@
 					this.showErrorToast(current_user.last_error_message);
 				}
 			},
-			messageListSelected: function (selected_user) {
-				this.page_visible = this.PAGE_MESSAGING;
+			messageListSelected: function (selected_user)
+            {
 				current_message_list = _.find(channels.channel_list, {"recipient_user_id": selected_user});
+
+				if (current_message_list.constructor === Group) {
+					this.page_visible = this.PAGE_GROUP_MESSAGING;
+                } else {
+					this.page_visible = this.PAGE_MESSAGING;
+                }
+
 				this.active_channel.username = current_message_list.recipient_user_id;
 				this.active_channel.friendly_name = current_message_list.friendly_name;
 				this.refreshActiveList();
@@ -1368,7 +1427,19 @@
                     }
                     this.show_spinner = false;
 	            }
-            }
+            },
+            joinApprove: async function(group_name, user_name, message_id)
+            {
+            	const group = channels.findByUsername(group_name);
+            	await group.adminApproveJoin(user_name);
+            	channels.deleteMessage(message_id);
+            },
+			joinDeny: async function(group_name, user_name, message_id)
+			{
+				const group = channels.findByUsername(group_name);
+				await group.adminDenyJoin(user_name);
+				channels.deleteMessage(message_id);
+			},
 		},
 		data()
 		{
@@ -1406,7 +1477,7 @@
                 user_activity_history: [],
 
 				new_group_name: '',
-				new_group_type: '1',
+				new_group_type: 'open',
 
 				support_message: '',
 				support_subject: '',
@@ -1424,14 +1495,15 @@
 				PAGE_REGISTER_VERIFY: 5,
 				PAGE_MAIN_LIST: 6,
 				PAGE_MESSAGING: 7,
-				PAGE_CONNECT: 8,
-				PAGE_QRCODE: 9,
-				PAGE_CREATE_GROUP: 10,
-				PAGE_ACTIVITY: 11,
-				PAGE_SETTINGS: 12,
-				PAGE_ACCOUNT_SETTINGS: 13,
-				PAGE_SUPPORT: 14,
-				PAGE_ABOUT: 15,
+				PAGE_GROUP_MESSAGING: 8,
+				PAGE_CONNECT: 9,
+				PAGE_QRCODE: 10,
+				PAGE_CREATE_GROUP: 11,
+				PAGE_ACTIVITY: 12,
+				PAGE_SETTINGS: 13,
+				PAGE_ACCOUNT_SETTINGS: 14,
+				PAGE_SUPPORT: 15,
+				PAGE_ABOUT: 16,
 
 				tour_images: [
 					{src: 'img/tour1.png'},

@@ -12,6 +12,7 @@ function Message() {
 	this.ReadDate = moment('1999-01-01');
 	this.GroupMessageType = null;
 	this.MessageList = null;
+	this.Command = null;
 
 	this.toJSON = function()
 	{
@@ -121,23 +122,7 @@ Message.prototype.decryptMessage = async function(channels, private_key_obj)
 	}
 
 	if ( ! _.isEmpty(this.MessageList)) {
-		this.MessageList.messages.push(this);
-		await this.MessageList.saveMessage(this);
-
-		// only check for signing if we have key
-		let verified = null;
-		if (!_.isEmpty(this.MessageList.recipient_public_key)) {
-			let options = {
-				message: openpgp.cleartext.readArmored(this.EncryptedBody), // parse armored message
-				publicKeys: openpgp.key.readArmored(this.MessageList.recipient_public_key).keys   // for verification
-			};
-			verified = await openpgp.verify(options);
-
-			if (verified.signatures.length > 0 && verified.signatures[0].valid) {
-				logger.info("valid signature");
-				this.Signed = true;
-			}
-		}
+		this.MessageList.processMessage(this);
 	}
 };
 

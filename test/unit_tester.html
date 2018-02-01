@@ -44,7 +44,7 @@
 <script src="passwords.js"></script>
 <script src="test_keys.js"></script>
 <script src="test_utilities.js"></script>
-
+<script src="sinon-4.1.3.js"></script>
 
 <!-- test files -->
 <!--
@@ -73,6 +73,7 @@
     mocha.run();
 
 	const assert = chai.assert;
+	let sandbox = sinon.createSandbox();
 </script>
 </body>
 </html>

@@ -49,7 +49,7 @@ describe('createGroup', function() {
 	});
 
 });
-*/
+
 describe('joinGroup', function() {
 	this.timeout(10000);
 
@@ -57,15 +57,71 @@ describe('joinGroup', function() {
 		Minilog.backends.array.empty();
 	});
 
-	it('should successfully join a group', async function () {
-		/*
-		join group
-		approve join
-		receive join
-		*/
+	afterEach(function () {
+		// completely restore all fakes created through the sandbox
+		sandbox.restore();
 	});
 
-	/*
+	it('should successfully join an open group', async function () {
+		await loginDemoUser();
+		current_user.username = 'demouser';
+
+		// join group
+		let group = new Group();
+
+		sandbox.stub(group, 'getRecipientPublicKey').resolves(true);
+		const send_member_stub = sandbox.stub(group, 'sendMemberMessage').resolves(true);
+		sandbox.stub(group, 'saveSettings');
+
+		const group_name = 'test_group';
+		await group.userJoinRequest(group_name);
+
+		let msg = new Message();
+		msg.Sender = 'demouser';
+		msg.MessageId = 'cmd_6';
+		msg.Body = JSON.stringify(send_member_stub.getCall(0).args[0]);
+
+		group.recipient_public_key = null;
+
+		group.processMessage(msg);
+
+		const approve_msg = send_member_stub.getCall(1).args[0];
+
+		assert(approve_msg.status === 'join_approved', "approve message not found");
+	});
+
+	it('should successfully join a closed group', async function () {
+		await loginDemoUser();
+		current_user.username = 'demouser';
+
+		// join group
+		let group = new Group();
+		group.admin_list.push('demouser');
+		group.group_type = 'closed';
+
+		sandbox.stub(group, 'getRecipientPublicKey').resolves(true);
+		const send_member_stub = sandbox.stub(group, 'sendMemberMessage').resolves(true);
+		sandbox.stub(group, 'saveSettings');
+
+		const group_name = 'test_group';
+		await group.userJoinRequest(group_name);
+
+		let msg = new Message();
+		msg.Sender = 'demouser';
+		msg.MessageId = 'cmd_6';
+		msg.Body = JSON.stringify(send_member_stub.getCall(0).args[0]);
+
+		group.recipient_public_key = null;
+
+		group.processMessage(msg);
+
+		await group.adminApproveJoin(user_name);
+
+		const approve_msg = send_member_stub.getCall(1).args[0];
+
+		assert(approve_msg.status === 'join_approved', "approve message not found");
+	});
+
 	it('should fail on undefined group name', async function () {
 		await loginDemoUser();
 		const group = new Group;
@@ -94,6 +150,28 @@ describe('joinGroup', function() {
 		const error = await group.joinGroup('local_group');
 		assert.equal('group name exists locally',error,"error result not matched: "+error);
 	});
-	*/
+});
+*/
+describe('removeMember', function() {
+	this.timeout(10000);
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should remove member', async function () {
+		assert.fail('remove member not defined');
+	});
 });
 
+describe('distributeKey', function() {
+	this.timeout(10000);
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should distribute key', async function () {
+		assert.fail('distributeKey not defined');
+	});
+});
