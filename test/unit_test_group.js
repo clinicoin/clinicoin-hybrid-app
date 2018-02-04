@@ -152,17 +152,7 @@ describe('joinGroup', function() {
 	});
 });
 */
-describe('removeMember', function() {
-	this.timeout(10000);
 
-	beforeEach(function () {
-		Minilog.backends.array.empty();
-	});
-
-	it('should remove member', async function () {
-		assert.fail('remove member not defined');
-	});
-});
 
 describe('distributeKey', function() {
 	this.timeout(10000);
@@ -172,6 +162,37 @@ describe('distributeKey', function() {
 	});
 
 	it('should distribute key', async function () {
-		assert.fail('distributeKey not defined');
+		current_user.generateKey();
+
+		const lambda_stub = sandbox.stub(current_user, 'callLambda').resolves(true);
+
+		const group = new Group();
+		group.group_public_key = current_user.getPublicKey();
+		group.group_private_key = current_user.getPrivateKey();
+		group.distributeKey();
+
+		const stub_arg = lambda_stub.getCall(0).args[0].Payload;
+
+		assert.equal(group.group_name, stub_arg.sender, "sender not matched");
+	});
+});
+
+describe('removeMember', function() {
+	this.timeout(10000);
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should remove member', async function () {
+		const group = new Group();
+		group.user_list = ["usera","userb","userc"];
+		const send_member_stub = sandbox.stub(group, 'sendMemberMessage').resolves(true);
+		const settings_stub = sandbox.stub(group, 'saveSettings').resolves(true);
+		const distribute_stub = sandbox.stub(group, 'distributeKey').resolves(true);
+
+		group.removeMember('usera');
+
+		assert.equal(2, group.user_list.length, "user did not get removed");
 	});
 });

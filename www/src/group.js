@@ -50,13 +50,19 @@ class Group extends MessageList
 	async loadSettings()
 	{
 		const settings = await store.getItem('gr_'+current_user.username+'_'+this.group_name+'_Settings');
-		this.fromJSONString(settings);
+		if ( ! _.isEmpty(settings)) {
+			this.fromJSONString(settings);
+		}
 
 		const admin_json = await store.getItem('gr_'+current_user.username+'_'+this.group_name+'_Admins');
-		this.admin_list = JSON.parse(admin_json);
+		if ( ! _.isEmpty(admin_json)) {
+			this.admin_list = JSON.parse(admin_json);
+		}
 
 		const user_json = await store.getItem('gr_'+current_user.username+'_'+this.group_name+'_Users');
-		this.user_list = JSON.parse(user_json);
+		if ( ! _.isEmpty(user_json)) {
+			this.user_list = JSON.parse(user_json);
+		}
 
 		return true;
 	};
@@ -100,7 +106,7 @@ class Group extends MessageList
 			// auto-process for an open group
 			this.adminApproveJoin(msg.Sender);
 		}
-		else if (data.command === 'join_request '+this.group_name && isAdmin()) {
+		else if (data.command === 'join_request '+this.group_name && this.isAdmin()) {
 			// user requested to join
 			msg.Command = {
 				request: 'join',
@@ -113,10 +119,9 @@ class Group extends MessageList
 		else if (data.command === 'join_approval') {
 			this.userJoinApprovalEvent(msg);
 		}
-
-		/*
-		TODO: functions for invite, request access, join (free group), refuse access, grant access
-		 */
+		else if (data.command === 'join_notify') {
+			this.messages.push(data.username + " has joined");
+		}
 	};
 
 	isAdmin()
@@ -225,7 +230,7 @@ class Group extends MessageList
 		return result;
 	};
 
-	async sendMemberMessage(message_json)
+	async sendGroupMessage(message_json)
 	{
 		let msg = new Message();
 		msg.Body = message_json;
@@ -275,7 +280,7 @@ class Group extends MessageList
 		const msg = {
 			command: "join_request "+group_name
 		};
-		await this.sendMemberMessage(msg);
+		await this.sendGroupMessage(msg);
 
 		this.group_status = 'requested';
 
@@ -287,15 +292,29 @@ class Group extends MessageList
 	async adminApproveJoin(user_name)
 	{
 		logger.info('approving join');
+
 		this.user_list.push(user_name);
-		const msg = {
+
+		const message_json = JSON.stringify({
 			status: "join_approved",
+			group: this.group_name,
 			passphrase: this.group_passphrase,
 			privatekey: this.group_private_key,
 			admins: this.admin_list,
 			users: this.user_list
-		};
-		this.sendMemberMessage(msg);
+		});
+
+		let msg = new Message();
+		msg.Body = message_json;
+		msg.Sender = current_user.username;
+		msg.Receiver = user_name;
+
+		let private_key_obj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
+		private_key_obj.decrypt(current_user.getPassphrase());
+		await msg.encryptMessage(this.recipient_public_key, [private_key_obj]);
+
+		await this.sendToServer(msg.EncryptedBody, 'cmd');
+
 		this.saveSettings();
 	}
 
@@ -322,10 +341,9 @@ class Group extends MessageList
 		logger.info('removing member');
 
 		this.user_list = _.without(this.user_list, user_name);
-		this.saveSettings();
 
 		const msg = { status: "removed" };
-		this.sendMemberMessage(msg);
+		this.sendGroupMessage(msg);
 
 		const key_object = await openpgp.generateKey(options);
 		this.group_private_key = key_object.privateKeyArmored;
@@ -350,12 +368,31 @@ class Group extends MessageList
 			return false;
 		}
 
+		let options = {
+			data: "----START ENVELOPE----\n\n"
+			+ JSON.stringify({
+				Sender: this.group_name,
+				Admins: this.admin_list.join(','),
+				Users: this.user_list.join(',')
+			})
+			+ "\n\n----END ENVELOPE----\n\n"
+			+ data,
+			publicKeys: openpgp.key.readArmored(this.group_public_key).keys,
+		};
+
+		let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
+		privKeyObj.decrypt(current_user.getPassphrase());
+		options.privateKeys = privKeyObj;
+
+		const enc_object = await openpgp.encrypt(options);
+
+		const key = 'cmd_'+moment().format('x')+(_.random(100, 999).toString());
+
 		const payload = JSON.stringify({
-			group: this.group_name,
-			publicKey: this.group_public_key,
-			privateKey: this.group_private_key,
-			passphrase: this.group_passphrase,
-			users: this.user_list
+			data: enc_object.data,
+			sender: this.group_name,
+			destinations: this.user_list.join(','),
+			messageid: key
 		});
 
 		const result = await current_user.callLambda({
@@ -368,4 +405,13 @@ class Group extends MessageList
 		return result.statusCode === 200;
 	}
 
+	adminPromote(admin_name)
+	{
+		this.sendGroupMessage(JSON.stringify({ command: "promote", admin: admin_name }));
+	}
+
+	adminDemote(admin_name)
+	{
+		this.sendGroupMessage(JSON.stringify({ command: "demote", admin: admin_name }));
+	}
 }

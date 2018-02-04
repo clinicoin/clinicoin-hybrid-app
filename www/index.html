@@ -15,6 +15,7 @@
 		Minilog.pipe(Minilog.backends.array);
 		Minilog.enable();
 	</script>
+    <script src="lib/jquery.mobile-1.4.5.min.js"></script>
 	<script src="lib/lodash-4.17.4.js"></script>
 	<script src="lib/openpgp.js"></script>
 	<script src="lib/aws-cognito-sdk.min.js"></script>
@@ -421,7 +422,7 @@
 			</v-container>
 
 			<v-container fluid id="conMainList" v-show="page_visible==PAGE_MAIN_LIST" class="white-container">
-
+                <div style="height: 70%; overflow-y: auto;">
 				<v-list two-line>
 					<template v-for="(item, index) in channels">
 						<v-list-tile :key="item.title" ripple @click="messageListSelected(item.username)">
@@ -445,7 +446,7 @@
 						<v-divider v-if="index + 1 < channels.length" :key="item.title + '-separator'"></v-divider>
 					</template>
 				</v-list>
-
+                </div>
 
 				<v-speed-dial bottom fixed right>
 					<v-btn slot="activator" color="blue darken-2" dark fab hover large>
@@ -507,6 +508,8 @@
             <v-container fluid id="conGroupMessages" v-show="page_visible==PAGE_GROUP_MESSAGING" class="white-container">
 
                 <div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
+
+                <v-btn id="btnShowGroupQR" outline color="indigo" @click="showGroupQRCode">Show Group QR Code</v-btn>
 
                 <div id="group_messaging_list" style="height: 80%; overflow-y: auto;">
                     <v-list>
@@ -810,6 +813,8 @@
 	let assert = null;
 
 	$(function() {
+		$('.ui-loader').hide();
+
 		for(let i=1; i <= 100; i++) {
 			vm.activity_amount_list.push(i);
         }
@@ -1428,6 +1433,12 @@
                     this.show_spinner = false;
 	            }
             },
+            joinGroup: async function(group_name)
+            {
+	            const group = channels.findByUsername(group_name);
+	            group.userJoinRequest(group_name);
+	            this.showSuccessToast('Group join request sent');
+            },
             joinApprove: async function(group_name, user_name, message_id)
             {
             	const group = channels.findByUsername(group_name);
@@ -1440,14 +1451,31 @@
 				await group.adminDenyJoin(user_name);
 				channels.deleteMessage(message_id);
 			},
+			showGroupQRCode: function () {
+				this.page_visible = this.PAGE_QRCODE;
+				const qr = new QRious({
+					element: document.getElementById('qr'),
+					value: 'https://www.clinicoin.com/connect/' + vm.username,
+					size: 300
+				});
+			},
+            promoteUser: async function(group_name, user_name)
+            {
+	            const group = channels.findByUsername(group_name);
+	            group.adminPromote(user_name);
+            },
+            demoteAdmin: async function(admin_name)
+            {
+
+            },
 		},
 		data()
 		{
 			return {
 				real_name: '',
-				username: 'demo40',
+				username: 'demo50',
 				is_username_disabled: false,
-				email: 'demo40@mailsac.com',
+				email: 'demo50@mailsac.com',
 				phone: '9995551212',
 				password: 'ffDemo@1234',
 				new_password: '',
