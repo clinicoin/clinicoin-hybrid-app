@@ -13,6 +13,7 @@ function Message() {
 	this.GroupMessageType = null;
 	this.MessageList = null;
 	this.Command = null;
+	this.MessagePath = '';
 
 	this.toJSON = function()
 	{
@@ -102,7 +103,13 @@ Message.prototype.decryptMessage = async function(channels, private_key_obj)
 	};
 
 	// returns object formatted with properties of data:string and signatures:[].valid
-	const decrypted_obj = await openpgp.decrypt(options);
+	let decrypted_obj = null;
+	try {
+		decrypted_obj = await openpgp.decrypt(options);
+	} catch(e) {
+		logger.error(e.message);
+		return false;
+	}
 
 	const parts = _.split(decrypted_obj.data, '----END ENVELOPE----');
 	const envelope = _.replace(parts[0],'----START ENVELOPE----','').trim();
@@ -113,17 +120,29 @@ Message.prototype.decryptMessage = async function(channels, private_key_obj)
 
 	logger.info("data decrypted");
 
-	// find the list this belongs to
-	this.MessageList = channels.findByUsername(this.Sender);
+	// try to find this in the groups, if the receiver is not the current user
+	if (this.Receiver !== current_user.username) {
+		this.MessageList = channels.findByUsername(this.Receiver);
+		if (_.isEmpty(this.MessageList) || this.MessageList.constructor !== Group) {
+			this.MessageList = null;
+		}
+	}
 
-	// create a msglist for those without one
-	if (_.isEmpty(this.MessageList)) {
-		this.MessageList = await channels.addChannel(this.Sender);
+	// find the list this belongs to
+	if (this.MessageList === null) {
+		this.MessageList = channels.findByUsername(this.Sender);
+
+		// create a msglist for those without one
+		if (_.isEmpty(this.MessageList)) {
+			this.MessageList = await channels.addChannel(this.Sender);
+		}
 	}
 
 	if ( ! _.isEmpty(this.MessageList)) {
-		this.MessageList.processMessage(this);
+		await this.MessageList.processMessage(this);
 	}
+
+	return true;
 };
 
 Message.prototype.encryptMessage = async function(recipient_public, signer_keys)

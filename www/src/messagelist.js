@@ -35,11 +35,15 @@ function MessageList()
 	};
 }
 
-MessageList.prototype.getRecipientPublicKey = async function()
+MessageList.prototype.getRecipientPublicKey = async function(user_name)
 {
 	logger.info('calling getRecipientPublicKey');
 
-	if (_.isEmpty(this.recipient_user_id)) {
+	if (_.isEmpty(user_name)) {
+		user_name = this.recipient_user_id;
+	}
+
+	if (_.isEmpty(user_name)) {
 		logger.error('recipient username is blank');
 		return false;
 	}
@@ -47,12 +51,13 @@ MessageList.prototype.getRecipientPublicKey = async function()
 	const response = await current_user.callLambda({
 		FunctionName : 'Clinicoin-getPublicKey',
 		InvocationType : 'RequestResponse',
-		Payload: JSON.stringify({username: this.recipient_user_id}),
+		Payload: JSON.stringify({ username: user_name }),
 		LogType : 'None'
 	});
 
 	if ( ! _.isEmpty(response.body) && response.statusCode===200) {
 		this.recipient_public_key = response.body.PublicKey.S;
+		this.is_group = response.body.IsGroup.S === "1";
 		this.last_public_key_retrieval = moment().format('YYYY-MM-DD HH:mm:ss');
 		return response.statusCode === 200;
 	}
@@ -117,7 +122,7 @@ MessageList.prototype.sendToServer = async function(data, message_type)
 		return false;
 	}
 	else {
-		logger.info('message send success');
+		logger.info('message send success: '+key);
 		return true;
 	}
 };

@@ -36,7 +36,7 @@ Channels.prototype.getChannels = async function()
 
 	for (let json of list) {
 		let grp = new Group();
-		grp.fromJSONString(json);
+		grp.fromGroupJSONString(json);
 		grp.loadSettings();
 		await grp.loadMessages();
 		local_list.push(grp);
@@ -84,18 +84,45 @@ Channels.prototype.addGroupChannel = function(new_group)
 	}
 };
 
-Channels.prototype.checkForMessages = async function(user_or_group_name)
+Channels.prototype.checkAllMessageSources = async function()
 {
-	if (_.isEmpty(user_or_group_name)) {
-		user_or_group_name = current_user.username;
+	this.checkForMessages(null, false);
+
+	const group_list = _.filter(this.channel_list, { is_group: true });
+
+	for(let group_obj of group_list) {
+		if ( ! _.isEmpty(group_obj.group_private_key)) {
+			this.checkForMessages(group_obj.group_name, true);
+		}
+	}
+};
+
+Channels.prototype.checkForMessages = async function(user_or_group, is_group)
+{
+	let private_key_obj = null;
+	let check_name = '';
+
+	if (_.isEmpty(user_or_group)) {
+		is_group = false;
+		check_name = current_user.username;
+	}
+	else if (user_or_group.constructor === User) {
+		is_group = false;
+		check_name = user_or_group.username;
+		private_key_obj = openpgp.key.readArmored(user_or_group.getPrivateKey()).keys[0];
+		private_key_obj.decrypt(user_or_group.getPassphrase());
+	}
+	else if (user_or_group.constructor === Group) {
+		check_name = user_or_group.group_name;
+		private_key_obj = openpgp.key.readArmored(user_or_group.group_private_key).keys[0];
+		private_key_obj.decrypt(user_or_group.group_passphrase);
 	}
 
-	// get the list of messages
-	let list = await this.listServerMessages(user_or_group_name);
+	let list = await this.listServerMessages(check_name);
 	list = list.sort();
 
 	if (list === false) {
-		logger.debug('message retrieve returned false');
+		logger.debug('No messages for '+check_name);
 		return;
 	}
 
@@ -104,10 +131,13 @@ Channels.prototype.checkForMessages = async function(user_or_group_name)
 	for (let result_obj of list) {
 		let msg = await this.retrieveMessage(result_obj.Key);
 
-		// processing as a normal message
-		await msg.decryptMessage(this);
+		let decrypt_success = await msg.decryptMessage(this, private_key_obj);
 
-		if (this.newMessageEventDelegate != null && typeof this.newMessageEventDelegate === "function") {
+		if ( ! is_group && ! decrypt_success) {
+			// delete personal messages that fail decryption
+			await this.deleteMessage(result_obj.Key);  // leave sync only for testing
+		}
+		else if (this.newMessageEventDelegate != null && typeof this.newMessageEventDelegate === "function") {
 			this.newMessageEventDelegate(msg_list, msg);
 		}
 	}
@@ -224,6 +254,7 @@ Channels.prototype.retrieveMessage = async function(message_key)
 			}
 		}
 
+		msg.MessagePath = message_key;
 		msg.EncryptedBody = result.data.Body.toString();
 		msg.SendStatus = 'Received';
 		return msg;

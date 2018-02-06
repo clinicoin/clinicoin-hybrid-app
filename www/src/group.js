@@ -17,7 +17,7 @@ class Group extends MessageList
 		this.last_error = '';
 	}
 
-	toJSON()
+	toGroupJSON()
 	{
 		return JSON.stringify({
 			friendly_name: this.friendly_name,
@@ -31,13 +31,17 @@ class Group extends MessageList
 		});
 	};
 
-	fromJSONString(json_string)
+	fromGroupJSONString(json_string)
 	{
 		if (_.isEmpty(json_string)) {
 			return;
 		}
 		const data = JSON.parse(json_string);
+		this.group_name = data.group_name;
 		this.friendly_name = data.friendly_name;
+		if (_.isEmpty(this.friendly_name)) {
+			this.friendly_name = this.group_name;
+		}
 		this.recipient_user_id = data.group_name;
 		this.group_passphrase = data.group_passphrase;
 		this.group_private_key = data.group_private_key;
@@ -51,7 +55,7 @@ class Group extends MessageList
 	{
 		const settings = await store.getItem('gr_'+current_user.username+'_'+this.group_name+'_Settings');
 		if ( ! _.isEmpty(settings)) {
-			this.fromJSONString(settings);
+			this.fromGroupJSONString(settings);
 		}
 
 		const admin_json = await store.getItem('gr_'+current_user.username+'_'+this.group_name+'_Admins');
@@ -69,7 +73,7 @@ class Group extends MessageList
 
 	async saveSettings()
 	{
-		await store.setItem('gr_'+current_user.username+'_'+this.group_name+'_Settings', this.toJSON());
+		await store.setItem('gr_'+current_user.username+'_'+this.group_name+'_Settings', this.toGroupJSON());
 
 		await store.setItem('gr_'+current_user.username+'_'+this.group_name+'_Admins', JSON.stringify(this.admin_list));
 
@@ -82,17 +86,21 @@ class Group extends MessageList
 	{
 		// only check for signing if we have key
 		let verified = null;
-		if (!_.isEmpty(this.recipient_public_key)) {
-			let options = {
-				message: openpgp.cleartext.readArmored(msg.EncryptedBody), // parse armored message
-				publicKeys: openpgp.key.readArmored(this.recipient_public_key).keys   // for verification
-			};
-			verified = await openpgp.verify(options);
+		try {
+			if (!_.isEmpty(this.recipient_public_key)) {
+				let options = {
+					message: openpgp.cleartext.readArmored(msg.EncryptedBody), // parse armored message
+					publicKeys: openpgp.key.readArmored(this.recipient_public_key).keys   // for verification
+				};
+				verified = await openpgp.verify(options);
 
-			if (verified.signatures.length > 0 && verified.signatures[0].valid) {
-				logger.info("valid signature");
-				msg.Signed = true;
+				if (verified.signatures.length > 0 && verified.signatures[0].valid) {
+					logger.info("valid signature");
+					msg.Signed = true;
+				}
 			}
+		} catch (e) {
+			logger.warn('could not verify signature');
 		}
 
 		if (_.startsWith(msg.MessageId, 'msg_')) {
@@ -104,7 +112,7 @@ class Group extends MessageList
 
 		if (data.command === 'join_request '+this.group_name && this.group_type === 'open') {
 			// auto-process for an open group
-			this.adminApproveJoin(msg.Sender);
+			await this.adminApproveJoin(msg.Sender);
 		}
 		else if (data.command === 'join_request '+this.group_name && this.isAdmin()) {
 			// user requested to join
@@ -116,8 +124,8 @@ class Group extends MessageList
 
 			this.message_list.push(msg);
 		}
-		else if (data.command === 'join_approval') {
-			this.userJoinApprovalEvent(msg);
+		else if (data.command === 'join_approved') {
+			await this.userJoinApprovalEvent(msg);
 		}
 		else if (data.command === 'join_notify') {
 			this.messages.push(data.username + " has joined");
@@ -139,8 +147,8 @@ class Group extends MessageList
 		}
 
 		if (group_name.replace(/\W+/ig, "") !== group_name) {
-			logger.error('group name contains non-word characters');
-			return 'group name contains non-word characters';
+			logger.error('group name contains spaces or special characters');
+			return 'group name contains spaces or special characters';
 		}
 
 		if (channels.findByUsername(group_name)) {
@@ -252,7 +260,7 @@ class Group extends MessageList
 		const send_success = await this.sendToServer(msg.EncryptedBody, 'cmd');
 	}
 
-	async userJoinRequest(group_name)
+	static async userJoinRequest(group_name)
 	{
 		logger.info('calling joinGroup');
 
@@ -262,41 +270,44 @@ class Group extends MessageList
 		}
 
 		if (channels.findByUsername(group_name)) {
-			logger.error('group name exists locally');
-			return 'group name exists locally';
+			logger.error('already joined/joining group');
+			return 'already joined/joining group';
 		}
 
-		this.recipient_user_id = group_name;
-		const exists = await this.getRecipientPublicKey();
+		const new_group = new Group();
+		new_group.recipient_user_id = group_name;
+		const exists = await new_group.getRecipientPublicKey();
 
 		if ( ! exists) {
 			logger.error("group with that name does not exist");
 			return "group not found";
 		}
 
-		this.group_public_key = this.recipient_public_key;
-		this.group_name = group_name;
+		new_group.group_public_key = new_group.recipient_public_key;
+		new_group.group_name = group_name;
 
-		const msg = {
-			command: "join_request "+group_name
-		};
-		await this.sendGroupMessage(msg);
+		await new_group.sendGroupMessage(JSON.stringify({ command: "join_request "+group_name }));
 
-		this.group_status = 'requested';
+		new_group.group_status = 'requested';
 
-		this.saveSettings();
+		new_group.saveSettings();
 
-		channels.addGroupChannel(this);
+		channels.addGroupChannel(new_group);
+
+		return new_group;
 	}
 
 	async adminApproveJoin(user_name)
 	{
 		logger.info('approving join');
 
+		this.recipient_user_id = user_name;
+		await this.getRecipientPublicKey(user_name);
+
 		this.user_list.push(user_name);
 
 		const message_json = JSON.stringify({
-			status: "join_approved",
+			command: "join_approved",
 			group: this.group_name,
 			passphrase: this.group_passphrase,
 			privatekey: this.group_private_key,
@@ -306,34 +317,35 @@ class Group extends MessageList
 
 		let msg = new Message();
 		msg.Body = message_json;
-		msg.Sender = current_user.username;
+		msg.Sender = this.group_name;
 		msg.Receiver = user_name;
 
 		let private_key_obj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
 		private_key_obj.decrypt(current_user.getPassphrase());
-		await msg.encryptMessage(this.recipient_public_key, [private_key_obj]);
+		await msg.encryptMessage(this.recipient_public_key, [ private_key_obj ]);
 
 		await this.sendToServer(msg.EncryptedBody, 'cmd');
+
+		this.sendGroupMessage(JSON.stringify({ command: "join_notify", username: user_name }));
 
 		this.saveSettings();
 	}
 
-	adminDenyJoin(user_name)
+	async adminDenyJoin(user_name)
 	{
 		// not doing anything, currently...
 	}
 
-	userJoinApprovalEvent(msg)
+	async userJoinApprovalEvent(msg)
 	{
+		msg = JSON.parse(msg.Body);
 		this.group_status = msg.status;
 		this.group_passphrase = msg.passphrase;
 		this.group_private_key = msg.privatekey;
 		this.admin_list = msg.admins;
 		this.user_list = msg.users;
 
-		this.saveSettings();
-
-		channels.addChannel(this.group_name);
+		await this.saveSettings();
 	}
 
 	async removeMember(user_name)
@@ -342,8 +354,7 @@ class Group extends MessageList
 
 		this.user_list = _.without(this.user_list, user_name);
 
-		const msg = { status: "removed" };
-		this.sendGroupMessage(msg);
+		this.sendGroupMessage(JSON.stringify({ status: "removed", group: this.group_name }));
 
 		const key_object = await openpgp.generateKey(options);
 		this.group_private_key = key_object.privateKeyArmored;
@@ -388,10 +399,12 @@ class Group extends MessageList
 
 		const key = 'cmd_'+moment().format('x')+(_.random(100, 999).toString());
 
+		const all_users = _.union(this.user_list, this.admin_list);
+
 		const payload = JSON.stringify({
 			data: enc_object.data,
 			sender: this.group_name,
-			destinations: this.user_list.join(','),
+			destinations: all_users.join(','),
 			messageid: key
 		});
 
@@ -405,13 +418,13 @@ class Group extends MessageList
 		return result.statusCode === 200;
 	}
 
-	adminPromote(admin_name)
+	async adminPromote(admin_name)
 	{
-		this.sendGroupMessage(JSON.stringify({ command: "promote", admin: admin_name }));
+		await this.sendGroupMessage(JSON.stringify({ command: "promote", admin: admin_name }));
 	}
 
-	adminDemote(admin_name)
+	async adminDemote(admin_name)
 	{
-		this.sendGroupMessage(JSON.stringify({ command: "demote", admin: admin_name }));
+		await this.sendGroupMessage(JSON.stringify({ command: "demote", admin: admin_name }));
 	}
 }

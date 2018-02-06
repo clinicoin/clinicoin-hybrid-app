@@ -62,6 +62,48 @@ describe('joinGroup', function() {
 		sandbox.restore();
 	});
 
+	it('should successfully (really) join an open group', async function () {
+		const group_name = 'group'+moment().format('x');
+
+		// create new user1
+		const user1 = await createConfirmLoginUser();
+
+		// create open group1 (user1 automatically admin)
+		current_user = user1;
+		let user1_group = await Group.createGroup(group_name, "open");
+		const user1Channels = new Channels();
+		channels = user1Channels;
+		user1Channels.addGroupChannel(user1_group);
+
+		assert.equal(1, user1_group.admin_list.length, "no admins listed");
+		assert.equal(current_user.username, user1_group.admin_list[0], "current user not an admin");
+
+		// create new user2 and join
+		const user2 = await createConfirmLoginUser();
+		current_user = user2;
+		const user2Channels = new Channels();
+		channels = user2Channels;
+		await Group.userJoinRequest(group_name);
+
+		// process requests to group through user1 (auto-approve)
+		current_user = user1;
+		channels = user1Channels;
+		await user1Channels.checkForMessages(user1_group);
+		assert(user1_group.user_list.length === 1, 'new user not added');
+
+		// user2 receives new public/private key to their path
+		current_user = user2;
+		channels = user2Channels;
+		await user2Channels.checkForMessages();
+
+		await channels.getChannels();
+		const actual_group = channels.findByUsername(group_name);
+
+		assert.equal(group_name, actual_group.group_name, 'names do not match');
+		assert.equal(actual_group.group_private_key, user1_group.group_private_key, 'private key does not match');
+		assert(actual_group.admin_list[0] === user1.username);
+	});
+
 	it('should successfully join an open group', async function () {
 		await loginDemoUser();
 		current_user.username = 'demouser';
@@ -151,8 +193,6 @@ describe('joinGroup', function() {
 		assert.equal('group name exists locally',error,"error result not matched: "+error);
 	});
 });
-*/
-
 
 describe('distributeKey', function() {
 	this.timeout(10000);
@@ -196,3 +236,4 @@ describe('removeMember', function() {
 		assert.equal(2, group.user_list.length, "user did not get removed");
 	});
 });
+*/
