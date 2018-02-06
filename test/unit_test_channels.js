@@ -1,5 +1,5 @@
 
-
+/*
 describe('listServerMessages', function() {
 	this.timeout(10000);
 
@@ -128,5 +128,44 @@ describe('end-to-end: sendMessage/checkForMessages', function() {
 		assert(msg_list.messages.length === 1, "message count is whack");
 
 		done();
+	});
+});
+*/
+
+describe('deleteMessage', function() {
+	this.timeout(10000);
+
+	beforeEach(function () {
+		Minilog.backends.array.empty();
+	});
+
+	it('should retrieve the demouser channel', async function () {
+		await loginDemoUser();
+
+		// write a file
+		const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+
+		const params = {
+			Body: 'data to delete',
+			Bucket: 'clinicoin-users',
+			Key: 'demouser/delete_me',
+			Expires: moment().add(2, 'days').unix()
+		};
+
+		const send_promise = new Promise((resolve) => {
+			s3.putObject(params, function(error, data) {
+				if (error) {
+					resolve({error:error});
+				} else {
+					resolve({data:data});
+				}
+			});
+		});
+
+		const result = await send_promise;
+
+
+		// delete it
+		channels.deleteMessage('demouser/delete_me');
 	});
 });

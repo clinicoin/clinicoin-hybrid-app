@@ -231,6 +231,10 @@ MessageList.prototype.markRead = function()
 
 MessageList.prototype.processMessage = async function(msg)
 {
+	if (_.find(this.messages, { MessageId: msg.MessageId }) !== undefined) {
+		return;
+	}
+
 	this.messages.push(msg);
 
 	// only check for signing if we have key

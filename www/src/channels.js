@@ -190,7 +190,7 @@ Channels.prototype.listServerMessages = async function(path)
 			current_user.login();
 		}
 
-		return false;
+		return [];
 	}
 	else {
 		logger.info('message receive success');
