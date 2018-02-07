@@ -2,6 +2,9 @@ const Channels = function() {
 	// this is the list of message lists
 	this.channel_list = [];
 
+	// this is a list of all downloaded files
+	this.download_list = [];
+
 	this.getUrl = function(user){
 		return 'https://sqs.'+AWS_REGION+'.amazonaws.com/'+AWS_ACCOUNT+'/Clinicoin-Mosio-'+user+'.fifo';
 	};
@@ -27,6 +30,12 @@ Channels.prototype.getChannels = async function()
 		let msglist = new MessageList();
 		msglist.fromJSONString(json);
 		await msglist.loadMessages();
+
+		// get all the keys
+		for (let msg of msglist.messages) {
+			this.download_list.push(msg.AwsKey);
+		}
+
 		local_list.push(msglist);
 	}
 
@@ -39,8 +48,16 @@ Channels.prototype.getChannels = async function()
 		grp.fromGroupJSONString(json);
 		grp.loadSettings();
 		await grp.loadMessages();
+
+		// get all the keys
+		for (let msg of grp.messages) {
+			this.download_list.push(msg.AwsKey);
+		}
+
 		local_list.push(grp);
 	}
+
+	this.download_list = _.uniq(this.download_list);
 
 	this.channel_list = local_list;
 
@@ -92,7 +109,7 @@ Channels.prototype.checkAllMessageSources = async function()
 
 	for(let group_obj of group_list) {
 		if ( ! _.isEmpty(group_obj.group_private_key)) {
-			this.checkForMessages(group_obj.group_name, true);
+			this.checkForMessages(group_obj, true);
 		}
 	}
 };
@@ -119,26 +136,28 @@ Channels.prototype.checkForMessages = async function(user_or_group, is_group)
 	}
 
 	let list = await this.listServerMessages(check_name);
+	list = _.difference(list, this.download_list);
 	list = list.sort();
 
 	if (list === false) {
+		logger.debug('Could not retrieve messages for '+check_name);
+		return;
+	}
+	else if (list.length === 0) {
 		logger.debug('No messages for '+check_name);
 		return;
 	}
 
 	logger.debug(list);
 
-	for (let result_obj of list) {
-		let msg = await this.retrieveMessage(result_obj.Key);
+	for (let key of list) {
+		let msg = await this.retrieveMessage(key);
 
 		let decrypt_success = await msg.decryptMessage(this, private_key_obj);
 
 		if ( ! is_group && ! decrypt_success) {
 			// delete personal messages that fail decryption
-			await this.deleteMessage(result_obj.Key);  // leave sync only for testing
-		}
-		else if (this.newMessageEventDelegate != null && typeof this.newMessageEventDelegate === "function") {
-			this.newMessageEventDelegate(msg_list, msg);
+			await msg.deleteFromServer(key);  // leave sync only for testing
 		}
 	}
 
@@ -195,7 +214,11 @@ Channels.prototype.listServerMessages = async function(path)
 	else {
 		logger.info('message receive success');
 
-		return result.data.Contents;
+		let list = [];
+		for(let msg of result.data.Contents) {
+			list.push(msg.Key);
+		}
+		return list;
 	}
 };
 
@@ -242,7 +265,7 @@ Channels.prototype.retrieveMessage = async function(message_key)
 			const match = myregexp.exec(message_key);
 			const path = match[1];
 			msg.MessageId = match[2];
-			store.setItem(path+'_LastMessage', null);
+			store.setItem(path+'_LastMessage', msg.MessageId);
 		}
 		else {
 			myregexp = /(.+)\/cmd_(\d+)/i;
@@ -250,53 +273,18 @@ Channels.prototype.retrieveMessage = async function(message_key)
 				const match = myregexp.exec(message_key);
 				const path = match[1];
 				msg.MessageId = match[2];
-				store.setItem(path+'_LastMessage', null);
+				store.setItem(path+'_LastMessage', msg.MessageId);
 			}
 		}
 
-		msg.MessagePath = message_key;
+		this.download_list.push(message_key);
+		this.download_list = _.uniq(this.download_list);
+
+		msg.AwsKey = message_key;
 		msg.EncryptedBody = result.data.Body.toString();
 		msg.SendStatus = 'Received';
 		return msg;
 	}
-};
-
-Channels.prototype.deleteMessage = async function(message_key)
-{
-	logger.debug('Delete message '+message_key);
-
-	const params = {
-		Bucket: 'clinicoin-users',
-		Key: message_key
-	};
-
-	const s3 = new AWS.S3({apiVersion: '2006-03-01'});
-
-	const delete_promise = new Promise((resolve) => {
-		s3.deleteObject(params, function(error, data) {
-			if (error) {
-				resolve({error:error});
-			} else {
-				resolve({data:data});
-			}
-		});
-	});
-
-	const result = await delete_promise;
-	if (result.error) {
-		logger.error(result.error.code + " - " + result.error.message);
-		this.last_error_code = result.error.code;
-		this.last_error_message = result.error.message;
-
-		// if it failed for credentials, try logging in for next time
-		if (result.error.code === 'CredentialsError') {
-			current_user.login();
-		}
-
-		return false;
-	}
-
-	return true;
 };
 
 let channels = new Channels();

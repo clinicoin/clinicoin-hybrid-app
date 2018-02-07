@@ -128,6 +128,14 @@
             margin-bottom: -10px;
         }
 
+        .command-event {
+            position: relative;
+            float: left;
+            padding: 5px;
+            font-size: smaller;
+            color: grey;
+        }
+
 		.white-container {
 			background: white;
 			height: 100%;
@@ -543,26 +551,47 @@
                 <div id="group_messaging_list" style="height: 80%; overflow-y: auto;">
                     <v-list>
                         <template v-for="item in active_channel.messages">
-                            <v-list-tile v-show="item.Sender==currentUserData.username && item.Command==null">
+                            <v-list-tile v-show="item.Sender == currentUserData.username && item.Command==null">
                                 <div style="width:100%;">
                                     <div class="message-out">
                                         {{ item.Body }}
                                     </div>
                                 </div>
                             </v-list-tile>
-                            <v-list-tile v-show="item.Sender!=currentUserData.username && item.Command==null">
+                            <v-list-tile v-show="item.Sender != currentUserData.username && item.Command==null">
                                 <div style="width:100%;">
                                     <div class="message-in">
                                         {{ item.Body }}
                                     </div>
                                 </div>
                             </v-list-tile>
-                            <v-list-tile v-show="item.Sender!=currentUserData.username && item.Command != null && item.Command.request == 'join'">
+                            <v-list-tile v-show="item.Sender != currentUserData.username && item.Command != null && item.Command.request == 'join'">
                                 <div style="width:100%;">
                                     <div class="message-in">
                                         {{ item.Sender }} has requested to join the group.
-                                        <v-btn color="primary" @click="joinApprove(item.Command.group, item.Sender, item.MessageId)">Approve</v-btn>
-                                        <v-btn outline color="indigo" @click="joinDeny(item.Command.group, item.Sender, item.MessageId)">Deny</v-btn>
+                                        <v-btn color="primary" @click="joinApprove(item.Command.group, item.Sender, item.AwsKey)">Approve</v-btn>
+                                        <v-btn outline color="indigo" @click="joinDeny(item.Command.group, item.Sender, item.AwsKey)">Deny</v-btn>
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                            <v-list-tile v-show="item.Command != null && item.Command.request == 'join_approved'">
+                                <div style="width:100%;">
+                                    <div class="command-event">
+                                        {{ item.Sender }} join has been approved
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                            <v-list-tile v-show="item.Command != null && item.Command.request == 'join_auto_approved'">
+                                <div style="width:100%;">
+                                    <div class="command-event">
+                                        {{ item.Sender }} join has been auto-approved
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                            <v-list-tile v-show="item.Command != null && item.Command.request == 'join_notify'">
+                                <div style="width:100%;">
+                                    <div class="command-event">
+                                        {{ item.Sender }} has joined
                                     </div>
                                 </div>
                             </v-list-tile>
@@ -1029,7 +1058,7 @@
 				await channels.getChannels();
 
 				channels.channel_list.forEach((channel) => {
-					let last_message = _.last(channel.messages);
+					let last_message = _.findLast(channel.messages, (msg)=>{ return msg.Command === null; });
 
 					if (_.isEmpty(last_message)) {
 						last_message = new Message();
@@ -1054,23 +1083,25 @@
 				logger.debug("newChannelEvent Fired");
 				this.updateChannels();
 			},
-			newMessageEvent: function(channel, message)
+			newMessageEvent: function(message)
 			{
-				logger.debug("newMessageEvent Fired "+channel.recipient_user_id);
+				logger.debug("newMessageEvent Fired "+message.MessageList.recipient_user_id);
 				logger.debug("active channel "+this.active_channel.username);
-				if (channel.recipient_user_id === this.active_channel.username) {
+				if (message.MessageList.recipient_user_id === this.active_channel.username) {
 					logger.debug("adding to active list");
 					this.refreshActiveList();
                 }
 				this.updateChannels();
 
-				cordova.plugins.notification.local.schedule({
-					title: 'Clinicoin - '+channel.friendly_name,
-					text: message.Body,
-					foreground: true,
-					led: { color: '#00FF00', on: 500, off: 500 },
-					vibrate: true
-				});
+				try{
+					cordova.plugins.notification.local.schedule({
+						title: 'Clinicoin - ' + channel.friendly_name,
+						text: message.Body,
+						foreground: true,
+						led: {color: '#00FF00', on: 500, off: 500},
+						vibrate: true
+					});
+				} catch (e) {}
 			},
 			loginUser: async function () {
 				if (_.isEmpty(this.username)) {
@@ -1305,16 +1336,18 @@
 				const active_channel = channels.findByUsername(this.active_channel.username);
 
 				let message_list = [];
-				current_message_list.messages.forEach(function (msg) {
+				active_channel.messages.forEach(function (msg) {
 					message_list.push({
 						Sender: msg.Sender,
 						Body: msg.Body,
-						SentDate: msg.SentDate
+						SentDate: msg.SentDate,
+                        Command: msg.Command,
+                        Data: msg
 					})
 				});
 				this.active_channel.messages = message_list;
 
-				current_message_list.markRead();
+				active_channel.markRead();
 
 				// scroll to bottom
 				setTimeout(() => {
@@ -1334,36 +1367,38 @@
 				this.page_visible = this.PAGE_CONNECT;
 			},
 			showScanBarcode: function () {
-				cordova.plugins.barcodeScanner.scan(
-					async function (result) {
-						if (!result.cancelled) {
-							logger.debug("Result: " + result.text + ", format: " + result.format);
-							vm.add_name = result.text;
-							await Vue.nextTick();
-							vm.connectUser();
-                        }
-                        else {
-							logger.debug('Scan canelled');
-                        }
-					},
-					function (error) {
-						logger.debug("Scanning failed: " + error);
-						this.showErrorToast("Scanning failed: " + error);
-					},
-					{
-						preferFrontCamera : false, // iOS and Android
-						showFlipCameraButton : true, // iOS and Android
-						showTorchButton : true, // iOS and Android
-						torchOn: false, // Android, launch with the torch switched on (if available)
-						saveHistory: true, // Android, save scan history (default false)
-						prompt : "Place a barcode inside the scan area", // Android
-						resultDisplayDuration: 500, // Android, display scanned text for X ms. 0 suppresses it entirely, default 1500
-						formats : "QR_CODE,PDF_417", // default: all but PDF_417 and RSS_EXPANDED
-						orientation : "portrait", // Android only (portrait|landscape), default unset so it rotates with the device
-						disableAnimations : true, // iOS
-						disableSuccessBeep: false // iOS and Android
-					}
-				);
+				try {
+					cordova.plugins.barcodeScanner.scan(
+						async function (result) {
+							if (!result.cancelled) {
+								logger.debug("Result: " + result.text + ", format: " + result.format);
+								vm.add_name = result.text;
+								await Vue.nextTick();
+								vm.connectUser();
+							}
+							else {
+								logger.debug('Scan canelled');
+							}
+						},
+						function (error) {
+							logger.debug("Scanning failed: " + error);
+							this.showErrorToast("Scanning failed: " + error);
+						},
+						{
+							preferFrontCamera: false, // iOS and Android
+							showFlipCameraButton: true, // iOS and Android
+							showTorchButton: true, // iOS and Android
+							torchOn: false, // Android, launch with the torch switched on (if available)
+							saveHistory: true, // Android, save scan history (default false)
+							prompt: "Place a barcode inside the scan area", // Android
+							resultDisplayDuration: 500, // Android, display scanned text for X ms. 0 suppresses it entirely, default 1500
+							formats: "QR_CODE,PDF_417", // default: all but PDF_417 and RSS_EXPANDED
+							orientation: "portrait", // Android only (portrait|landscape), default unset so it rotates with the device
+							disableAnimations: true, // iOS
+							disableSuccessBeep: false // iOS and Android
+						}
+					);
+				} catch (e) {}
 			},
 			connectUser: async function () {
 				if (_.isEmpty(this.add_name.trim())) {
@@ -1492,7 +1527,7 @@
 		            }
 		            else {
 			            this.showSuccessToast('New group created');
-		            	// go to the new group
+			            this.messageListSelected(this.new_group_name);
                     }
                     this.show_spinner = false;
 	            }
@@ -1501,18 +1536,23 @@
             {
 	            Group.userJoinRequest(group_name);
 	            this.showSuccessToast('Group join request sent');
+	            this.page_visible = this.PAGE_MAIN_LIST;
             },
-            joinApprove: async function(group_name, user_name, message_id)
+            joinApprove: async function(group_name, user_name, aws_key)
             {
             	const group = channels.findByUsername(group_name);
             	await group.adminApproveJoin(user_name);
-            	channels.deleteMessage(message_id);
+
+            	const msg = new Message();
+            	msg.deleteFromServer(aws_key);
             },
-			joinDeny: async function(group_name, user_name, message_id)
+			joinDeny: async function(group_name, user_name, aws_key)
 			{
 				const group = channels.findByUsername(group_name);
 				await group.adminDenyJoin(user_name);
-				channels.deleteMessage(message_id);
+
+				const msg = new Message();
+				msg.deleteFromServer(aws_key);
 			},
 			showGroupQRCode: function () {
 				this.page_visible = this.PAGE_QRCODE;

@@ -84,6 +84,10 @@ class Group extends MessageList
 
 	async processMessage(msg)
 	{
+		if (_.find(this.messages, { MessageId: msg.MessageId }) !== undefined) {
+			return;
+		}
+
 		// only check for signing if we have key
 		let verified = null;
 		try {
@@ -103,32 +107,66 @@ class Group extends MessageList
 			logger.warn('could not verify signature');
 		}
 
-		if (_.startsWith(msg.MessageId, 'msg_')) {
-			// regular message, so just push
+		msg.MessageList = this;
+		msg.recipient_user_id = this.group_name;
+
+		if (/(.+)\/msg_(\d+)/i.test(msg.AwsKey)) {
+			// regular message, so just push and return
 			this.messages.push(msg);
 		}
+		else {
+			const data = JSON.parse(msg.Body);
 
-		const data = JSON.parse(msg.Body);
+			if (data.command === 'join_request ' + this.group_name && this.group_type === 'open') {
+				// auto-process for an open group
+				await this.adminApproveJoin(msg.Sender);
+				msg.deleteFromServer();
 
-		if (data.command === 'join_request '+this.group_name && this.group_type === 'open') {
-			// auto-process for an open group
-			await this.adminApproveJoin(msg.Sender);
-		}
-		else if (data.command === 'join_request '+this.group_name && this.isAdmin()) {
-			// user requested to join
-			msg.Command = {
-				request: 'join',
-				group: this.group_name,
-				sender: this.recipient_user_id
-			};
+				msg.Command = {
+					request: 'join_auto_approved',
+					group: this.group_name,
+					sender: this.recipient_user_id
+				};
 
-			this.message_list.push(msg);
+				this.messages.push(msg);
+			}
+			else if (data.command === 'join_request ' + this.group_name && this.isAdmin()) {
+				// user requested to join
+				msg.Body = 'Command';
+				msg.Command = {
+					request: 'join',
+					group: this.group_name,
+					sender: this.recipient_user_id
+				};
+
+				this.messages.push(msg);
+			}
+			else if (data.command === 'join_approved') {
+				await this.userJoinApprovalEvent(msg);
+				msg.Body = 'Join Approved';
+				msg.Command = {
+					request: 'join_approved',
+					group: this.group_name,
+					sender: this.recipient_user_id
+				};
+
+				this.messages.push(msg);
+			}
+			else if (data.command === 'join_notify') {
+				msg.Body = 'Command';
+				msg.Command = {
+					request: 'join_notify',
+					group: this.group_name,
+					sender: this.recipient_user_id
+				};
+				this.messages.push(msg);
+			}
 		}
-		else if (data.command === 'join_approved') {
-			await this.userJoinApprovalEvent(msg);
-		}
-		else if (data.command === 'join_notify') {
-			this.messages.push(data.username + " has joined");
+
+		this.saveMessage(msg);
+
+		if (channels.newMessageEventDelegate != null && typeof channels.newMessageEventDelegate === "function") {
+			channels.newMessageEventDelegate(msg);
 		}
 	};
 
@@ -334,6 +372,7 @@ class Group extends MessageList
 	async adminDenyJoin(user_name)
 	{
 		// not doing anything, currently...
+		msg.deleteFromServer();
 	}
 
 	async userJoinApprovalEvent(msg)

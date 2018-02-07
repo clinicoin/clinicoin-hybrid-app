@@ -252,5 +252,9 @@ MessageList.prototype.processMessage = async function(msg)
 		}
 	}
 
+	if (channels.newMessageEventDelegate != null && typeof channels.newMessageEventDelegate === "function") {
+		channels.newMessageEventDelegate(msg);
+	}
+
 	await this.saveMessage(this);
 };

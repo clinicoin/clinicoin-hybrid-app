@@ -13,7 +13,7 @@ function Message() {
 	this.GroupMessageType = null;
 	this.MessageList = null;
 	this.Command = null;
-	this.MessagePath = '';
+	this.AwsKey = '';
 
 	this.toJSON = function()
 	{
@@ -27,7 +27,9 @@ function Message() {
 			SentDate: moment(this.SentDate).format('YYYY-MM-DD HH:mm:ss'),
 			ReadDate: moment(this.ReadDate).format('YYYY-MM-DD HH:mm:ss'),
 			SendStatus: this.SendStatus,
-			GroupMessageType: this.GroupMessageType
+			GroupMessageType: this.GroupMessageType,
+			AwsKey: this.AwsKey,
+			Command: this.Command
 		});
 	};
 
@@ -43,6 +45,8 @@ function Message() {
 		this.ReadDate = data.ReadDate;
 		this.SendStatus = data.SendStatus;
 		this.GroupMessageType = data.GroupMessageType;
+		this.AwsKey = data.AwsKey;
+		this.Command = data.Command;
 	};
 
 	this.getEnvelope = function()
@@ -97,14 +101,14 @@ Message.prototype.decryptMessage = async function(channels, private_key_obj)
 
 	//logger.debug(encrypted_data);
 
-	let options = {
-		message: openpgp.message.readArmored(this.EncryptedBody),     // parse armored message
-		privateKey: private_key_obj // for decryption
-	};
-
 	// returns object formatted with properties of data:string and signatures:[].valid
 	let decrypted_obj = null;
 	try {
+		let options = {
+			message: openpgp.message.readArmored(this.EncryptedBody),     // parse armored message
+			privateKey: private_key_obj // for decryption
+		};
+
 		decrypted_obj = await openpgp.decrypt(options);
 	} catch(e) {
 		logger.error(e.message);
@@ -167,14 +171,49 @@ Message.prototype.encryptMessage = async function(recipient_public, signer_keys)
 
 	if ( ! _.isEmpty(signer_keys)) {
 		options.privateKeys = signer_keys;
-
-		/*
-		let privKeyObj = openpgp.key.readArmored(private_key).keys[0];
-		privKeyObj.decrypt(passphrase);
-		options.privateKeys = privKeyObj;
-		*/
 	}
 
 	const enc_object = await openpgp.encrypt(options);
 	this.EncryptedBody = enc_object.data;
+};
+
+Message.prototype.deleteFromServer = async function(aws_key)
+{
+	if (_.isEmpty(aws_key)) {
+		aws_key = this.AwsKey;
+	}
+
+	logger.debug('Delete message '+aws_key);
+
+	const params = {
+		Bucket: 'clinicoin-users',
+		Key: aws_key
+	};
+
+	const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+
+	const delete_promise = new Promise((resolve) => {
+		s3.deleteObject(params, function(error, data) {
+			if (error) {
+				resolve({error:error});
+			} else {
+				resolve({data:data});
+			}
+		});
+	});
+
+	const result = await delete_promise;
+	if (result.error) {
+		logger.error(result.error.code + " - " + result.error.message);
+		this.last_error_code = result.error.code;
+		this.last_error_message = result.error.message;
+
+		// if it failed for credentials, try logging in for next time
+		if (result.error.code === 'CredentialsError') {
+			current_user.login();
+		}
+		return false;
+	}
+
+	return true;
 };
