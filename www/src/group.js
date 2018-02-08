@@ -82,6 +82,13 @@ class Group extends MessageList
 		return true;
 	};
 
+	async removeSettings()
+	{
+		await store.removeItem('gr_'+current_user.username+'_'+this.recipient_user_id+'_Settings');
+		await store.removeItem('gr_'+current_user.username+'_'+this.group_name+'_Admins');
+		await store.removeItem('gr_'+current_user.username+'_'+this.group_name+'_Users');
+	}
+
 	async processMessage(msg)
 	{
 		if (_.find(this.messages, { MessageId: msg.MessageId }) !== undefined) {
@@ -131,7 +138,7 @@ class Group extends MessageList
 				this.messages.push(msg);
 			}
 			else if (data.command === 'join_request ' + this.group_name && this.isAdmin()) {
-				// user requested to join
+				// user requested to join closed group
 				msg.Body = 'Command';
 				msg.Command = {
 					request: 'join',
@@ -142,7 +149,9 @@ class Group extends MessageList
 				this.messages.push(msg);
 			}
 			else if (data.command === 'join_approved') {
+				// approval received by the requesting user
 				await this.userJoinApprovalEvent(msg);
+
 				msg.Body = 'Join Approved';
 				msg.Command = {
 					request: 'join_approved',
@@ -153,9 +162,34 @@ class Group extends MessageList
 				this.messages.push(msg);
 			}
 			else if (data.command === 'join_notify') {
+				this.user_list.push(msg.Sender);
+				this.user_list = _.uniq(this.user_list);
+
 				msg.Body = 'Command';
 				msg.Command = {
 					request: 'join_notify',
+					group: this.group_name,
+					sender: this.recipient_user_id
+				};
+				this.messages.push(msg);
+			}
+			else if (data.command === 'promote') {
+				this.adminPromoteEvent(msg.Sender);
+
+				msg.Body = 'Command';
+				msg.Command = {
+					request: 'promote',
+					group: this.group_name,
+					sender: this.recipient_user_id
+				};
+				this.messages.push(msg);
+			}
+			else if (data.command === 'demote') {
+				this.adminDemoteEvent(msg.Sender);
+
+				msg.Body = 'Command';
+				msg.Command = {
+					request: 'demote',
 					group: this.group_name,
 					sender: this.recipient_user_id
 				};
@@ -283,14 +317,19 @@ class Group extends MessageList
 		msg.Sender = current_user.username;
 		msg.Receiver = this.group_name;
 
-		this.getGroupKey();
-
 		if ( ! _.isEmpty(this.group_private_key)) {
-			let private_key_obj = openpgp.key.readArmored(this.group_private_key).keys[0];
-			private_key_obj.decrypt(this.group_passphrase);
-			await msg.encryptMessage(this.recipient_public_key, [private_key_obj]);
+			let private_key_obj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
+			private_key_obj.decrypt(current_user.getPassphrase());
+			await msg.encryptMessage(this.group_public_key, [private_key_obj]);
 		}
 		else {
+			if (this.recipient_public_key === '') {
+				this.recipient_public_key = this.group_public_key;
+			}
+			if (this.recipient_public_key === '') {
+				await this.getRecipientPublicKey();
+				this.group_public_key = this.recipient_public_key;
+			}
 			await msg.encryptMessage(this.recipient_public_key);
 		}
 
@@ -372,24 +411,49 @@ class Group extends MessageList
 	async adminDenyJoin(user_name)
 	{
 		// not doing anything, currently...
-		msg.deleteFromServer();
 	}
 
 	async userJoinApprovalEvent(msg)
 	{
-		msg = JSON.parse(msg.Body);
-		this.group_status = msg.status;
-		this.group_passphrase = msg.passphrase;
-		this.group_private_key = msg.privatekey;
-		this.admin_list = msg.admins;
-		this.user_list = msg.users;
+		const msgjson = JSON.parse(msg.Body);
+		this.group_status = msgjson.status;
+		this.group_passphrase = msgjson.passphrase;
+		this.group_private_key = msgjson.privatekey;
+		this.admin_list = msgjson.admins;
+		this.user_list = msgjson.users;
 
 		await this.saveSettings();
+
+		msg.deleteFromServer();
 	}
 
-	async removeMember(user_name)
+	async leave()
+	{
+		// if they are the only admin, they cannot leave
+		if (this.admin_list === [current_user]) {
+			logger.error('sole admin cannot leave group');
+			this.last_error = 'sole admin cannot leave group';
+			return false;
+		}
+
+		channels.removeGroupChannel(this.group_name);
+
+		await this.sendGroupMessage(JSON.stringify({ command: 'left', sender: current_user.username }));
+
+		await this.removeSettings();
+
+		return true;
+	}
+
+	async banMember(user_name)
 	{
 		logger.info('removing member');
+
+		if (_.indexOf(this.user_name, user_name) === -1) {
+			logger.error(user_name+' not a member, cannot ban');
+			this.last_error = user_name+' not a member, cannot ban';
+			return false;
+		}
 
 		this.user_list = _.without(this.user_list, user_name);
 
@@ -402,6 +466,8 @@ class Group extends MessageList
 		this.saveSettings();
 
 		this.distributeKey();
+
+		return true;
 	}
 
 	async distributeKey()
@@ -410,11 +476,13 @@ class Group extends MessageList
 
 		if (_.isEmpty(this.group_private_key)) {
 			logger.error('private key is blank');
+			this.last_error = 'private key is blank';
 			return false;
 		}
 
 		if (_.isEmpty(this.group_public_key)) {
 			logger.error('public key is blank');
+			this.last_error = 'public key is blank';
 			return false;
 		}
 
@@ -460,10 +528,51 @@ class Group extends MessageList
 	async adminPromote(admin_name)
 	{
 		await this.sendGroupMessage(JSON.stringify({ command: "promote", admin: admin_name }));
+		this.adminPromoteEvent(admin_name);
+	}
+
+	async adminPromoteEvent(admin_name)
+	{
+		if (_.indexOf(this.user_list, admin_name) === -1) {
+			logger.error(admin_name+' not found in list, cannot promote');
+			this.last_error = admin_name+' not found in list, cannot promote';
+			return false;
+		}
+
+		this.user_list = _.without(this.user_list, admin_name);
+		this.admin_list.push(admin_name);
+		this.admin_list = _.uniq(this.admin_list);
+		await this.saveSettings();
+		logger.debug(admin_name+' has been promoted');
+		return true;
 	}
 
 	async adminDemote(admin_name)
 	{
 		await this.sendGroupMessage(JSON.stringify({ command: "demote", admin: admin_name }));
+		this.adminDemoteEvent(admin_name);
+	}
+
+	async adminDemoteEvent(admin_name)
+	{
+		if (_.indexOf(this.admin_list, admin_name) === -1) {
+			logger.error(admin_name+' not found in list, cannot demote');
+			this.last_error = admin_name+' not found in list, cannot demote';
+			return false;
+		}
+
+		this.admin_list = _.without(this.admin_list, admin_name);
+
+		if (this.admin_list.length === 0) {
+			logger.error('cannot demote only admin');
+			this.last_error = 'cannot demote only admin';
+			return false;
+		}
+
+		this.user_list.push(admin_name);
+		this.user_list = _.uniq(this.user_list);
+		await this.saveSettings();
+		logger.debug(admin_name+' has been demoted');
+		return true;
 	}
 }

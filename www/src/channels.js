@@ -101,6 +101,11 @@ Channels.prototype.addGroupChannel = function(new_group)
 	}
 };
 
+Channels.prototype.removeGroupChannel = function(group_name)
+{
+	this.channel_list = _.reject(this.channel_list, { group_name: group_name });
+};
+
 Channels.prototype.checkAllMessageSources = async function()
 {
 	this.checkForMessages(null, false);
@@ -155,7 +160,7 @@ Channels.prototype.checkForMessages = async function(user_or_group, is_group)
 
 		let decrypt_success = await msg.decryptMessage(this, private_key_obj);
 
-		if ( ! is_group && ! decrypt_success) {
+		if (moment().diff(msg.FileDate, 'minutes') > 60 && ! decrypt_success) {
 			// delete personal messages that fail decryption
 			await msg.deleteFromServer(key);  // leave sync only for testing
 		}
@@ -283,6 +288,7 @@ Channels.prototype.retrieveMessage = async function(message_key)
 		msg.AwsKey = message_key;
 		msg.EncryptedBody = result.data.Body.toString();
 		msg.SendStatus = 'Received';
+		msg.FileDate = moment(result.data.LastModified);
 		return msg;
 	}
 };

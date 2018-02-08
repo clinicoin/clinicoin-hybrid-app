@@ -8,6 +8,7 @@ function Message() {
 	this.ReceiptHandle = '';
 	this.ReceiveDate =  moment('1999-01-01');
 	this.SentDate = moment('1999-01-01');
+	this.FileDate = moment('1999-01-01');
 	this.SendStatus = 'Unsent';
 	this.ReadDate = moment('1999-01-01');
 	this.GroupMessageType = null;

@@ -124,8 +124,13 @@
             border-top-color: #E8EDF3;
             border-bottom: 0;
             border-left: 0;
-            margin-left: -10px;
+            margin-left: -5px;
             margin-bottom: -10px;
+        }
+
+        .message-time {
+            font-size: x-small;
+            margin-left: 20px;
         }
 
         .command-event {
@@ -170,7 +175,10 @@
 			<v-toolbar-title>CliniCoin</v-toolbar-title>
 
 			<v-spacer></v-spacer>
-            <v-icon v-if="is_updating">swap_vert</v-icon>
+            <v-btn icon v-show="page_visible >= PAGE_MAIN_LIST" @click="checkQueue">
+                <v-icon>swap_vert</v-icon>
+            </v-btn>
+            <v-icon v-show="is_updating">swap_vert</v-icon>
 			<v-btn icon v-show="page_visible == PAGE_MAIN_LIST" @click="page_visible=PAGE_SETTINGS">
 				<v-icon>settings</v-icon>
 			</v-btn>
@@ -545,8 +553,9 @@
 
                 <v-btn id="btnShowGroupQR" outline color="indigo" @click="showGroupQRCode">Show Group QR Code</v-btn>
 
-                [ Leave Group ]
-                [ Re-Key ]
+                <v-btn id="btnLeaveGroup" outline color="indigo" @click="leaveGroup">Leave Group</v-btn>
+
+                <v-btn id="btnRekeyGroup" outline color="indigo" @click="rekeyGroup" v-show="active_user.is_admin">Re-Key Group</v-btn>
 
                 <div id="group_messaging_list" style="height: 80%; overflow-y: auto;">
                     <v-list>
@@ -560,17 +569,28 @@
                             </v-list-tile>
                             <v-list-tile v-show="item.Sender != currentUserData.username && item.Command==null">
                                 <div style="width:100%;">
-                                    <div class="message-in">
-                                        {{ item.Body }}
-                                    </div>
+                                    <table>
+                                        <tr>
+                                            <td>
+                                                <div class="message-in" @click="showGroupDialog(item.Message)">
+                                                    {{ item.Body }}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="message-time">{{ item.Sender }} on {{ item.SentDate }}</div>
+                                            </td>
+                                        </tr>
+                                    </table>
                                 </div>
                             </v-list-tile>
                             <v-list-tile v-show="item.Sender != currentUserData.username && item.Command != null && item.Command.request == 'join'">
                                 <div style="width:100%;">
                                     <div class="message-in">
                                         {{ item.Sender }} has requested to join the group.
-                                        <v-btn color="primary" @click="joinApprove(item.Command.group, item.Sender, item.AwsKey)">Approve</v-btn>
-                                        <v-btn outline color="indigo" @click="joinDeny(item.Command.group, item.Sender, item.AwsKey)">Deny</v-btn>
+                                        <v-btn color="primary" @click="joinApprove(item)">Approve</v-btn>
+                                        <v-btn outline color="indigo" @click="joinDeny(item)">Deny</v-btn>
                                     </div>
                                 </div>
                             </v-list-tile>
@@ -588,10 +608,31 @@
                                     </div>
                                 </div>
                             </v-list-tile>
+                            <v-list-tile v-show="item.Command != null && item.Command.request == 'join_denied'">
+                                <div style="width:100%;">
+                                    <div class="command-event">
+                                        {{ item.Sender }} join has been denied
+                                    </div>
+                                </div>
+                            </v-list-tile>
                             <v-list-tile v-show="item.Command != null && item.Command.request == 'join_notify'">
                                 <div style="width:100%;">
                                     <div class="command-event">
                                         {{ item.Sender }} has joined
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                            <v-list-tile v-show="item.Command != null && item.Command.request == 'promote'">
+                                <div style="width:100%;">
+                                    <div class="command-event">
+                                        {{ item.Sender }} has been made an admin
+                                    </div>
+                                </div>
+                            </v-list-tile>
+                            <v-list-tile v-show="item.Command != null && item.Command.request == 'demote'">
+                                <div style="width:100%;">
+                                    <div class="command-event">
+                                        {{ item.Sender }} changed from admin to user
                                     </div>
                                 </div>
                             </v-list-tile>
@@ -601,26 +642,30 @@
                     <v-dialog v-model="user_group_dialog" max-width="500px">
                         <v-card>
                             <v-card-title>
-                                <span>{{ active_channel.username }}</span>
+                                <span>{{ active_user.username }}</span>
                                 <v-spacer></v-spacer>
                                 <v-menu bottom left>
                                     <v-btn icon slot="activator">
                                         <v-icon>more_vert</v-icon>
                                     </v-btn>
                                     <v-list>
-                                        <v-list-tile @click="">
-                                            <v-list-tile-title>Block</v-list-tile-title>
+                                        <v-list-tile @click="banGroupMember">
+                                            <v-list-tile-title>Ban</v-list-tile-title>
                                         </v-list-tile>
                                     </v-list>
                                 </v-menu>
                             </v-card-title>
                             <v-card-text>
-                                <v-text-field label="Real Name" hint="real user name" v-model="active_channel.friendly_name"></v-text-field>
-                                [ Promote ]
-                                [ Demote ]
+                                <!--
+                                <v-text-field label="Real Name" hint="real user name" v-model="active_user.friendly_name"></v-text-field>
+                                -->
+
+                                <v-btn id="btnPromoteMember" outline color="indigo" @click="promoteGroupMember" v-show="!active_user.is_admin">Promote Member</v-btn>
+
+                                <v-btn id="btnDemoteAdmin" outline color="indigo" @click="demoteAdmin" v-show="active_user.is_admin">Demote Admin</v-btn>
                             </v-card-text>
                             <v-card-actions>
-                                <v-btn color="primary" flat @click.stop="user_dialog=false">Close</v-btn>
+                                <v-btn color="primary" flat @click.stop="user_group_dialog=false">Close</v-btn>
                             </v-card-actions>
                         </v-card>
                     </v-dialog>
@@ -1126,7 +1171,7 @@
 						this.email = current_user.email;
 
 						// set check timer
-						queueCheckTimer = setInterval(this.checkQueue, 30000);
+						//queueCheckTimer = setInterval(this.checkQueue, 30000);
 
 						current_user.getActivities().then((result)=>{
 							vm.user_activity_history = result;
@@ -1331,6 +1376,22 @@
 					}
 				}
 			},
+            updateActiveMessage: function(msg)
+            {
+            	let list = _.reject(this.active_channel.messages, (m)=>{ return m.Message.MessageId===msg.MessageId });
+
+	            list.push({
+		            Sender: msg.Sender,
+		            Body: msg.Body,
+		            SentDate: moment(msg.SentDate).format('YYYY-MM-DD HH:mm'),
+		            Command: msg.Command,
+		            Message: msg
+	            });
+
+	            _.sortBy(list, ['SentDate']);
+
+	            this.active_channel.messages = list;
+            },
 			refreshActiveList: function()
 			{
 				const active_channel = channels.findByUsername(this.active_channel.username);
@@ -1340,9 +1401,9 @@
 					message_list.push({
 						Sender: msg.Sender,
 						Body: msg.Body,
-						SentDate: msg.SentDate,
+						SentDate: moment(msg.SentDate).format('YYYY-MM-DD HH:mm'),
                         Command: msg.Command,
-                        Data: msg
+                        Message: msg
 					})
 				});
 				this.active_channel.messages = message_list;
@@ -1538,22 +1599,51 @@
 	            this.showSuccessToast('Group join request sent');
 	            this.page_visible = this.PAGE_MAIN_LIST;
             },
-            joinApprove: async function(group_name, user_name, aws_key)
+            joinApprove: async function(item)
             {
-            	const group = channels.findByUsername(group_name);
-            	await group.adminApproveJoin(user_name);
+            	const group = channels.findByUsername(item.Command.group);
+            	await group.adminApproveJoin(item.Sender);
+            	item.Message.deleteFromServer();
 
-            	const msg = new Message();
-            	msg.deleteFromServer(aws_key);
+	            item.Command.request = 'join_approved';
+	            item.Message.Command.request = 'join_approved';
+            	item.Message.Body = 'You approved join for '+item.Sender;
+            	group.saveMessage(item.Message);
+
+	            this.updateActiveMessage(item.Message);
             },
-			joinDeny: async function(group_name, user_name, aws_key)
+			joinDeny: async function(item)
 			{
-				const group = channels.findByUsername(group_name);
-				await group.adminDenyJoin(user_name);
+				const group = channels.findByUsername(item.Command.group);
+				await group.adminDenyJoin(item.Sender);
+				item.Message.deleteFromServer();
 
-				const msg = new Message();
-				msg.deleteFromServer(aws_key);
+				item.Command.request = 'join_denied';
+				item.Message.Command.request = 'join_denied';
+				item.Message.Body = 'You denied join for '+item.Sender;
+				group.saveMessage(item.Message);
+
+				this.updateActiveMessage(item.Message);
 			},
+            leaveGroup: async function()
+            {
+            	const group_name = this.active_channel.username;
+            	const group = channels.findByUsername(group_name);
+            	if (await group.leave()) {
+            		this.updateChannels();
+            		this.page_visible = this.PAGE_MAIN_LIST;
+            		this.showSuccessToast('Left group '+group_name);
+                }
+                else {
+            		this.showErrorToast(group.last_error);
+                }
+            },
+            rekeyGroup: async function()
+            {
+	            const group_name = this.active_channel.username;
+	            const group = channels.findByUsername(group_name);
+	            group.distributeKey();
+            },
 			showGroupQRCode: function () {
 				this.page_visible = this.PAGE_QRCODE;
 				this.qr_code_title = 'Group: '+vm.username;
@@ -1563,14 +1653,49 @@
 					size: 300
 				});
 			},
-            promoteUser: async function(group_name, user_name)
+			promoteGroupMember: async function()
             {
+	            const group_name = this.active_channel.username;
 	            const group = channels.findByUsername(group_name);
-	            group.adminPromote(user_name);
+	            if (group.adminPromote(this.active_user.username)) {
+		            this.showSuccessToast('Admin promoted successfully');
+	            }
+	            else {
+		            this.showErrorToast(this.last_error);
+	            }
             },
-            demoteAdmin: async function(admin_name)
+            demoteAdmin: async function()
             {
+	            const group_name = this.active_channel.username;
+	            const group = channels.findByUsername(group_name);
+	            if (group.adminDemote(this.active_user.username)) {
+	            	this.showSuccessToast('Admin demoted successfully');
+                }
+                else {
+	            	this.showErrorToast(this.last_error);
+                }
+            },
+			banGroupMember: async function()
+            {
+	            const group_name = this.active_channel.username;
+	            const group = channels.findByUsername(group_name);
 
+	            if (group.banMember(this.active_user.username)) {
+		            this.showSuccessToast('Member has been banned');
+	            }
+	            else {
+		            this.showErrorToast(this.last_error);
+	            }
+            },
+            showGroupDialog: function(msg)
+            {
+	            const group_name = this.active_channel.username;
+	            const group = channels.findByUsername(group_name);
+            	this.user_group_dialog = true;
+
+            	// set the active user from ???
+                this.active_user.username = msg.Sender;
+                this.active_user.is_admin = _.indexOf(group.admin_list, msg.Sender) !== -1;
             }
 		},
 		data()
@@ -1653,7 +1778,12 @@
 					username: "demouser",
 					friendly_name: "channel",
 					messages: []
-				}
+				},
+                active_user: {
+					username: 'auser',
+                    friendly_name: 'abraham user',
+                    is_admin: false
+                }
 			};
 		},
 		computed: {
