@@ -175,9 +175,6 @@
 			<v-toolbar-title>CliniCoin</v-toolbar-title>
 
 			<v-spacer></v-spacer>
-            <v-btn icon v-show="page_visible >= PAGE_MAIN_LIST" @click="checkQueue">
-                <v-icon>swap_vert</v-icon>
-            </v-btn>
             <v-icon v-show="is_updating">swap_vert</v-icon>
 			<v-btn icon v-show="page_visible == PAGE_MAIN_LIST" @click="page_visible=PAGE_SETTINGS">
 				<v-icon>settings</v-icon>
@@ -555,7 +552,7 @@
 
                 <v-btn id="btnLeaveGroup" outline color="indigo" @click="leaveGroup">Leave Group</v-btn>
 
-                <v-btn id="btnRekeyGroup" outline color="indigo" @click="rekeyGroup" v-show="active_user.is_admin">Re-Key Group</v-btn>
+                <v-btn id="btnRekeyGroup" outline color="indigo" @click="rekeyGroup" v-show="isGroupAdmin">Re-Key Group</v-btn>
 
                 <div id="group_messaging_list" style="height: 80%; overflow-y: auto;">
                     <v-list>
@@ -1171,7 +1168,7 @@
 						this.email = current_user.email;
 
 						// set check timer
-						//queueCheckTimer = setInterval(this.checkQueue, 30000);
+						queueCheckTimer = setInterval(this.checkQueue, 30000);
 
 						current_user.getActivities().then((result)=>{
 							vm.user_activity_history = result;
@@ -1642,7 +1639,7 @@
             {
 	            const group_name = this.active_channel.username;
 	            const group = channels.findByUsername(group_name);
-	            group.distributeKey();
+	            group.distributeNewKey();
             },
 			showGroupQRCode: function () {
 				this.page_visible = this.PAGE_QRCODE;
@@ -1696,6 +1693,12 @@
             	// set the active user from ???
                 this.active_user.username = msg.Sender;
                 this.active_user.is_admin = _.indexOf(group.admin_list, msg.Sender) !== -1;
+            },
+			isGroupAdmin: function()
+            {
+	            const group_name = this.active_channel.username;
+	            const group = channels.findByUsername(group_name);
+	            return group.isAdmin();
             }
 		},
 		data()

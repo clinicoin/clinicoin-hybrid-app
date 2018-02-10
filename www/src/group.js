@@ -122,7 +122,26 @@ class Group extends MessageList
 			this.messages.push(msg);
 		}
 		else {
-			const data = JSON.parse(msg.Body);
+
+			if (_.startsWith(msg.Body, '-----BEGIN PGP MESSAGE')) {
+				const internal_msg = new Message();
+				internal_msg.EncryptedBody = msg.Body;
+
+				let private_key_obj = openpgp.key.readArmored(this.group_private_key).keys[0];
+				private_key_obj.decrypt(this.group_passphrase);
+
+				await internal_msg.decryptMessage(channels, private_key_obj);
+				return;
+			}
+
+
+			let data = '';
+			try {
+				data = JSON.parse(msg.Body);
+			} catch (e) {
+				logger.error('failure parsing json, removing from server');
+				msg.deleteFromServer();
+			}
 
 			if (data.command === 'join_request ' + this.group_name && this.group_type === 'open') {
 				// auto-process for an open group
@@ -195,6 +214,17 @@ class Group extends MessageList
 				};
 				this.messages.push(msg);
 			}
+			else if (data.command === 'new_group_key') {
+				this.newKeyEvent(msg);
+
+				msg.Body = 'Command';
+				msg.Command = {
+					request: 'new_key',
+					group: this.group_name,
+					sender: this.recipient_user_id
+				};
+				this.messages.push(msg);
+			}
 		}
 
 		this.saveMessage(msg);
@@ -242,35 +272,9 @@ class Group extends MessageList
 		}
 
 		// good to go, create keys and save
-		group.group_passphrase = Group.randomPassword(30);
+		await group.generateGroupKey();
 
-		const options = {
-			userIds: [ {
-				name: group_name
-			} ], // multiple user IDs
-			numBits: 2048,                // RSA key size
-			passphrase: group.group_passphrase        // protects the private key
-		};
-
-		const key_object = await openpgp.generateKey(options);
-		group.group_private_key = key_object.privateKeyArmored;
-		group.group_public_key = key_object.publicKeyArmored;
-
-		const payload = JSON.stringify({
-			username: group.group_name,
-			publicKey: group.group_public_key,
-			is_group: "1",
-			sub: group.group_type,
-			phone: ' ',
-			email: current_user.username
-		});
-
-		const result = await current_user.callLambda({
-			FunctionName : 'Clinicoin-updatePublicKey',
-			InvocationType : 'RequestResponse',
-			Payload: payload,
-			LogType : 'None'
-		});
+		const result = await group.updatePublicKey();
 
 		if (result.statusCode !== 200) {
 			logger.error("Unknown error setting public key");
@@ -307,8 +311,49 @@ class Group extends MessageList
 		this.recipient_user_id = this.group_name;
 		const result = await this.getRecipientPublicKey();
 		this.group_public_key = this.recipient_public_key;
+
+		this.saveSettings();
+
 		return result;
 	};
+
+	async generateGroupKey()
+	{
+		this.group_passphrase = Group.randomPassword(30);
+
+		const options = {
+			userIds: [ {
+				name: this.group_name
+			} ], // multiple user IDs
+			numBits: 2048,                // RSA key size
+			passphrase: this.group_passphrase        // protects the private key
+		};
+
+		const key_object = await openpgp.generateKey(options);
+		this.group_private_key = key_object.privateKeyArmored;
+		this.group_public_key = key_object.publicKeyArmored;
+	}
+
+	async updatePublicKey()
+	{
+		const payload = JSON.stringify({
+			username: this.group_name,
+			publicKey: this.group_public_key,
+			is_group: "1",
+			sub: this.group_type,
+			phone: ' ',
+			email: current_user.username
+		});
+
+		const result = await current_user.callLambda({
+			FunctionName : 'Clinicoin-updatePublicKey',
+			InvocationType : 'RequestResponse',
+			Payload: payload,
+			LogType : 'None'
+		});
+
+		return result;
+	}
 
 	async sendGroupMessage(message_json)
 	{
@@ -388,6 +433,7 @@ class Group extends MessageList
 			group: this.group_name,
 			passphrase: this.group_passphrase,
 			privatekey: this.group_private_key,
+			publickey: this.group_public_key,
 			admins: this.admin_list,
 			users: this.user_list
 		});
@@ -419,6 +465,7 @@ class Group extends MessageList
 		this.group_status = msgjson.status;
 		this.group_passphrase = msgjson.passphrase;
 		this.group_private_key = msgjson.privatekey;
+		this.group_public_key = msgjson.publickey;
 		this.admin_list = msgjson.admins;
 		this.user_list = msgjson.users;
 
@@ -459,45 +506,42 @@ class Group extends MessageList
 
 		this.sendGroupMessage(JSON.stringify({ status: "removed", group: this.group_name }));
 
-		const key_object = await openpgp.generateKey(options);
-		this.group_private_key = key_object.privateKeyArmored;
-		this.group_public_key = key_object.publicKeyArmored;
-
-		this.saveSettings();
-
-		this.distributeKey();
+		this.distributeNewKey();
 
 		return true;
 	}
 
-	async distributeKey()
+	async distributeNewKey()
 	{
-		logger.info('calling distributeKey');
+		logger.info('calling distributeNewKey');
 
-		if (_.isEmpty(this.group_private_key)) {
-			logger.error('private key is blank');
-			this.last_error = 'private key is blank';
-			return false;
-		}
+		const old_public_key = this.group_public_key;
 
-		if (_.isEmpty(this.group_public_key)) {
-			logger.error('public key is blank');
-			this.last_error = 'public key is blank';
-			return false;
-		}
+		await this.generateGroupKey();
+
+		await this.updatePublicKey();
 
 		let options = {
 			data: "----START ENVELOPE----\n\n"
 			+ JSON.stringify({
-				Sender: this.group_name,
-				Admins: this.admin_list.join(','),
-				Users: this.user_list.join(',')
+				SentDate: moment().toISOString(),
+				Sender: current_user.username,
+				Receiver: this.group_name
 			})
-			+ "\n\n----END ENVELOPE----\n\n"
-			+ data,
-			publicKeys: openpgp.key.readArmored(this.group_public_key).keys,
+			+ "\n\n----END ENVELOPE----\n\n"+
+			JSON.stringify({
+				command: 'new_group_key',
+				group: this.group_name,
+				passphrase: this.group_passphrase,
+				privatekey: this.group_private_key,
+				publickey: this.group_public_key,
+				admins: this.admin_list,
+				users: this.user_list
+			}),
+			publicKeys: openpgp.key.readArmored(old_public_key).keys,
 		};
 
+		// signed with admin's private key
 		let privKeyObj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
 		privKeyObj.decrypt(current_user.getPassphrase());
 		options.privateKeys = privKeyObj;
@@ -506,7 +550,8 @@ class Group extends MessageList
 
 		const key = 'cmd_'+moment().format('x')+(_.random(100, 999).toString());
 
-		const all_users = _.union(this.user_list, this.admin_list);
+		let all_users = _.union(this.user_list, this.admin_list);
+		all_users = _.without(all_users, current_user.username);
 
 		const payload = JSON.stringify({
 			data: enc_object.data,
@@ -515,14 +560,28 @@ class Group extends MessageList
 			messageid: key
 		});
 
-		const result = await current_user.callLambda({
+		const bulkresult = await current_user.callLambda({
 			FunctionName : 'Clinicoin-bulkSend',
 			InvocationType : 'RequestResponse',
 			Payload: payload,
 			LogType : 'None'
 		});
 
-		return result.statusCode === 200;
+		return bulkresult.statusCode === 200;
+	}
+
+	async newKeyEvent(msg)
+	{
+		const msgjson = JSON.parse(msg.Body);
+		this.group_passphrase = msgjson.passphrase;
+		this.group_private_key = msgjson.privatekey;
+		this.group_public_key = msgjson.publickey;
+		this.admin_list = msgjson.admins;
+		this.user_list = msgjson.users;
+
+		await this.saveSettings();
+
+		msg.deleteFromServer();
 	}
 
 	async adminPromote(admin_name)

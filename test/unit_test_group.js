@@ -194,7 +194,7 @@ describe('joinGroup', function() {
 	});
 });
 
-describe('distributeKey', function() {
+describe('distributeNewKey', function() {
 	this.timeout(10000);
 
 	beforeEach(function () {
@@ -209,7 +209,7 @@ describe('distributeKey', function() {
 		const group = new Group();
 		group.group_public_key = current_user.getPublicKey();
 		group.group_private_key = current_user.getPrivateKey();
-		group.distributeKey();
+		group.distributeNewKey();
 
 		const stub_arg = lambda_stub.getCall(0).args[0].Payload;
 
@@ -229,7 +229,7 @@ describe('removeMember', function() {
 		group.user_list = ["usera","userb","userc"];
 		const send_member_stub = sandbox.stub(group, 'sendMemberMessage').resolves(true);
 		const settings_stub = sandbox.stub(group, 'saveSettings').resolves(true);
-		const distribute_stub = sandbox.stub(group, 'distributeKey').resolves(true);
+		const distribute_stub = sandbox.stub(group, 'distributeNewKey').resolves(true);
 
 		group.removeMember('usera');
 
