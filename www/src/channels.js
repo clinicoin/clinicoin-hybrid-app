@@ -171,7 +171,7 @@ Channels.prototype.checkForMessages = async function(user_or_group, is_group)
 
 Channels.prototype.findByUsername = function(username)
 {
-	return _.find(this.channel_list, { 'recipient_user_id': username });
+	return _.find(this.channel_list, { 'recipient_user_id': username.toLowerCase() });
 };
 
 Channels.prototype.listServerMessages = async function(path)
@@ -233,7 +233,7 @@ Channels.prototype.retrieveMessage = async function(message_key)
 
 	const params = {
 		Bucket: 'clinicoin-users',
-		Key: message_key
+		Key: message_key.toLowerCase()
 	};
 
 	const s3 = new AWS.S3({apiVersion: '2006-03-01'});

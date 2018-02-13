@@ -12,7 +12,7 @@ function MessageList()
 	{
 		return JSON.stringify({
 			friendly_name: this.friendly_name,
-			recipient_user_id: this.recipient_user_id,
+			recipient_user_id: this.recipient_user_id.toLowerCase(),
 			recipient_public_key: this.recipient_public_key,
 			message_group_id: this.message_group_id,
 			last_public_key_retrieval: this.last_public_key_retrieval,
@@ -27,7 +27,7 @@ function MessageList()
 		}
 		const data = JSON.parse(json_string);
 		this.friendly_name = data.friendly_name;
-		this.recipient_user_id = data.recipient_user_id;
+		this.recipient_user_id = data.recipient_user_id.toLowerCase();
 		this.recipient_public_key = data.recipient_public_key;
 		this.message_group_id = data.message_group_id;
 		this.last_public_key_retrieval = data.last_public_key_retrieval;
@@ -51,7 +51,7 @@ MessageList.prototype.getRecipientPublicKey = async function(user_name)
 	const response = await current_user.callLambda({
 		FunctionName : 'Clinicoin-getPublicKey',
 		InvocationType : 'RequestResponse',
-		Payload: JSON.stringify({ username: user_name }),
+		Payload: JSON.stringify({ username: user_name.toLowerCase() }),
 		LogType : 'None'
 	});
 
@@ -100,7 +100,7 @@ MessageList.prototype.sendToServer = async function(data, message_type)
 	const params = {
 		Body: data,
 		Bucket: 'clinicoin-users',
-		Key: key,
+		Key: key.toLowerCase(),
 		Expires: moment().add(30, 'days').unix()
 	};
 
@@ -132,7 +132,7 @@ MessageList.prototype.sendMessage = async function(message_data)
 	let msg = new Message();
 	msg.Body = message_data;
 	msg.Sender = current_user.username;
-	msg.Receiver = this.recipient_user_id;
+	msg.Receiver = this.recipient_user_id.toLowerCase();
 
 	this.messages.push(msg);
 
@@ -168,7 +168,7 @@ MessageList.prototype.sendMessage = async function(message_data)
 
 MessageList.prototype.removeAllMessages = async function()
 {
-	const exp = new RegExp('^ch_'+current_user.username+'_'+this.recipient_user_id+'_[a-f0-9]+', 'i');
+	const exp = new RegExp('^ch_'+current_user.username.toLowerCase()+'_'+this.recipient_user_id.toLowerCase()+'_[a-f0-9]+', 'i');
 	await store.removeItemsExpression(exp);
 };
 
@@ -178,7 +178,7 @@ MessageList.prototype.loadMessages = async function()
 
 	const self = this;
 	this.messages = [];
-	const exp = new RegExp('^ch_'+current_user.username+'_'+this.recipient_user_id+'_[a-f0-9]+', 'i');
+	const exp = new RegExp('^ch_'+current_user.username.toLowerCase()+'_'+this.recipient_user_id.toLowerCase()+'_[a-f0-9]+', 'i');
 	const key_list = await store.getFilteredData(exp);
 	key_list.forEach(async function(json) {
 		const msg = new Message();
@@ -196,26 +196,26 @@ MessageList.prototype.saveMessage = async function(msg)
 {
 	logger.info('save message '+msg.MessageId);
 	const json = msg.toJSON();  // converting first allows the dates to be set properly
-	await store.setItem('ch_' +current_user.username+'_'+ this.recipient_user_id + '_' + msg.MessageId, json);
+	await store.setItem('ch_' +current_user.username.toLowerCase()+'_'+ this.recipient_user_id.toLowerCase() + '_' + msg.MessageId, json);
 	return true;
 };
 
 MessageList.prototype.loadSettings = async function()
 {
-	const settings = await store.getItem('ch_'+current_user.username+'_'+this.recipient_user_id+'_Settings');
+	const settings = await store.getItem('ch_'+current_user.username.toLowerCase()+'_'+this.recipient_user_id.toLowerCase()+'_Settings');
 	this.fromJSONString(settings);
 	return true;
 };
 
 MessageList.prototype.saveSettings = async function()
 {
-	await store.setItem('ch_'+current_user.username+'_'+this.recipient_user_id+'_Settings', this.toJSON());
+	await store.setItem('ch_'+current_user.username.toLowerCase()+'_'+this.recipient_user_id.toLowerCase()+'_Settings', this.toJSON());
 	return true;
 };
 
 MessageList.prototype.removeSettings = async function()
 {
-	await store.removeItem('ch_'+current_user.username+'_'+this.recipient_user_id+'_Settings');
+	await store.removeItem('ch_'+current_user.username.toLowerCase()+'_'+this.recipient_user_id.toLowerCase()+'_Settings');
 	return true;
 };
 

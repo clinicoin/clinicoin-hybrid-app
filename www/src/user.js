@@ -388,6 +388,7 @@ User.prototype.login = async function()
 		logger.info('login success');
 
 		if (this.is_first_login) {
+			this.is_first_login = false;
 			this.provisionUser();
 		}
 
@@ -425,6 +426,7 @@ User.prototype.sendWelcomeMessage = async function()
 
 	await msg.encryptMessage(this.getPublicKey(), [signPrivateKeyObj]);
 	await msg_list.sendToServer(msg.EncryptedBody);
+	channels.checkAllMessageSources();
 };
 
 /**
@@ -853,7 +855,7 @@ User.prototype.updatePublicKey = async function()
 	}
 
 	const payload = JSON.stringify({
-		username: this.username,
+		username: this.username.toLowerCase(),
 		sub: this.awsSub,
 		publicKey: key,
 		phone: this.phone,

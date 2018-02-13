@@ -34,8 +34,8 @@
 	<script src="src/user.js"></script>
 	<script src="src/messagelist.js"></script>
 	<script src="src/message.js"></script>
-    <script src="src/group.js"></script>
-    <script src="src/activity.js"></script>
+	<script src="src/group.js"></script>
+	<script src="src/activity.js"></script>
 	<script src="src/datastorage.js"></script>
 	<script>
 		let store = new DataStorage();
@@ -79,67 +79,67 @@
 		}
 
 
-        .message-out {
-            position: relative;
-            background: #483EBB;
-            border-radius: .4em;
-            color: white;
-            float: right;
-            padding: 5px;
-            font-size: smaller;
-        }
+		.message-out {
+			position: relative;
+			background: #483EBB;
+			border-radius: .4em;
+			color: white;
+			float: right;
+			padding: 5px;
+			font-size: smaller;
+		}
 
-        .message-out:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 95%;
-            width: 0;
-            height: 0;
-            border: 10px solid transparent;
-            border-top-color: #483EBB;
-            border-bottom: 0;
-            border-right: 0;
-            margin-left: -10px;
-            margin-bottom: -10px;
-        }
+		.message-out:after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 95%;
+			width: 0;
+			height: 0;
+			border: 10px solid transparent;
+			border-top-color: #483EBB;
+			border-bottom: 0;
+			border-right: 0;
+			margin-left: -10px;
+			margin-bottom: -10px;
+		}
 
-        .message-in {
-            position: relative;
-            background: #E8EDF3;
-            border-radius: .4em;
-            float: left;
-            padding: 5px;
-            font-size: smaller;
-        }
+		.message-in {
+			position: relative;
+			background: #E8EDF3;
+			border-radius: .4em;
+			float: left;
+			padding: 5px;
+			font-size: smaller;
+		}
 
-        .message-in:after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 5%;
-            width: 0;
-            height: 0;
-            border: 10px solid transparent;
-            border-top-color: #E8EDF3;
-            border-bottom: 0;
-            border-left: 0;
-            margin-left: -5px;
-            margin-bottom: -10px;
-        }
+		.message-in:after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 5%;
+			width: 0;
+			height: 0;
+			border: 10px solid transparent;
+			border-top-color: #E8EDF3;
+			border-bottom: 0;
+			border-left: 0;
+			margin-left: -5px;
+			margin-bottom: -10px;
+		}
 
-        .message-time {
-            font-size: x-small;
-            margin-left: 20px;
-        }
+		.message-time {
+			font-size: x-small;
+			margin-left: 20px;
+		}
 
-        .command-event {
-            position: relative;
-            float: left;
-            padding: 5px;
-            font-size: smaller;
-            color: grey;
-        }
+		.command-event {
+			position: relative;
+			float: left;
+			padding: 5px;
+			font-size: smaller;
+			color: grey;
+		}
 
 		.white-container {
 			background: white;
@@ -167,15 +167,15 @@
 				<v-icon>keyboard_arrow_left</v-icon>
 			</v-btn>
 
-            <v-btn icon v-show="page_visible > PAGE_SETTINGS"
-                   @click="page_visible=PAGE_SETTINGS">
-                <v-icon>keyboard_arrow_left</v-icon>
-            </v-btn>
+			<v-btn icon v-show="page_visible > PAGE_SETTINGS"
+				   @click="page_visible=PAGE_SETTINGS">
+				<v-icon>keyboard_arrow_left</v-icon>
+			</v-btn>
 
 			<v-toolbar-title>CliniCoin</v-toolbar-title>
 
 			<v-spacer></v-spacer>
-            <v-icon v-show="is_updating">swap_vert</v-icon>
+			<v-icon v-show="is_updating">swap_vert</v-icon>
 			<v-btn icon v-show="page_visible == PAGE_MAIN_LIST" @click="page_visible=PAGE_SETTINGS">
 				<v-icon>settings</v-icon>
 			</v-btn>
@@ -229,9 +229,9 @@
 				</div>
 			</v-container>
 			<v-container fluid id="conLogin" v-show="page_visible==PAGE_LOGIN">
-                <v-btn icon light color="white" @click="page_visible=PAGE_INITIAL">
-                    <v-icon>keyboard_arrow_left</v-icon>
-                </v-btn>
+				<v-btn icon light color="white" @click="page_visible=PAGE_INITIAL">
+					<v-icon>keyboard_arrow_left</v-icon>
+				</v-btn>
 				<div style="margin-top: 20%;">
 					<img src="img/logo.png" style="width: 72%; margin-left: 12%;">
 				</div>
@@ -333,7 +333,7 @@
 
 				<div class="text-xs-center" style="margin-top: 5%; padding-left: 10%; padding-right: 10%;">
 					<div class="local-rounded-button"
-                         id="btnReset"
+						 id="btnReset"
 						 style="background-color: transparent; color: white; border-color: white;"
 						 @click="resetForgotPassword">
 						Reset Password
@@ -409,6 +409,7 @@
 								label="Registration Code"
 								hint="6-digit code sent to you"
 								id="register_code"
+                                type="number"
 								v-model="register_code"
 								mask="######"
 								v-bind:rules="[()=>{ return register_code.length==0 ? 'Reset code is required' : true; }]"
@@ -418,15 +419,15 @@
 
 				<div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
 					<div id="btnConfirmRegistration"
-                         class="local-rounded-button"
-                         style=""
-                         @click="confirmUserRegistration">
+						 class="local-rounded-button"
+						 style=""
+						 @click="confirmUserRegistration">
 						Enter Confirmation
 					</div>
 				</div>
 				<div class="text-xs-center" style="margin-top: 15%; padding-left: 10%; padding-right: 10%;">
 					<div id="divResendConfirmation"
-                         class="local-rounded-button"
+						 class="local-rounded-button"
 						 style="background-color: transparent; color: white; border-color: white;"
 						 @click="resendConfirmation">
 						Re-Send Confirmation
@@ -435,7 +436,7 @@
 			</v-container>
 
 			<v-container fluid id="conMainList" v-show="page_visible==PAGE_MAIN_LIST" class="white-container">
-                <div style="height: 70%; overflow-y: auto;">
+				<div style="height: 70%; overflow-y: auto;">
 				<v-list two-line>
 					<template v-for="(item, index) in channels">
 						<v-list-tile :key="item.title" ripple @click="messageListSelected(item.username)">
@@ -459,7 +460,7 @@
 						<v-divider v-if="index + 1 < channels.length" :key="item.title + '-separator'"></v-divider>
 					</template>
 				</v-list>
-                </div>
+				</div>
 
 				<v-speed-dial bottom fixed right>
 					<v-btn slot="activator" color="blue darken-2" dark fab hover large>
@@ -477,7 +478,7 @@
 
 			<v-container fluid id="conMessages" v-show="page_visible==PAGE_MESSAGING" class="white-container">
 
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">{{active_channel.friendly_name}}</div>
 
 				<div id="messaging_list" style="height: 80%; overflow-y: auto;">
 					<v-list>
@@ -500,41 +501,41 @@
 					</v-list>
 				</div>
 
-                <v-dialog v-model="user_dialog" max-width="500px">
-                    <v-card>
-                        <v-card-title>
-                            <span>{{ active_channel.username }}</span>
-                            <v-spacer></v-spacer>
-                            <v-menu bottom left>
-                                <v-btn icon slot="activator">
-                                    <v-icon>more_vert</v-icon>
-                                </v-btn>
-                                <v-list>
-                                    <v-list-tile @click="">
-                                        <v-list-tile-title>Block</v-list-tile-title>
-                                    </v-list-tile>
-                                </v-list>
-                            </v-menu>
-                        </v-card-title>
-                        <v-card-text>
-                            <v-text-field label="Real Name" hint="real user name" v-model="active_channel.friendly_name"></v-text-field>
-                        </v-card-text>
-                        <v-card-actions>
-                            <v-btn color="primary" flat @click.stop="user_dialog=false">Close</v-btn>
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
+				<v-dialog v-model="user_dialog" max-width="500px">
+					<v-card>
+						<v-card-title>
+							<span>{{ active_channel.username }}</span>
+							<v-spacer></v-spacer>
+							<v-menu bottom left>
+								<v-btn icon slot="activator">
+									<v-icon>more_vert</v-icon>
+								</v-btn>
+								<v-list>
+									<v-list-tile @click="">
+										<v-list-tile-title>Block</v-list-tile-title>
+									</v-list-tile>
+								</v-list>
+							</v-menu>
+						</v-card-title>
+						<v-card-text>
+							<v-text-field label="Real Name" hint="real user name" v-model="active_channel.friendly_name"></v-text-field>
+						</v-card-text>
+						<v-card-actions>
+							<v-btn color="primary" flat @click.stop="user_dialog=false">Close</v-btn>
+						</v-card-actions>
+					</v-card>
+				</v-dialog>
 
 				<v-footer style="background-color:white;" v-bind:app="true">
 
-                    <!--<v-btn icon disabled><v-icon>photo_camera</v-icon></v-btn>-->
+					<!--<v-btn icon disabled><v-icon>photo_camera</v-icon></v-btn>-->
 
-                    <v-text-field
-                            label="Message"
-                            auto-grow
-                            light
-                            v-model="outgoing_message"
-                    ></v-text-field>
+					<v-text-field
+							label="Message"
+							auto-grow
+							light
+							v-model="outgoing_message"
+					></v-text-field>
 
 					<v-btn fab small dark color="indigo" @click="sendUserMessage">
 						<v-icon>send</v-icon>
@@ -542,391 +543,391 @@
 				</v-footer>
 			</v-container>
 
-            <v-container fluid id="conGroupMessages" v-show="page_visible==PAGE_GROUP_MESSAGING" class="white-container">
+			<v-container fluid id="conGroupMessages" v-show="page_visible==PAGE_GROUP_MESSAGING" class="white-container">
 
-                <v-toolbar flat dense>
-                    <v-toolbar-title>Group: {{active_channel.friendly_name}}</v-toolbar-title>
-                    <v-spacer></v-spacer>
+				<v-toolbar flat dense>
+					<v-toolbar-title>Group: {{active_channel.friendly_name}}</v-toolbar-title>
+					<v-spacer></v-spacer>
 
-                    <v-toolbar-side-icon class="hidden-sm-and-up">
-                        <v-menu bottom left>
-                            <v-btn icon slot="activator">
-                                <v-icon>more_vert</v-icon>
-                            </v-btn>
-                            <v-list>
-                                <v-list-tile @click="showGroupQRCode" flat>
-                                    <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                                        <path fill="#000000" d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H11V13H9V11M15,11H17V13H19V11H21V13H19V15H21V19H19V21H17V19H13V21H11V17H15V15H17V13H15V11M19,19V15H17V19H19M15,3H21V9H15V3M17,5V7H19V5H17M3,3H9V9H3V3M5,5V7H7V5H5M3,15H9V21H3V15M5,17V19H7V17H5Z" />
-                                    </svg>
-                                    <v-list-tile-title>Show QR Code</v-list-tile-title>
-                                </v-list-tile>
-                                <v-list-tile @click="leaveGroup" flat>
-                                    <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                                        <path fill="#000000" d="M4,1C2.89,1 2,1.89 2,3V7C2,8.11 2.89,9 4,9H1V11H13V9H10C11.11,9 12,8.11 12,7V3C12,1.89 11.11,1 10,1H4M4,3H10V7H4V3M14,13C12.89,13 12,13.89 12,15V19C12,20.11 12.89,21 14,21H11V23H23V21H20C21.11,21 22,20.11 22,19V15C22,13.89 21.11,13 20,13H14M3.88,13.46L2.46,14.88L4.59,17L2.46,19.12L3.88,20.54L6,18.41L8.12,20.54L9.54,19.12L7.41,17L9.54,14.88L8.12,13.46L6,15.59L3.88,13.46M14,15H20V19H14V15Z" />
-                                    </svg>
-                                    <v-list-tile-title>Leave Group</v-list-tile-title>
-                                </v-list-tile>
-                                <v-list-tile @click="rekeyGroup" v-show="isGroupAdmin" flat>
-                                    <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                                        <path fill="#000000" d="M22,18V22H18V19H15V16H12L9.74,13.74C9.19,13.91 8.61,14 8,14A6,6 0 0,1 2,8A6,6 0 0,1 8,2A6,6 0 0,1 14,8C14,8.61 13.91,9.19 13.74,9.74L22,18M7,5A2,2 0 0,0 5,7A2,2 0 0,0 7,9A2,2 0 0,0 9,7A2,2 0 0,0 7,5Z" />
-                                    </svg>
-                                    <v-list-tile-title>Re-Key Group</v-list-tile-title>
-                                </v-list-tile>
-                            </v-list>
-                        </v-menu>
-                    </v-toolbar-side-icon>
-                    <v-toolbar-items class="hidden-xs-only">
-                        <v-btn id="btnShowGroupQR" @click="showGroupQRCode" title="Show the group QR code" icon>
-                            <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                                <path fill="#000000" d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H11V13H9V11M15,11H17V13H19V11H21V13H19V15H21V19H19V21H17V19H13V21H11V17H15V15H17V13H15V11M19,19V15H17V19H19M15,3H21V9H15V3M17,5V7H19V5H17M3,3H9V9H3V3M5,5V7H7V5H5M3,15H9V21H3V15M5,17V19H7V17H5Z" />
-                            </svg>
-                        </v-btn>
-                        <v-btn id="btnLeaveGroup" @click="leaveGroup" title="Leave this group" icon>
-                            <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                                <path fill="#000000" d="M4,1C2.89,1 2,1.89 2,3V7C2,8.11 2.89,9 4,9H1V11H13V9H10C11.11,9 12,8.11 12,7V3C12,1.89 11.11,1 10,1H4M4,3H10V7H4V3M14,13C12.89,13 12,13.89 12,15V19C12,20.11 12.89,21 14,21H11V23H23V21H20C21.11,21 22,20.11 22,19V15C22,13.89 21.11,13 20,13H14M3.88,13.46L2.46,14.88L4.59,17L2.46,19.12L3.88,20.54L6,18.41L8.12,20.54L9.54,19.12L7.41,17L9.54,14.88L8.12,13.46L6,15.59L3.88,13.46M14,15H20V19H14V15Z" />
-                            </svg>
-                        </v-btn>
-                        <v-btn id="btnRekeyGroup" @click="rekeyGroup" v-show="isGroupAdmin" title="Change the group key" icon>
-                            <svg style="width:24px;height:24px" viewBox="0 0 24 24">
-                                <path fill="#000000" d="M22,18V22H18V19H15V16H12L9.74,13.74C9.19,13.91 8.61,14 8,14A6,6 0 0,1 2,8A6,6 0 0,1 8,2A6,6 0 0,1 14,8C14,8.61 13.91,9.19 13.74,9.74L22,18M7,5A2,2 0 0,0 5,7A2,2 0 0,0 7,9A2,2 0 0,0 9,7A2,2 0 0,0 7,5Z" />
-                            </svg>
-                        </v-btn>
-                    </v-toolbar-items>
-                </v-toolbar>
+					<v-toolbar-side-icon class="hidden-sm-and-up">
+						<v-menu bottom left>
+							<v-btn icon slot="activator">
+								<v-icon>more_vert</v-icon>
+							</v-btn>
+							<v-list>
+								<v-list-tile @click="showGroupQRCode" flat>
+									<svg style="width:24px;height:24px" viewBox="0 0 24 24">
+										<path fill="#000000" d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H11V13H9V11M15,11H17V13H19V11H21V13H19V15H21V19H19V21H17V19H13V21H11V17H15V15H17V13H15V11M19,19V15H17V19H19M15,3H21V9H15V3M17,5V7H19V5H17M3,3H9V9H3V3M5,5V7H7V5H5M3,15H9V21H3V15M5,17V19H7V17H5Z" />
+									</svg>
+									<v-list-tile-title>Show QR Code</v-list-tile-title>
+								</v-list-tile>
+								<v-list-tile @click="leaveGroup" flat>
+									<svg style="width:24px;height:24px" viewBox="0 0 24 24">
+										<path fill="#000000" d="M4,1C2.89,1 2,1.89 2,3V7C2,8.11 2.89,9 4,9H1V11H13V9H10C11.11,9 12,8.11 12,7V3C12,1.89 11.11,1 10,1H4M4,3H10V7H4V3M14,13C12.89,13 12,13.89 12,15V19C12,20.11 12.89,21 14,21H11V23H23V21H20C21.11,21 22,20.11 22,19V15C22,13.89 21.11,13 20,13H14M3.88,13.46L2.46,14.88L4.59,17L2.46,19.12L3.88,20.54L6,18.41L8.12,20.54L9.54,19.12L7.41,17L9.54,14.88L8.12,13.46L6,15.59L3.88,13.46M14,15H20V19H14V15Z" />
+									</svg>
+									<v-list-tile-title>Leave Group</v-list-tile-title>
+								</v-list-tile>
+								<v-list-tile @click="rekeyGroup" v-show="isGroupAdmin" flat>
+									<svg style="width:24px;height:24px" viewBox="0 0 24 24">
+										<path fill="#000000" d="M22,18V22H18V19H15V16H12L9.74,13.74C9.19,13.91 8.61,14 8,14A6,6 0 0,1 2,8A6,6 0 0,1 8,2A6,6 0 0,1 14,8C14,8.61 13.91,9.19 13.74,9.74L22,18M7,5A2,2 0 0,0 5,7A2,2 0 0,0 7,9A2,2 0 0,0 9,7A2,2 0 0,0 7,5Z" />
+									</svg>
+									<v-list-tile-title>Re-Key Group</v-list-tile-title>
+								</v-list-tile>
+							</v-list>
+						</v-menu>
+					</v-toolbar-side-icon>
+					<v-toolbar-items class="hidden-xs-only">
+						<v-btn id="btnShowGroupQR" @click="showGroupQRCode" title="Show the group QR code" icon>
+							<svg style="width:24px;height:24px" viewBox="0 0 24 24">
+								<path fill="#000000" d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H11V13H9V11M15,11H17V13H19V11H21V13H19V15H21V19H19V21H17V19H13V21H11V17H15V15H17V13H15V11M19,19V15H17V19H19M15,3H21V9H15V3M17,5V7H19V5H17M3,3H9V9H3V3M5,5V7H7V5H5M3,15H9V21H3V15M5,17V19H7V17H5Z" />
+							</svg>
+						</v-btn>
+						<v-btn id="btnLeaveGroup" @click="leaveGroup" title="Leave this group" icon>
+							<svg style="width:24px;height:24px" viewBox="0 0 24 24">
+								<path fill="#000000" d="M4,1C2.89,1 2,1.89 2,3V7C2,8.11 2.89,9 4,9H1V11H13V9H10C11.11,9 12,8.11 12,7V3C12,1.89 11.11,1 10,1H4M4,3H10V7H4V3M14,13C12.89,13 12,13.89 12,15V19C12,20.11 12.89,21 14,21H11V23H23V21H20C21.11,21 22,20.11 22,19V15C22,13.89 21.11,13 20,13H14M3.88,13.46L2.46,14.88L4.59,17L2.46,19.12L3.88,20.54L6,18.41L8.12,20.54L9.54,19.12L7.41,17L9.54,14.88L8.12,13.46L6,15.59L3.88,13.46M14,15H20V19H14V15Z" />
+							</svg>
+						</v-btn>
+						<v-btn id="btnRekeyGroup" @click="rekeyGroup" v-show="isGroupAdmin" title="Change the group key" icon>
+							<svg style="width:24px;height:24px" viewBox="0 0 24 24">
+								<path fill="#000000" d="M22,18V22H18V19H15V16H12L9.74,13.74C9.19,13.91 8.61,14 8,14A6,6 0 0,1 2,8A6,6 0 0,1 8,2A6,6 0 0,1 14,8C14,8.61 13.91,9.19 13.74,9.74L22,18M7,5A2,2 0 0,0 5,7A2,2 0 0,0 7,9A2,2 0 0,0 9,7A2,2 0 0,0 7,5Z" />
+							</svg>
+						</v-btn>
+					</v-toolbar-items>
+				</v-toolbar>
 
-                <div id="group_messaging_list" style="height: 400px; overflow-y: auto;">
-                    <v-list>
-                        <template v-for="item in active_channel.messages">
-                            <v-list-tile v-show="item.Sender == currentUserData.username && item.Command==null">
-                                <div style="width:100%;">
-                                    <div class="message-out">
-                                        {{ item.Body }}
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                            <v-list-tile v-show="item.Sender != currentUserData.username && item.Command==null">
-                                <div style="width:100%;">
-                                    <table>
-                                        <tr>
-                                            <td>
-                                                <div class="message-in" @click="showGroupDialog(item.Message)">
-                                                    {{ item.Body }}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="message-time" v-if="item.Signed"><v-icon color="green darken-2">check_circle</v-icon> {{ item.Sender }} on {{ item.SentDate }}</div>
-                                                <div class="message-time" v-else><v-icon color="orange darken-2">warning</v-icon> {{ item.Sender }}? on {{ item.SentDate }}</div>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </v-list-tile>
-                            <v-list-tile v-show="item.Sender != currentUserData.username && item.Command != null && item.Command.request == 'join'">
-                                <div style="width:100%;">
-                                    <div class="message-in">
-                                        {{ item.Sender }} has requested to join the group.
-                                        <v-btn color="primary" @click="joinApprove(item)">Approve</v-btn>
-                                        <v-btn outline color="indigo" @click="joinDeny(item)">Deny</v-btn>
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                            <v-list-tile v-show="item.Command != null && item.Command.request == 'join_approved'">
-                                <div style="width:100%;">
-                                    <div class="command-event">
-                                        {{ item.Sender }} join has been approved
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                            <v-list-tile v-show="item.Command != null && item.Command.request == 'join_auto_approved'">
-                                <div style="width:100%;">
-                                    <div class="command-event">
-                                        {{ item.Sender }} join has been auto-approved
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                            <v-list-tile v-show="item.Command != null && item.Command.request == 'join_denied'">
-                                <div style="width:100%;">
-                                    <div class="command-event">
-                                        {{ item.Sender }} join has been denied
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                            <v-list-tile v-show="item.Command != null && item.Command.request == 'join_notify'">
-                                <div style="width:100%;">
-                                    <div class="command-event">
-                                        {{ item.Sender }} has joined
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                            <v-list-tile v-show="item.Command != null && item.Command.request == 'promote'">
-                                <div style="width:100%;">
-                                    <div class="command-event">
-                                        {{ item.Sender }} has been made an admin
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                            <v-list-tile v-show="item.Command != null && item.Command.request == 'demote'">
-                                <div style="width:100%;">
-                                    <div class="command-event">
-                                        {{ item.Sender }} changed from admin to user
-                                    </div>
-                                </div>
-                            </v-list-tile>
-                        </template>
-                    </v-list>
+				<div id="group_messaging_list" style="height: 400px; overflow-y: auto;">
+					<v-list>
+						<template v-for="item in active_channel.messages">
+							<v-list-tile v-show="item.Sender == currentUserData.username && item.Command==null">
+								<div style="width:100%;">
+									<div class="message-out">
+										{{ item.Body }}
+									</div>
+								</div>
+							</v-list-tile>
+							<v-list-tile v-show="item.Sender != currentUserData.username && item.Command==null">
+								<div style="width:100%;">
+									<table>
+										<tr>
+											<td>
+												<div class="message-in" @click="showGroupDialog(item.Message)">
+													{{ item.Body }}
+												</div>
+											</td>
+										</tr>
+										<tr>
+											<td>
+												<div class="message-time" v-if="item.Signed"><v-icon color="green darken-2">check_circle</v-icon> {{ item.Sender }} on {{ item.SentDate }}</div>
+												<div class="message-time" v-else><v-icon color="orange darken-2">warning</v-icon> {{ item.Sender }}? on {{ item.SentDate }}</div>
+											</td>
+										</tr>
+									</table>
+								</div>
+							</v-list-tile>
+							<v-list-tile v-show="item.Sender != currentUserData.username && item.Command != null && item.Command.request == 'join'">
+								<div style="width:100%;">
+									<div class="message-in">
+										{{ item.Sender }} has requested to join the group.
+										<v-btn color="primary" @click="joinApprove(item)">Approve</v-btn>
+										<v-btn outline color="indigo" @click="joinDeny(item)">Deny</v-btn>
+									</div>
+								</div>
+							</v-list-tile>
+							<v-list-tile v-show="item.Command != null && item.Command.request == 'join_approved'">
+								<div style="width:100%;">
+									<div class="command-event">
+										{{ item.Sender }} join has been approved
+									</div>
+								</div>
+							</v-list-tile>
+							<v-list-tile v-show="item.Command != null && item.Command.request == 'join_auto_approved'">
+								<div style="width:100%;">
+									<div class="command-event">
+										{{ item.Sender }} join has been auto-approved
+									</div>
+								</div>
+							</v-list-tile>
+							<v-list-tile v-show="item.Command != null && item.Command.request == 'join_denied'">
+								<div style="width:100%;">
+									<div class="command-event">
+										{{ item.Sender }} join has been denied
+									</div>
+								</div>
+							</v-list-tile>
+							<v-list-tile v-show="item.Command != null && item.Command.request == 'join_notify'">
+								<div style="width:100%;">
+									<div class="command-event">
+										{{ item.Sender }} has joined
+									</div>
+								</div>
+							</v-list-tile>
+							<v-list-tile v-show="item.Command != null && item.Command.request == 'promote'">
+								<div style="width:100%;">
+									<div class="command-event">
+										{{ item.Sender }} has been made an admin
+									</div>
+								</div>
+							</v-list-tile>
+							<v-list-tile v-show="item.Command != null && item.Command.request == 'demote'">
+								<div style="width:100%;">
+									<div class="command-event">
+										{{ item.Sender }} changed from admin to user
+									</div>
+								</div>
+							</v-list-tile>
+						</template>
+					</v-list>
 
-                    <v-dialog v-model="user_group_dialog" max-width="500px">
-                        <v-card>
-                            <v-card-title>
-                                <span>{{ active_user.username }}</span>
-                                <!--
-                                <v-spacer></v-spacer>
-                                <v-menu bottom left>
-                                    <v-btn icon slot="activator">
-                                        <v-icon>more_vert</v-icon>
-                                    </v-btn>
-                                    <v-list>
-                                        <v-list-tile @click="banGroupMember">
-                                            <v-list-tile-title>Ban</v-list-tile-title>
-                                        </v-list-tile>
-                                    </v-list>
-                                </v-menu>
-                                -->
-                            </v-card-title>
-                            <v-card-text>
-                                <div v-if="active_user.signed"><v-icon color="green darken-2">check_circle</v-icon> verified sender</div>
-                                <div v-else><v-icon color="orange darken-2">warning</v-icon> unverified sender</div>
-                                <div>{{ active_user.sentdate }}</div>
+					<v-dialog v-model="user_group_dialog" max-width="500px">
+						<v-card>
+							<v-card-title>
+								<span>{{ active_user.username }}</span>
+								<!--
+								<v-spacer></v-spacer>
+								<v-menu bottom left>
+									<v-btn icon slot="activator">
+										<v-icon>more_vert</v-icon>
+									</v-btn>
+									<v-list>
+										<v-list-tile @click="banGroupMember">
+											<v-list-tile-title>Ban</v-list-tile-title>
+										</v-list-tile>
+									</v-list>
+								</v-menu>
+								-->
+							</v-card-title>
+							<v-card-text>
+								<div v-if="active_user.signed"><v-icon color="green darken-2">check_circle</v-icon> verified sender</div>
+								<div v-else><v-icon color="orange darken-2">warning</v-icon> unverified sender</div>
+								<div>{{ active_user.sentdate }}</div>
 
-                                <!--
-                                <v-text-field label="Real Name" hint="real user name" v-model="active_user.friendly_name"></v-text-field>
-                                -->
+								<!--
+								<v-text-field label="Real Name" hint="real user name" v-model="active_user.friendly_name"></v-text-field>
+								-->
 
-                                <v-btn id="btnPromoteMember" outline color="indigo" @click="promoteGroupMember" v-show="!active_user.is_admin">Promote Member</v-btn>
+								<v-btn id="btnPromoteMember" outline color="indigo" @click="promoteGroupMember" v-show="!active_user.is_admin">Promote Member</v-btn>
 
-                                <v-btn id="btnDemoteAdmin" outline color="indigo" @click="demoteAdmin" v-show="active_user.is_admin">Demote Admin</v-btn>
-                            </v-card-text>
-                            <v-card-actions>
-                                <v-btn color="primary" flat @click.stop="user_group_dialog=false">Close</v-btn>
-                            </v-card-actions>
-                        </v-card>
-                    </v-dialog>
-                </div>
-                <v-footer style="background-color:white;" v-bind:app="true">
+								<v-btn id="btnDemoteAdmin" outline color="indigo" @click="demoteAdmin" v-show="active_user.is_admin">Demote Admin</v-btn>
+							</v-card-text>
+							<v-card-actions>
+								<v-btn color="primary" flat @click.stop="user_group_dialog=false">Close</v-btn>
+							</v-card-actions>
+						</v-card>
+					</v-dialog>
+				</div>
+				<v-footer style="background-color:white;" v-bind:app="true">
 
-                    <!-- <v-btn icon disabled><v-icon>photo_camera</v-icon></v-btn> -->
+					<!-- <v-btn icon disabled><v-icon>photo_camera</v-icon></v-btn> -->
 
-                    <v-text-field
-                            label="Message"
-                            auto-grow
-                            light
-                            v-model="outgoing_message"
-                    ></v-text-field>
+					<v-text-field
+							label="Message"
+							auto-grow
+							light
+							v-model="outgoing_message"
+					></v-text-field>
 
-                    <v-btn fab small dark color="indigo" @click="sendUserMessage">
-                        <v-icon>send</v-icon>
-                    </v-btn>
-                </v-footer>
-            </v-container>
+					<v-btn fab small dark color="indigo" @click="sendUserMessage">
+						<v-icon>send</v-icon>
+					</v-btn>
+				</v-footer>
+			</v-container>
 
 			<v-container fluid id="conSettings" v-show="page_visible==PAGE_CONNECT" class="white-container">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Connect With People</div>
 
-                <div style="text-align:center;">
-                    <v-btn id="btnShowQR" outline color="indigo" @click="showQRCode">Show My QR Code</v-btn>
-                </div>
+				<div style="text-align:center;">
+					<v-btn id="btnShowQR" outline color="indigo" @click="showQRCode">Show My QR Code</v-btn>
+				</div>
 
 				<div style="text-align:center;">
 					<v-btn outline color="indigo" @click="showScanBarcode">Scan QR Code</v-btn>
 				</div>
 
-				<v-text-field label="Clinicoin URL" v-model="add_name"></v-text-field>
+				<v-text-field label="Clinicoin URL" v-model="add_name" style="text-transform: lowercase;"></v-text-field>
 
 				<div style="text-align:center;">
 					<v-btn id="btnConnectUser" color="primary" @click="connectUser">Connect</v-btn>
 				</div>
 
-                <div style="padding-top: 30px; text-align:center;">
-                    <v-btn id="btnShowCreateGroup" outline color="indigo" @click="page_visible=PAGE_CREATE_GROUP">Create New Group</v-btn>
-                </div>
+				<div style="padding-top: 30px; text-align:center;">
+					<v-btn id="btnShowCreateGroup" outline color="indigo" @click="page_visible=PAGE_CREATE_GROUP">Create New Group</v-btn>
+				</div>
 			</v-container>
 
-            <v-container fluid id="conSettings" v-show="page_visible==PAGE_QRCODE" class="white-container">
-                <h1>{{ qr_code_title }}</h1>
-                <div style="text-align: center; margin-top: 100px;">
-                    <canvas id="qr"></canvas>
-                </div>
-            </v-container>
+			<v-container fluid id="conSettings" v-show="page_visible==PAGE_QRCODE" class="white-container">
+				<h1>{{ qr_code_title }}</h1>
+				<div style="text-align: center; margin-top: 100px;">
+					<canvas id="qr"></canvas>
+				</div>
+			</v-container>
 
-            <v-container fluid id="conCreateGroup" v-show="page_visible==PAGE_CREATE_GROUP" class="white-container">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Create Group</div>
+			<v-container fluid id="conCreateGroup" v-show="page_visible==PAGE_CREATE_GROUP" class="white-container">
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">Create Group</div>
 
-                <v-text-field label="Group Name" v-model="new_group_name"></v-text-field>
+				<v-text-field label="Group Name" v-model="new_group_name" style="text-transform: lowercase;"></v-text-field>
 
-                <v-radio-group v-model="new_group_type">
-                    <v-radio label="Open Group (Automatic Entry)" value="open" checked></v-radio>
-                    <v-radio label="Closed Group (Member Approval)" value="closed"></v-radio>
-                </v-radio-group>
+				<v-radio-group v-model="new_group_type">
+					<v-radio label="Open Group (Automatic Entry)" value="open" checked></v-radio>
+					<v-radio label="Closed Group (Member Approval)" value="closed"></v-radio>
+				</v-radio-group>
 
-                <div style="text-align:center;">
-                    <v-btn id="btnCreateGroup" color="primary" @click="createGroup">Create Group</v-btn>
-                </div>
-            </v-container>
+				<div style="text-align:center;">
+					<v-btn id="btnCreateGroup" color="primary" @click="createGroup">Create Group</v-btn>
+				</div>
+			</v-container>
 
 			<v-container fluid id="conSettings" v-show="page_visible==PAGE_ACTIVITY" class="white-container" style="background-color: #EDF2F8;">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Activity</div>
-                <div>What did you do today?</div>
-                <v-card hover>
-                    <v-card-text>
-                        <v-layout row wrap>
-                            <v-flex xs2 sm2 md1 lg1>
-                                <div style="margin-top: 15px;">Today I</div>
-                            </v-flex>
+				<div>What did you do today?</div>
+				<v-card hover>
+					<v-card-text>
+						<v-layout row wrap>
+							<v-flex xs2 sm2 md1 lg1>
+								<div style="margin-top: 15px;">Today I</div>
+							</v-flex>
 
-                            <v-flex xs9 sm8 md6 lg6>
-                                <v-select v-bind:items="activity_type_list" label="Activity" editable item-value="activity_type" v-model="activity_type"></v-select>
-                            </v-flex>
+							<v-flex xs9 sm8 md6 lg6>
+								<v-select v-bind:items="activity_type_list" label="Activity" editable item-value="activity_type" v-model="activity_type"></v-select>
+							</v-flex>
 
-                            <v-flex xs1 sm1 md1 lg1>
-                                <div style="margin-left: 10px; margin-top: 15px;">for</div>
-                            </v-flex>
-                        </v-layout>
+							<v-flex xs1 sm1 md1 lg1>
+								<div style="margin-left: 10px; margin-top: 15px;">for</div>
+							</v-flex>
+						</v-layout>
 
-                        <v-layout row wrap>
-                            <v-flex xs6 sm6 md6 lg6>
-                                <v-select type="numeric" v-bind:items="activity_amount_list" label="Amount" editable item-value="activity_amount" v-model="activity_amount"></v-select>
-                            </v-flex>
-                            <v-flex xs6 sm6 md6 lg6>
-                                <v-select v-bind:items="activity_unit_list" label="Activity" editable item-value="activity_unit" v-model="activity_unit" style="margin-left: 10px;"></v-select>
-                            </v-flex>
-                        </v-layout>
+						<v-layout row wrap>
+							<v-flex xs6 sm6 md6 lg6>
+								<v-select type="numeric" v-bind:items="activity_amount_list" label="Amount" editable item-value="activity_amount" v-model="activity_amount"></v-select>
+							</v-flex>
+							<v-flex xs6 sm6 md6 lg6>
+								<v-select v-bind:items="activity_unit_list" label="Activity" editable item-value="activity_unit" v-model="activity_unit" style="margin-left: 10px;"></v-select>
+							</v-flex>
+						</v-layout>
 
-                    <div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
-                        <div class="local-rounded-button" style="color:white; background-color: #483ebb;" @click="logActivity">
-                            Log Activity
-                        </div>
-                    </div>
-                    </v-card-text>
-                </v-card>
+					<div class="text-xs-center" style="margin-top: 10%; padding-left: 10%; padding-right: 10%;">
+						<div class="local-rounded-button" style="color:white; background-color: #483ebb;" @click="logActivity">
+							Log Activity
+						</div>
+					</div>
+					</v-card-text>
+				</v-card>
 
-                <div style="margin-top: 30px;">Activity History</div>
-                <div style="height: 40%; overflow-y: auto;">
-                    <template v-for="item in user_activity_history">
-                        <v-card raised>
-                            <v-card-text>
-                                <div class="title">{{ item.getActivityLine() }}</div>
-                                <div class="caption">{{ item.getFriendlyTime() }}</div>
-                            </v-card-text>
-                        </v-card>
-                        <div style="margin-top: 10px;"></div>
-                    </template>
-                    <template v-if="user_activity_history.length == 0">
-                        <v-card raised>
-                            <v-card-text>
-                                <div class="caption">No activities yet</div>
-                            </v-card-text>
-                        </v-card>
-                    </template>
-                </div>
+				<div style="margin-top: 30px;">Activity History</div>
+				<div style="height: 40%; overflow-y: auto;">
+					<template v-for="item in user_activity_history">
+						<v-card raised>
+							<v-card-text>
+								<div class="title">{{ item.getActivityLine() }}</div>
+								<div class="caption">{{ item.getFriendlyTime() }}</div>
+							</v-card-text>
+						</v-card>
+						<div style="margin-top: 10px;"></div>
+					</template>
+					<template v-if="user_activity_history.length == 0">
+						<v-card raised>
+							<v-card-text>
+								<div class="caption">No activities yet</div>
+							</v-card-text>
+						</v-card>
+					</template>
+				</div>
 			</v-container>
 
-            <v-container fluid id="conSettings" v-show="page_visible==PAGE_SETTINGS" class="white-container">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Settings</div>
+			<v-container fluid id="conSettings" v-show="page_visible==PAGE_SETTINGS" class="white-container">
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">Settings</div>
 
-                <v-card flat>
-                    <v-card-text>
-                        <div class="title">{{ real_name }}</div>
-                        <div class="caption">{{ email }}</div>
-                    </v-card-text>
-                </v-card>
+				<v-card flat>
+					<v-card-text>
+						<div class="title">{{ real_name }}</div>
+						<div class="caption">{{ email }}</div>
+					</v-card-text>
+				</v-card>
 
-                <v-list>
-                    <v-list-tile @click="page_visible=PAGE_ACCOUNT_SETTINGS">
-                        <v-list-tile-avatar>
-                            <v-btn fab dark small color="green">
-                                <v-icon>face</v-icon>
-                            </v-btn>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>My Account</v-list-tile-title>
-                        </v-list-tile-content>
+				<v-list>
+					<v-list-tile @click="page_visible=PAGE_ACCOUNT_SETTINGS">
+						<v-list-tile-avatar>
+							<v-btn fab dark small color="green">
+								<v-icon>face</v-icon>
+							</v-btn>
+						</v-list-tile-avatar>
+						<v-list-tile-content>
+							<v-list-tile-title>My Account</v-list-tile-title>
+						</v-list-tile-content>
 
-                        <v-list-tile-action>
-                            <v-btn flat icon color="green">
-                                <v-icon>chevron_right</v-icon>
-                            </v-btn>
-                        </v-list-tile-action>
-                    </v-list-tile>
+						<v-list-tile-action>
+							<v-btn flat icon color="green">
+								<v-icon>chevron_right</v-icon>
+							</v-btn>
+						</v-list-tile-action>
+					</v-list-tile>
 
-                    <v-spacer class="mb-4"></v-spacer>
+					<v-spacer class="mb-4"></v-spacer>
 
-                    <v-list-tile>
-                        <v-list-tile-avatar>
-                            <v-btn fab dark small color="red">
-                                <v-icon>add_alert</v-icon>
-                            </v-btn>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>Notifications</v-list-tile-title>
-                        </v-list-tile-content>
+					<v-list-tile>
+						<v-list-tile-avatar>
+							<v-btn fab dark small color="red">
+								<v-icon>add_alert</v-icon>
+							</v-btn>
+						</v-list-tile-avatar>
+						<v-list-tile-content>
+							<v-list-tile-title>Notifications</v-list-tile-title>
+						</v-list-tile-content>
 
-                    </v-list-tile>
+					</v-list-tile>
 
-                    <v-spacer class="mb-2"></v-spacer>
-                    <v-divider></v-divider>
-                    <v-spacer class="mb-2"></v-spacer>
+					<v-spacer class="mb-2"></v-spacer>
+					<v-divider></v-divider>
+					<v-spacer class="mb-2"></v-spacer>
 
-                    <v-list-tile @click="page_visible = PAGE_SUPPORT">
-                        <v-list-tile-avatar>
-                            <v-btn fab dark small color="orange">
-                                <v-icon>build</v-icon>
-                            </v-btn>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>Support</v-list-tile-title>
-                        </v-list-tile-content>
+					<v-list-tile @click="page_visible = PAGE_SUPPORT">
+						<v-list-tile-avatar>
+							<v-btn fab dark small color="orange">
+								<v-icon>build</v-icon>
+							</v-btn>
+						</v-list-tile-avatar>
+						<v-list-tile-content>
+							<v-list-tile-title>Support</v-list-tile-title>
+						</v-list-tile-content>
 
-                        <!--
-                        <v-list-tile-action>
-                            <v-btn flat icon color="orange">
-                                <v-icon>chevron_right</v-icon>
-                            </v-btn>
-                        </v-list-tile-action>
-                        -->
-                    </v-list-tile>
+						<!--
+						<v-list-tile-action>
+							<v-btn flat icon color="orange">
+								<v-icon>chevron_right</v-icon>
+							</v-btn>
+						</v-list-tile-action>
+						-->
+					</v-list-tile>
 
-                    <v-spacer class="mb-2"></v-spacer>
-                    <v-divider></v-divider>
-                    <v-spacer class="mb-2"></v-spacer>
+					<v-spacer class="mb-2"></v-spacer>
+					<v-divider></v-divider>
+					<v-spacer class="mb-2"></v-spacer>
 
-                    <v-list-tile @click="page_visible=PAGE_ABOUT">
-                        <v-list-tile-avatar>
-                            <v-btn fab dark small color="blue">
-                                <v-icon>info</v-icon>
-                            </v-btn>
-                        </v-list-tile-avatar>
-                        <v-list-tile-content>
-                            <v-list-tile-title>About</v-list-tile-title>
-                        </v-list-tile-content>
+					<v-list-tile @click="page_visible=PAGE_ABOUT">
+						<v-list-tile-avatar>
+							<v-btn fab dark small color="blue">
+								<v-icon>info</v-icon>
+							</v-btn>
+						</v-list-tile-avatar>
+						<v-list-tile-content>
+							<v-list-tile-title>About</v-list-tile-title>
+						</v-list-tile-content>
 
-                        <!--
-                        <v-list-tile-action>
-                            <v-btn flat icon color="blue">
-                                <v-icon>chevron_right</v-icon>
-                            </v-btn>
-                        </v-list-tile-action>
-                        -->
-                    </v-list-tile>
-                </v-list>
+						<!--
+						<v-list-tile-action>
+							<v-btn flat icon color="blue">
+								<v-icon>chevron_right</v-icon>
+							</v-btn>
+						</v-list-tile-action>
+						-->
+					</v-list-tile>
+				</v-list>
 
-                <div class="text-xs-center" style="margin-top: 20%; padding-left: 10%; padding-right: 10%;">
-                    <v-btn round color="error" dark @click="logoutUser"><v-icon>cloud_off</v-icon> Sign Out</v-btn>
-                </div>
+				<div class="text-xs-center" style="margin-top: 20%; padding-left: 10%; padding-right: 10%;">
+					<v-btn round color="error" dark @click="logoutUser"><v-icon>cloud_off</v-icon> Sign Out</v-btn>
+				</div>
 
 
-            </v-container>
+			</v-container>
 
 			<v-container fluid id="conSettings" v-show="page_visible==PAGE_ACCOUNT_SETTINGS" class="white-container">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Settings</div>
@@ -947,19 +948,19 @@
 				</div>
 			</v-container>
 
-            <v-container fluid v-show="page_visible==PAGE_SUPPORT" class="white-container">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Support</div>
-                <v-text-field label="Subject" v-model="support_subject"></v-text-field>
-                <v-text-field light multi-line label="Message" v-model="support_message"></v-text-field>
-                <div style="text-align:center;">
-                    <v-btn color="primary" @click="sendSupportMessage">Send Support Message</v-btn>
-                </div>
-            </v-container>
+			<v-container fluid v-show="page_visible==PAGE_SUPPORT" class="white-container">
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">Support</div>
+				<v-text-field label="Subject" v-model="support_subject"></v-text-field>
+				<v-text-field light multi-line label="Message" v-model="support_message"></v-text-field>
+				<div style="text-align:center;">
+					<v-btn color="primary" @click="sendSupportMessage">Send Support Message</v-btn>
+				</div>
+			</v-container>
 
-            <v-container fluid v-show="page_visible==PAGE_ABOUT" class="white-container">
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">About</div>
+			<v-container fluid v-show="page_visible==PAGE_ABOUT" class="white-container">
+				<div style="text-align:center; font-size:large; margin-bottom:20px;">About</div>
 
-            </v-container>
+			</v-container>
 
 			<v-snackbar id="errorSnack" bottom color="red" :timeout=5000 v-model="show_error_toast_value">
 				{{ error_message }}
@@ -994,7 +995,7 @@
 
 		for(let i=1; i <= 100; i++) {
 			vm.activity_amount_list.push(i);
-        }
+		}
 	});
 
 	function interface_test()
@@ -1082,12 +1083,7 @@
 			// try to catch the back button
 			document.addEventListener("backbutton", function () {
 				logger.info('back button used');
-				if (vm.page_visible > vm.PAGE_MAIN_LIST) {
-					vm.page_visible = vm.PAGE_LOGIN;
-				}
-				else {
-					vm.page_visible = vm.PAGE_MAIN_LIST;
-				}
+                vm.page_visible = vm.PAGE_MAIN_LIST;
 			}, false);
 
 			// set the initial page
@@ -1098,7 +1094,7 @@
 				this.real_name = current_user.name;
 				if (_.isEmpty(this.real_name)) {
 					this.real_name = current_user.username;
-                }
+				}
 				this.username = current_user.username;
 				this.phone = current_user.phone;
 				this.email = current_user.email;
@@ -1109,7 +1105,7 @@
 				const BeenHereBefore = await store.getItem('Clinicoin_First', 0);
 				logger.debug("BeenHereBefore = " + BeenHereBefore);
 
-				if (BeenHereBefore==null || BeenHereBefore==0) {
+				if (BeenHereBefore==null || BeenHereBefore===0) {
 					this.page_visible = this.PAGE_INITIAL;
 				}
 			}
@@ -1181,7 +1177,7 @@
 				if (message.MessageList.recipient_user_id === this.active_channel.username) {
 					logger.debug("adding to active list");
 					this.refreshActiveList();
-                }
+				}
 				this.updateChannels();
 
 				try{
@@ -1226,26 +1222,26 @@
 					else {
 						if (current_user.is_first_login) {
 							// try again if this is our first time
-                            await this.sleep(1000);
+							await this.sleep(1000);
 							this.loginUser();
-                        }
-                        else {
+						}
+						else {
 							this.showErrorToast(current_user.last_error_message);
 						}
 					}
 					this.show_spinner = false;
 				}
 			},
-            sleep: async function(ms)
-            {
-	            return new Promise(resolve => setTimeout(resolve, ms));
-            },
-            checkQueue: async function()
-            {
-	            vm.is_updating = true;
-	            await channels.checkAllMessageSources();
-	            vm.is_updating = false;
-            },
+			sleep: async function(ms)
+			{
+				return new Promise(resolve => setTimeout(resolve, ms));
+			},
+			checkQueue: async function()
+			{
+				vm.is_updating = true;
+				await channels.checkAllMessageSources();
+				vm.is_updating = false;
+			},
 			showforgotPasswordConfirm: function () {
 				if (_.isEmpty(this.username)) {
 					this.showErrorToast('username cannot be empty');
@@ -1394,14 +1390,14 @@
 				}
 			},
 			messageListSelected: function (selected_user)
-            {
+			{
 				current_message_list = _.find(channels.channel_list, {"recipient_user_id": selected_user});
 
 				if (current_message_list.constructor === Group) {
 					this.page_visible = this.PAGE_GROUP_MESSAGING;
-                } else {
+				} else {
 					this.page_visible = this.PAGE_MESSAGING;
-                }
+				}
 
 				this.active_channel.username = current_message_list.recipient_user_id;
 				this.active_channel.friendly_name = current_message_list.friendly_name;
@@ -1414,7 +1410,7 @@
 				else {
 					const msg = await current_message_list.sendMessage(this.outgoing_message);
 					if (msg.SendStatus === 'Sent') {
-						this.showSuccessToast('Message Sent');
+						//this.showSuccessToast('Message Sent');
 						this.refreshActiveList();
 					}
 					else {
@@ -1422,23 +1418,23 @@
 					}
 				}
 			},
-            updateActiveMessage: function(msg)
-            {
-            	let list = _.reject(this.active_channel.messages, (m)=>{ return m.Message.MessageId===msg.MessageId });
+			updateActiveMessage: function(msg)
+			{
+				let list = _.reject(this.active_channel.messages, (m)=>{ return m.Message.MessageId===msg.MessageId });
 
-	            list.push({
-		            Sender: msg.Sender,
-                    Signed: msg.Signed,
-		            Body: msg.Body,
-		            SentDate: moment(msg.SentDate).format('YYYY-MM-DD HH:mm'),
-		            Command: msg.Command,
-		            Message: msg
-	            });
+				list.push({
+					Sender: msg.Sender,
+					Signed: msg.Signed,
+					Body: msg.Body,
+					SentDate: moment(msg.SentDate).format('YYYY-MM-DD HH:mm'),
+					Command: msg.Command,
+					Message: msg
+				});
 
-	            _.sortBy(list, ['SentDate']);
+				_.sortBy(list, ['SentDate']);
 
-	            this.active_channel.messages = list;
-            },
+				this.active_channel.messages = list;
+			},
 			refreshActiveList: function()
 			{
 				const active_channel = channels.findByUsername(this.active_channel.username);
@@ -1450,8 +1446,8 @@
 						Signed: msg.Signed,
 						Body: msg.Body,
 						SentDate: moment(msg.SentDate).format('YYYY-MM-DD HH:mm'),
-                        Command: msg.Command,
-                        Message: msg
+						Command: msg.Command,
+						Message: msg
 					})
 				});
 				this.active_channel.messages = message_list;
@@ -1517,21 +1513,21 @@
 					this.show_spinner = true;
 					this.add_name = this.add_name.replace(/https:\/\/www\.clinicoin\.com\/connect\//i, "");
 					current_message_list = new MessageList();
-					current_message_list.recipient_user_id = this.add_name.trim();
+					current_message_list.recipient_user_id = this.add_name.trim().toLowerCase();
 					current_message_list.friendly_name = this.add_name.trim();
 					if (await current_message_list.getRecipientPublicKey()) {
 						if (current_message_list.is_group) {
-							this.joinGroup(this.add_name);
+							this.joinGroup(current_message_list.recipient_user_id);
 						}
 						else {
-							this.showSuccessToast('Connected Successfully to ' + this.add_name.trim());
+							this.showSuccessToast('Connected Successfully to ' + current_message_list.recipient_user_id);
 							current_message_list.saveSettings();
 							channels.channel_list.push(current_message_list);
-							this.messageListSelected(this.add_name.trim());
+							this.messageListSelected(current_message_list.recipient_user_id);
 						}
 					}
 					else {
-						this.showErrorToast('Could not connect to ' + this.add_name.trim() + ', ' + current_message_list.last_error_message);
+						this.showErrorToast('Could not connect to ' + current_message_list.recipient_user_id + ', ' + current_message_list.last_error_message);
 					}
 					this.show_spinner = false;
 				}
@@ -1606,7 +1602,7 @@
 				}
 				else {
 					const act = await current_user.addActivity(this.activity_type.trim(), this.activity_amount.trim(), this.activity_unit.trim());
-                    this.user_activity_history.push(act);
+					this.user_activity_history.push(act);
 					this.showSuccessToast('Activity Logged');
 				}
 			},
@@ -1624,42 +1620,42 @@
 				}
 			},
 			createGroup: async function()
-            {
-	            if (_.isEmpty(this.new_group_name.trim())) {
-		            this.showErrorToast('group name cannot be empty');
-	            }
-	            else {
-	            	this.show_spinner = true;
-		            const result = await Group.createGroup(this.new_group_name, this.new_group_type);
-		            if (_.isString(result)) {
-			            this.showErrorToast('Group create failed: '+result);
-		            }
-		            else {
-			            this.showSuccessToast('New group created');
-			            this.messageListSelected(this.new_group_name);
-                    }
-                    this.show_spinner = false;
-	            }
-            },
-            joinGroup: async function(group_name)
-            {
-	            Group.userJoinRequest(group_name);
-	            this.showSuccessToast('Group join request sent');
-	            this.page_visible = this.PAGE_MAIN_LIST;
-            },
-            joinApprove: async function(item)
-            {
-            	const group = channels.findByUsername(item.Command.group);
-            	await group.adminApproveJoin(item.Sender);
-            	item.Message.deleteFromServer();
+			{
+				if (_.isEmpty(this.new_group_name.trim())) {
+					this.showErrorToast('group name cannot be empty');
+				}
+				else {
+					this.show_spinner = true;
+					const result = await Group.createGroup(this.new_group_name, this.new_group_type);
+					if (_.isString(result)) {
+						this.showErrorToast('Group create failed: '+result);
+					}
+					else {
+						this.showSuccessToast('New group created');
+						this.messageListSelected(this.new_group_name);
+					}
+					this.show_spinner = false;
+				}
+			},
+			joinGroup: async function(group_name)
+			{
+				Group.userJoinRequest(group_name);
+				this.showSuccessToast('Group join request sent');
+				this.page_visible = this.PAGE_MAIN_LIST;
+			},
+			joinApprove: async function(item)
+			{
+				const group = channels.findByUsername(item.Command.group);
+				await group.adminApproveJoin(item.Sender);
+				item.Message.deleteFromServer();
 
-	            item.Command.request = 'join_approved';
-	            item.Message.Command.request = 'join_approved';
-            	item.Message.Body = 'You approved join for '+item.Sender;
-            	group.saveMessage(item.Message);
+				item.Command.request = 'join_approved';
+				item.Message.Command.request = 'join_approved';
+				item.Message.Body = 'You approved join for '+item.Sender;
+				group.saveMessage(item.Message);
 
-	            this.updateActiveMessage(item.Message);
-            },
+				this.updateActiveMessage(item.Message);
+			},
 			joinDeny: async function(item)
 			{
 				const group = channels.findByUsername(item.Command.group);
@@ -1673,33 +1669,33 @@
 
 				this.updateActiveMessage(item.Message);
 			},
-            leaveGroup: async function()
-            {
-            	if (!confirm('Really leave the group?')) {
-            		return;
-                }
+			leaveGroup: async function()
+			{
+				if (!confirm('Really leave the group?')) {
+					return;
+				}
 
-            	const group_name = this.active_channel.username;
-            	const group = channels.findByUsername(group_name);
-            	if (await group.leave()) {
-            		this.updateChannels();
-            		this.page_visible = this.PAGE_MAIN_LIST;
-            		this.showSuccessToast('Left group '+group_name);
-                }
-                else {
-            		this.showErrorToast(group.last_error);
-                }
-            },
-            rekeyGroup: async function()
-            {
-            	if (!confirm('Really change the group key?')) {
-            		return;
-                }
+				const group_name = this.active_channel.username;
+				const group = channels.findByUsername(group_name);
+				if (await group.leave()) {
+					this.updateChannels();
+					this.page_visible = this.PAGE_MAIN_LIST;
+					this.showSuccessToast('Left group '+group_name);
+				}
+				else {
+					this.showErrorToast(group.last_error);
+				}
+			},
+			rekeyGroup: async function()
+			{
+				if (!confirm('Really change the group key?')) {
+					return;
+				}
 
-	            const group_name = this.active_channel.username;
-	            const group = channels.findByUsername(group_name);
-	            group.distributeNewKey();
-            },
+				const group_name = this.active_channel.username;
+				const group = channels.findByUsername(group_name);
+				group.distributeNewKey();
+			},
 			showGroupQRCode: function () {
 				this.page_visible = this.PAGE_QRCODE;
 				this.qr_code_title = 'Group: '+vm.username;
@@ -1710,57 +1706,57 @@
 				});
 			},
 			promoteGroupMember: async function()
-            {
-	            const group_name = this.active_channel.username;
-	            const group = channels.findByUsername(group_name);
-	            if (group.adminPromote(this.active_user.username)) {
-		            this.showSuccessToast('Admin promoted successfully');
-	            }
-	            else {
-		            this.showErrorToast(this.last_error);
-	            }
-            },
-            demoteAdmin: async function()
-            {
-	            const group_name = this.active_channel.username;
-	            const group = channels.findByUsername(group_name);
-	            if (group.adminDemote(this.active_user.username)) {
-	            	this.showSuccessToast('Admin demoted successfully');
-                }
-                else {
-	            	this.showErrorToast(this.last_error);
-                }
-            },
+			{
+				const group_name = this.active_channel.username;
+				const group = channels.findByUsername(group_name);
+				if (group.adminPromote(this.active_user.username)) {
+					this.showSuccessToast('Admin promoted successfully');
+				}
+				else {
+					this.showErrorToast(this.last_error);
+				}
+			},
+			demoteAdmin: async function()
+			{
+				const group_name = this.active_channel.username;
+				const group = channels.findByUsername(group_name);
+				if (group.adminDemote(this.active_user.username)) {
+					this.showSuccessToast('Admin demoted successfully');
+				}
+				else {
+					this.showErrorToast(this.last_error);
+				}
+			},
 			banGroupMember: async function()
-            {
-	            const group_name = this.active_channel.username;
-	            const group = channels.findByUsername(group_name);
+			{
+				const group_name = this.active_channel.username;
+				const group = channels.findByUsername(group_name);
 
-	            if (group.banMember(this.active_user.username)) {
-		            this.showSuccessToast('Member has been banned');
-	            }
-	            else {
-		            this.showErrorToast(this.last_error);
-	            }
-            },
-            showGroupDialog: function(msg)
-            {
-	            const group_name = this.active_channel.username;
-	            const group = channels.findByUsername(group_name);
-            	this.user_group_dialog = true;
+				if (group.banMember(this.active_user.username)) {
+					this.showSuccessToast('Member has been banned');
+				}
+				else {
+					this.showErrorToast(this.last_error);
+				}
+			},
+			showGroupDialog: function(msg)
+			{
+				const group_name = this.active_channel.username;
+				const group = channels.findByUsername(group_name);
+				this.user_group_dialog = true;
 
-            	// set the active user from ???
-                this.active_user.username = msg.Sender;
-                this.active_user.is_admin = _.indexOf(group.admin_list, msg.Sender) !== -1;
-                this.active_user.sentdate = msg.SentDate.format('YYYY-MM-DD HH:mm');
-                this.active_user.signed = msg.Signed;
-            },
+				// set the active user from ???
+				this.active_user.username = msg.Sender;
+				this.active_user.is_admin = _.indexOf(group.admin_list, msg.Sender) !== -1;
+				this.active_user.sentdate = msg.SentDate.format('YYYY-MM-DD HH:mm');
+				this.active_user.signed = msg.Signed;
+			},
 			isGroupAdmin: function()
-            {
-	            const group_name = this.active_channel.username;
-	            const group = channels.findByUsername(group_name);
-	            return group.isAdmin();
-            }
+			{
+				const group_name = this.active_channel.username;
+				const group = channels.findByUsername(group_name);
+				return group.isAdmin();
+			}
 		},
 		data()
 		{
@@ -1788,21 +1784,21 @@
 				info_message: 'some info',
 				success_message: 'success',
 				outgoing_message: '',
-                auto_login: true,
+				auto_login: true,
 
 				activity_type: '',
 				activity_unit: '',
 				activity_amount: 0,
 				activity_unit_list:["Minutes","Hours","Miles","Kilometers","Meters","Reps","Sets","Laps","Steps"],
 				activity_type_list:["Biked","Danced","Exercise Class’d","Gym’d","Hiked","Lifted Weights","Martial Arts’d","Meditated","Parkour’d","Played a Sport","Ran","Surfed","Swam","Walked","Yoga’d","Other"],
-                activity_amount_list: [],
-                user_activity_history: [],
+				activity_amount_list: [],
+				user_activity_history: [],
 
 				new_group_name: '',
 				new_group_type: 'open',
 
 				user_dialog: false,
-                user_group_dialog: false,
+				user_group_dialog: false,
 
 				support_message: '',
 				support_subject: '',
@@ -1843,13 +1839,13 @@
 					friendly_name: "channel",
 					messages: []
 				},
-                active_user: {
+				active_user: {
 					username: 'auser',
-                    friendly_name: 'abraham user',
-                    is_admin: false,
-                    sentdate: '',
-                    signed: false
-                }
+					friendly_name: 'abraham user',
+					is_admin: false,
+					sentdate: '',
+					signed: false
+				}
 			};
 		},
 		computed: {

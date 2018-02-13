@@ -73,20 +73,20 @@ class Group extends MessageList
 
 	async saveSettings()
 	{
-		await store.setItem('gr_'+current_user.username+'_'+this.group_name+'_Settings', this.toGroupJSON());
+		await store.setItem('gr_'+current_user.username.toLowerCase()+'_'+this.group_name.toLowerCase()+'_Settings', this.toGroupJSON());
 
-		await store.setItem('gr_'+current_user.username+'_'+this.group_name+'_Admins', JSON.stringify(this.admin_list));
+		await store.setItem('gr_'+current_user.username.toLowerCase()+'_'+this.group_name.toLowerCase()+'_Admins', JSON.stringify(this.admin_list));
 
-		await store.setItem('gr_'+current_user.username+'_'+this.group_name+'_Users', JSON.stringify(this.user_list));
+		await store.setItem('gr_'+current_user.username.toLowerCase()+'_'+this.group_name.toLowerCase()+'_Users', JSON.stringify(this.user_list));
 
 		return true;
 	};
 
 	async removeSettings()
 	{
-		await store.removeItem('gr_'+current_user.username+'_'+this.recipient_user_id+'_Settings');
-		await store.removeItem('gr_'+current_user.username+'_'+this.group_name+'_Admins');
-		await store.removeItem('gr_'+current_user.username+'_'+this.group_name+'_Users');
+		await store.removeItem('gr_'+current_user.username.toLowerCase()+'_'+this.group_name.toLowerCase()+'_Settings');
+		await store.removeItem('gr_'+current_user.username.toLowerCase()+'_'+this.group_name.toLowerCase()+'_Admins');
+		await store.removeItem('gr_'+current_user.username.toLowerCase()+'_'+this.group_name.toLowerCase()+'_Users');
 	}
 
 	async processMessage(msg)
@@ -275,10 +275,10 @@ class Group extends MessageList
 
 		// check if the group already exists
 		let group = new Group();
-		group.group_name = group_name;
+		group.group_name = group_name.toLowerCase();
 		group.friendly_name = group_name;
-		group.recipient_user_id = group_name;
-		group.group_type = group_type;
+		group.recipient_user_id = group_name.toLowerCase();
+		group.group_type = group_type.toLowerCase();
 		const exists = await group.getRecipientPublicKey();
 
 		if (exists) {
@@ -289,7 +289,7 @@ class Group extends MessageList
 		// good to go, create keys and save
 		await group.generateGroupKey();
 
-		const result = await group.updatePublicKey();
+		const result = await group.updateGroupPublicKey();
 
 		if (result.statusCode !== 200) {
 			logger.error("Unknown error setting public key");
@@ -338,7 +338,7 @@ class Group extends MessageList
 
 		const options = {
 			userIds: [ {
-				name: this.group_name
+				name: this.group_name.toLowerCase()
 			} ], // multiple user IDs
 			numBits: 2048,                // RSA key size
 			passphrase: this.group_passphrase        // protects the private key
@@ -349,10 +349,10 @@ class Group extends MessageList
 		this.group_public_key = key_object.publicKeyArmored;
 	}
 
-	async updatePublicKey()
+	async updateGroupPublicKey()
 	{
 		const payload = JSON.stringify({
-			username: this.group_name,
+			username: this.group_name.toLowerCase(),
 			publicKey: this.group_public_key,
 			is_group: "1",
 			sub: this.group_type,
@@ -374,8 +374,8 @@ class Group extends MessageList
 	{
 		let msg = new Message();
 		msg.Body = message_json;
-		msg.Sender = current_user.username;
-		msg.Receiver = this.group_name;
+		msg.Sender = current_user.username.toLowerCase();
+		msg.Receiver = this.group_name.toLowerCase();
 
 		if ( ! _.isEmpty(this.group_private_key)) {
 			let private_key_obj = openpgp.key.readArmored(current_user.getPrivateKey()).keys[0];
@@ -412,7 +412,7 @@ class Group extends MessageList
 		}
 
 		const new_group = new Group();
-		new_group.recipient_user_id = group_name;
+		new_group.recipient_user_id = group_name.toLowerCase();
 		const exists = await new_group.getRecipientPublicKey();
 
 		if ( ! exists) {
@@ -421,7 +421,7 @@ class Group extends MessageList
 		}
 
 		new_group.group_public_key = new_group.recipient_public_key;
-		new_group.group_name = group_name;
+		new_group.group_name = group_name.toLowerCase();
 
 		await new_group.sendGroupMessage(JSON.stringify({ command: "join_request "+group_name }));
 
@@ -445,7 +445,7 @@ class Group extends MessageList
 
 		const message_json = JSON.stringify({
 			command: "join_approved",
-			group: this.group_name,
+			group: this.group_name.toLowerCase(),
 			passphrase: this.group_passphrase,
 			privatekey: this.group_private_key,
 			publickey: this.group_public_key,
@@ -538,7 +538,10 @@ class Group extends MessageList
 
 		channels.removeGroupChannel(this.group_name);
 
-		await this.sendGroupMessage(JSON.stringify({ command: 'left', sender: current_user.username }));
+		await this.sendGroupMessage(JSON.stringify({
+			command: 'left',
+			sender: current_user.username.toLowerCase()
+		}));
 
 		await this.removeSettings();
 
@@ -557,7 +560,10 @@ class Group extends MessageList
 
 		this.user_list = _.without(this.user_list, user_name);
 
-		this.sendGroupMessage(JSON.stringify({ status: "removed", group: this.group_name }));
+		this.sendGroupMessage(JSON.stringify({
+			status: "removed",
+			group: this.group_name.toLowerCase()
+		}));
 
 		this.distributeNewKey();
 
@@ -572,19 +578,19 @@ class Group extends MessageList
 
 		await this.generateGroupKey();
 
-		await this.updatePublicKey();
+		await this.updateGroupPublicKey();
 
 		let options = {
 			data: "-----BEGIN ENVELOPE-----"
 			+ JSON.stringify({
 				SentDate: moment().toISOString(),
-				Sender: current_user.username,
-				Receiver: this.group_name
+				Sender: current_user.username.toLowerCase(),
+				Receiver: this.group_name.toLowerCase()
 			})
 			+ "-----END ENVELOPE-----\n\n"+
 			JSON.stringify({
 				command: 'new_group_key',
-				group: this.group_name,
+				group: this.group_name.toLowerCase(),
 				passphrase: this.group_passphrase,
 				privatekey: this.group_private_key,
 				publickey: this.group_public_key,
@@ -608,7 +614,7 @@ class Group extends MessageList
 
 		const payload = JSON.stringify({
 			data: enc_object.data,
-			sender: this.group_name,
+			sender: this.group_name.toLowerCase(),
 			destinations: all_users.join(','),
 			messageid: key
 		});
