@@ -232,7 +232,7 @@
                 <v-btn icon light color="white" @click="page_visible=PAGE_INITIAL">
                     <v-icon>keyboard_arrow_left</v-icon>
                 </v-btn>
-				<div style="margin-top: 50%;">
+				<div style="margin-top: 20%;">
 					<img src="img/logo.png" style="width: 72%; margin-left: 12%;">
 				</div>
 
@@ -527,9 +527,7 @@
 
 				<v-footer style="background-color:white;" v-bind:app="true">
 
-                    <v-btn icon disabled>
-                        <v-icon>photo_camera</v-icon>
-                    </v-btn>
+                    <!--<v-btn icon disabled><v-icon>photo_camera</v-icon></v-btn>-->
 
                     <v-text-field
                             label="Message"
@@ -546,15 +544,57 @@
 
             <v-container fluid id="conGroupMessages" v-show="page_visible==PAGE_GROUP_MESSAGING" class="white-container">
 
-                <div style="text-align:center; font-size:large; margin-bottom:20px;">Group: {{active_channel.friendly_name}}</div>
+                <v-toolbar flat dense>
+                    <v-toolbar-title>Group: {{active_channel.friendly_name}}</v-toolbar-title>
+                    <v-spacer></v-spacer>
 
-                <v-btn id="btnShowGroupQR" outline color="indigo" @click="showGroupQRCode">Show Group QR Code</v-btn>
+                    <v-toolbar-side-icon class="hidden-sm-and-up">
+                        <v-menu bottom left>
+                            <v-btn icon slot="activator">
+                                <v-icon>more_vert</v-icon>
+                            </v-btn>
+                            <v-list>
+                                <v-list-tile @click="showGroupQRCode" flat>
+                                    <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                                        <path fill="#000000" d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H11V13H9V11M15,11H17V13H19V11H21V13H19V15H21V19H19V21H17V19H13V21H11V17H15V15H17V13H15V11M19,19V15H17V19H19M15,3H21V9H15V3M17,5V7H19V5H17M3,3H9V9H3V3M5,5V7H7V5H5M3,15H9V21H3V15M5,17V19H7V17H5Z" />
+                                    </svg>
+                                    <v-list-tile-title>Show QR Code</v-list-tile-title>
+                                </v-list-tile>
+                                <v-list-tile @click="leaveGroup" flat>
+                                    <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                                        <path fill="#000000" d="M4,1C2.89,1 2,1.89 2,3V7C2,8.11 2.89,9 4,9H1V11H13V9H10C11.11,9 12,8.11 12,7V3C12,1.89 11.11,1 10,1H4M4,3H10V7H4V3M14,13C12.89,13 12,13.89 12,15V19C12,20.11 12.89,21 14,21H11V23H23V21H20C21.11,21 22,20.11 22,19V15C22,13.89 21.11,13 20,13H14M3.88,13.46L2.46,14.88L4.59,17L2.46,19.12L3.88,20.54L6,18.41L8.12,20.54L9.54,19.12L7.41,17L9.54,14.88L8.12,13.46L6,15.59L3.88,13.46M14,15H20V19H14V15Z" />
+                                    </svg>
+                                    <v-list-tile-title>Leave Group</v-list-tile-title>
+                                </v-list-tile>
+                                <v-list-tile @click="rekeyGroup" v-show="isGroupAdmin" flat>
+                                    <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                                        <path fill="#000000" d="M22,18V22H18V19H15V16H12L9.74,13.74C9.19,13.91 8.61,14 8,14A6,6 0 0,1 2,8A6,6 0 0,1 8,2A6,6 0 0,1 14,8C14,8.61 13.91,9.19 13.74,9.74L22,18M7,5A2,2 0 0,0 5,7A2,2 0 0,0 7,9A2,2 0 0,0 9,7A2,2 0 0,0 7,5Z" />
+                                    </svg>
+                                    <v-list-tile-title>Re-Key Group</v-list-tile-title>
+                                </v-list-tile>
+                            </v-list>
+                        </v-menu>
+                    </v-toolbar-side-icon>
+                    <v-toolbar-items class="hidden-xs-only">
+                        <v-btn id="btnShowGroupQR" @click="showGroupQRCode" title="Show the group QR code" icon>
+                            <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                                <path fill="#000000" d="M3,11H5V13H3V11M11,5H13V9H11V5M9,11H13V15H11V13H9V11M15,11H17V13H19V11H21V13H19V15H21V19H19V21H17V19H13V21H11V17H15V15H17V13H15V11M19,19V15H17V19H19M15,3H21V9H15V3M17,5V7H19V5H17M3,3H9V9H3V3M5,5V7H7V5H5M3,15H9V21H3V15M5,17V19H7V17H5Z" />
+                            </svg>
+                        </v-btn>
+                        <v-btn id="btnLeaveGroup" @click="leaveGroup" title="Leave this group" icon>
+                            <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                                <path fill="#000000" d="M4,1C2.89,1 2,1.89 2,3V7C2,8.11 2.89,9 4,9H1V11H13V9H10C11.11,9 12,8.11 12,7V3C12,1.89 11.11,1 10,1H4M4,3H10V7H4V3M14,13C12.89,13 12,13.89 12,15V19C12,20.11 12.89,21 14,21H11V23H23V21H20C21.11,21 22,20.11 22,19V15C22,13.89 21.11,13 20,13H14M3.88,13.46L2.46,14.88L4.59,17L2.46,19.12L3.88,20.54L6,18.41L8.12,20.54L9.54,19.12L7.41,17L9.54,14.88L8.12,13.46L6,15.59L3.88,13.46M14,15H20V19H14V15Z" />
+                            </svg>
+                        </v-btn>
+                        <v-btn id="btnRekeyGroup" @click="rekeyGroup" v-show="isGroupAdmin" title="Change the group key" icon>
+                            <svg style="width:24px;height:24px" viewBox="0 0 24 24">
+                                <path fill="#000000" d="M22,18V22H18V19H15V16H12L9.74,13.74C9.19,13.91 8.61,14 8,14A6,6 0 0,1 2,8A6,6 0 0,1 8,2A6,6 0 0,1 14,8C14,8.61 13.91,9.19 13.74,9.74L22,18M7,5A2,2 0 0,0 5,7A2,2 0 0,0 7,9A2,2 0 0,0 9,7A2,2 0 0,0 7,5Z" />
+                            </svg>
+                        </v-btn>
+                    </v-toolbar-items>
+                </v-toolbar>
 
-                <v-btn id="btnLeaveGroup" outline color="indigo" @click="leaveGroup">Leave Group</v-btn>
-
-                <v-btn id="btnRekeyGroup" outline color="indigo" @click="rekeyGroup" v-show="isGroupAdmin">Re-Key Group</v-btn>
-
-                <div id="group_messaging_list" style="height: 80%; overflow-y: auto;">
+                <div id="group_messaging_list" style="height: 400px; overflow-y: auto;">
                     <v-list>
                         <template v-for="item in active_channel.messages">
                             <v-list-tile v-show="item.Sender == currentUserData.username && item.Command==null">
@@ -576,7 +616,8 @@
                                         </tr>
                                         <tr>
                                             <td>
-                                                <div class="message-time">{{ item.Sender }} on {{ item.SentDate }}</div>
+                                                <div class="message-time" v-if="item.Signed"><v-icon color="green darken-2">check_circle</v-icon> {{ item.Sender }} on {{ item.SentDate }}</div>
+                                                <div class="message-time" v-else><v-icon color="orange darken-2">warning</v-icon> {{ item.Sender }}? on {{ item.SentDate }}</div>
                                             </td>
                                         </tr>
                                     </table>
@@ -640,6 +681,7 @@
                         <v-card>
                             <v-card-title>
                                 <span>{{ active_user.username }}</span>
+                                <!--
                                 <v-spacer></v-spacer>
                                 <v-menu bottom left>
                                     <v-btn icon slot="activator">
@@ -651,8 +693,13 @@
                                         </v-list-tile>
                                     </v-list>
                                 </v-menu>
+                                -->
                             </v-card-title>
                             <v-card-text>
+                                <div v-if="active_user.signed"><v-icon color="green darken-2">check_circle</v-icon> verified sender</div>
+                                <div v-else><v-icon color="orange darken-2">warning</v-icon> unverified sender</div>
+                                <div>{{ active_user.sentdate }}</div>
+
                                 <!--
                                 <v-text-field label="Real Name" hint="real user name" v-model="active_user.friendly_name"></v-text-field>
                                 -->
@@ -669,9 +716,7 @@
                 </div>
                 <v-footer style="background-color:white;" v-bind:app="true">
 
-                    <v-btn icon disabled>
-                        <v-icon>photo_camera</v-icon>
-                    </v-btn>
+                    <!-- <v-btn icon disabled><v-icon>photo_camera</v-icon></v-btn> -->
 
                     <v-text-field
                             label="Message"
@@ -843,11 +888,13 @@
                             <v-list-tile-title>Support</v-list-tile-title>
                         </v-list-tile-content>
 
+                        <!--
                         <v-list-tile-action>
                             <v-btn flat icon color="orange">
                                 <v-icon>chevron_right</v-icon>
                             </v-btn>
                         </v-list-tile-action>
+                        -->
                     </v-list-tile>
 
                     <v-spacer class="mb-2"></v-spacer>
@@ -864,11 +911,13 @@
                             <v-list-tile-title>About</v-list-tile-title>
                         </v-list-tile-content>
 
+                        <!--
                         <v-list-tile-action>
                             <v-btn flat icon color="blue">
                                 <v-icon>chevron_right</v-icon>
                             </v-btn>
                         </v-list-tile-action>
+                        -->
                     </v-list-tile>
                 </v-list>
 
@@ -1379,6 +1428,7 @@
 
 	            list.push({
 		            Sender: msg.Sender,
+                    Signed: msg.Signed,
 		            Body: msg.Body,
 		            SentDate: moment(msg.SentDate).format('YYYY-MM-DD HH:mm'),
 		            Command: msg.Command,
@@ -1397,6 +1447,7 @@
 				active_channel.messages.forEach(function (msg) {
 					message_list.push({
 						Sender: msg.Sender,
+						Signed: msg.Signed,
 						Body: msg.Body,
 						SentDate: moment(msg.SentDate).format('YYYY-MM-DD HH:mm'),
                         Command: msg.Command,
@@ -1624,6 +1675,10 @@
 			},
             leaveGroup: async function()
             {
+            	if (!confirm('Really leave the group?')) {
+            		return;
+                }
+
             	const group_name = this.active_channel.username;
             	const group = channels.findByUsername(group_name);
             	if (await group.leave()) {
@@ -1637,6 +1692,10 @@
             },
             rekeyGroup: async function()
             {
+            	if (!confirm('Really change the group key?')) {
+            		return;
+                }
+
 	            const group_name = this.active_channel.username;
 	            const group = channels.findByUsername(group_name);
 	            group.distributeNewKey();
@@ -1693,6 +1752,8 @@
             	// set the active user from ???
                 this.active_user.username = msg.Sender;
                 this.active_user.is_admin = _.indexOf(group.admin_list, msg.Sender) !== -1;
+                this.active_user.sentdate = msg.SentDate.format('YYYY-MM-DD HH:mm');
+                this.active_user.signed = msg.Signed;
             },
 			isGroupAdmin: function()
             {
@@ -1785,7 +1846,9 @@
                 active_user: {
 					username: 'auser',
                     friendly_name: 'abraham user',
-                    is_admin: false
+                    is_admin: false,
+                    sentdate: '',
+                    signed: false
                 }
 			};
 		},

@@ -3,7 +3,9 @@ function Message() {
 	this.Sender = 'me';
 	this.Body = '';
 	this.EncryptedBody = '';
+	this.RawBody = '';
 	this.Signed = false;
+	this.SignData = '';
 	this.MessageId = moment().format('x');
 	this.ReceiptHandle = '';
 	this.ReceiveDate =  moment('1999-01-01');
@@ -116,12 +118,12 @@ Message.prototype.decryptMessage = async function(channels, private_key_obj)
 		return false;
 	}
 
-	const parts = _.split(decrypted_obj.data, '----END ENVELOPE----');
-	const envelope = _.replace(parts[0],'----START ENVELOPE----','').trim();
-	this.readEnvelope(envelope);
-	logger.debug(envelope);
+	this.RawBody = decrypted_obj.data;
 
-	this.Body = parts[1].trim();
+	const parts = decrypted_obj.data.split(/-----BEGIN ENVELOPE-----|-----END ENVELOPE-----|-----BEGIN PGP SIGNATURE-----|-----END PGP SIGNATURE-----/i);
+	this.readEnvelope(parts[1].trim());
+	this.Body = parts[2].trim();
+	this.SignData = '-----BEGIN PGP SIGNATURE-----'+"\n\n"+parts[3].trim()+"\n\n"+'-----END PGP SIGNATURE-----';
 
 	logger.info("data decrypted");
 
@@ -163,15 +165,21 @@ Message.prototype.encryptMessage = async function(recipient_public, signer_keys)
 	}
 
 	let options = {
-		data: "----START ENVELOPE----\n\n"
+		data: "-----BEGIN ENVELOPE-----"
 				+ this.getEnvelope()
-				+ "\n\n----END ENVELOPE----\n\n"
+				+ "-----END ENVELOPE-----\n\n"
 				+ this.Body,
 		publicKeys: openpgp.key.readArmored(recipient_public).keys,
 	};
 
 	if ( ! _.isEmpty(signer_keys)) {
-		options.privateKeys = signer_keys;
+		let sign_options = {
+			data: options.data,
+			privateKeys: signer_keys // for signing
+		};
+
+		const sign_obj = await openpgp.sign(sign_options);
+		options.data = sign_obj.data;
 	}
 
 	const enc_object = await openpgp.encrypt(options);

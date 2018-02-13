@@ -96,23 +96,7 @@ class Group extends MessageList
 		}
 
 		// only check for signing if we have key
-		let verified = null;
-		try {
-			if (!_.isEmpty(this.recipient_public_key)) {
-				let options = {
-					message: openpgp.cleartext.readArmored(msg.EncryptedBody), // parse armored message
-					publicKeys: openpgp.key.readArmored(this.recipient_public_key).keys   // for verification
-				};
-				verified = await openpgp.verify(options);
-
-				if (verified.signatures.length > 0 && verified.signatures[0].valid) {
-					logger.info("valid signature");
-					msg.Signed = true;
-				}
-			}
-		} catch (e) {
-			logger.warn('could not verify signature');
-		}
+		await this.verifySignature(msg);
 
 		msg.MessageList = this;
 		msg.recipient_user_id = this.group_name;
@@ -131,6 +115,8 @@ class Group extends MessageList
 				private_key_obj.decrypt(this.group_passphrase);
 
 				await internal_msg.decryptMessage(channels, private_key_obj);
+
+				msg.deleteFromServer();
 				return;
 			}
 
@@ -167,7 +153,7 @@ class Group extends MessageList
 
 				this.messages.push(msg);
 			}
-			else if (data.command === 'join_approved') {
+			else if (data.command === 'join_approved' && msg.Signed) {
 				// approval received by the requesting user
 				await this.userJoinApprovalEvent(msg);
 
@@ -180,7 +166,7 @@ class Group extends MessageList
 
 				this.messages.push(msg);
 			}
-			else if (data.command === 'join_notify') {
+			else if (data.command === 'join_notify' && msg.Signed) {
 				this.user_list.push(msg.Sender);
 				this.user_list = _.uniq(this.user_list);
 
@@ -192,7 +178,7 @@ class Group extends MessageList
 				};
 				this.messages.push(msg);
 			}
-			else if (data.command === 'promote') {
+			else if (data.command === 'promote' && msg.Signed) {
 				this.adminPromoteEvent(msg.Sender);
 
 				msg.Body = 'Command';
@@ -203,7 +189,7 @@ class Group extends MessageList
 				};
 				this.messages.push(msg);
 			}
-			else if (data.command === 'demote') {
+			else if (data.command === 'demote' && msg.Signed) {
 				this.adminDemoteEvent(msg.Sender);
 
 				msg.Body = 'Command';
@@ -214,7 +200,7 @@ class Group extends MessageList
 				};
 				this.messages.push(msg);
 			}
-			else if (data.command === 'new_group_key') {
+			else if (data.command === 'new_group_key' && msg.Signed) {
 				this.newKeyEvent(msg);
 
 				msg.Body = 'Command';
@@ -233,6 +219,35 @@ class Group extends MessageList
 			channels.newMessageEventDelegate(msg);
 		}
 	};
+
+	async verifySignature(msg)
+	{
+		let verified = null;
+		try {
+			if (_.indexOf(this.admin_list, msg.Sender) > -1) {
+				let admin_public = await this.getAdminKey(msg.Sender);
+
+				let options = {
+					message: openpgp.cleartext.readArmored(msg.RawBody),
+					publicKeys: openpgp.key.readArmored(admin_public).keys
+				};
+				verified = await openpgp.verify(options);
+
+				if (verified.signatures.length > 0 && verified.signatures[0].valid) {
+					logger.info("valid signature");
+					msg.Signed = true;
+				}
+				else {
+					logger.debug("signature not validated")
+				}
+			}
+		}
+		catch (e) {
+			logger.warn('could not verify signature');
+		}
+
+		this.recipient_public_key = this.group_public_key;
+	}
 
 	isAdmin()
 	{
@@ -472,6 +487,44 @@ class Group extends MessageList
 		await this.saveSettings();
 
 		msg.deleteFromServer();
+
+		this.getAdminListKeys();
+	}
+
+	async getAdminListKeys()
+	{
+		for(let admin of this.admin_list) {
+			this.getAdminKey(admin);
+		}
+
+		this.recipient_public_key = this.group_public_key;
+	}
+
+	async getAdminKey(admin)
+	{
+		let json = await store.getItem('gr_admin_' + admin, null);
+
+		if (json !== null) {
+			const data = JSON.parse(json);
+			if (moment(data.date).isAfter(moment().subtract(24, 'hours'))) {
+				return data.public;
+			}
+		}
+
+		await this.getRecipientPublicKey(admin);
+
+		if (this.recipient_public_key !== null) {
+			await store.setItem('gr_admin_' + admin,
+				JSON.stringify({
+					date: moment().format('YYYY-MM-DD HH:mm:ss'),
+					public: this.recipient_public_key
+				}));
+		}
+
+		const public_key = this.recipient_public_key;
+		this.recipient_public_key = this.group_public_key;
+
+		return public_key;
 	}
 
 	async leave()
@@ -522,13 +575,13 @@ class Group extends MessageList
 		await this.updatePublicKey();
 
 		let options = {
-			data: "----START ENVELOPE----\n\n"
+			data: "-----BEGIN ENVELOPE-----"
 			+ JSON.stringify({
 				SentDate: moment().toISOString(),
 				Sender: current_user.username,
 				Receiver: this.group_name
 			})
-			+ "\n\n----END ENVELOPE----\n\n"+
+			+ "-----END ENVELOPE-----\n\n"+
 			JSON.stringify({
 				command: 'new_group_key',
 				group: this.group_name,
