@@ -91,7 +91,7 @@ class Group extends MessageList
 
 	async processMessage(msg)
 	{
-		if (_.find(this.messages, { MessageId: msg.MessageId }) !== undefined) {
+		if (_.find(this.messages, { AwsKey: msg.AwsKey }) !== undefined) {
 			return;
 		}
 
@@ -153,7 +153,7 @@ class Group extends MessageList
 
 				this.messages.push(msg);
 			}
-			else if (data.command === 'join_approved' && msg.Signed) {
+			else if (data.command === 'join_approved') {
 				// approval received by the requesting user
 				await this.userJoinApprovalEvent(msg);
 
@@ -200,6 +200,15 @@ class Group extends MessageList
 				};
 				this.messages.push(msg);
 			}
+			else if (data.command === 'left' && msg.Signed) {
+				msg.Body = 'Command';
+				msg.Command = {
+					request: 'left',
+					group: this.group_name,
+					sender: this.recipient_user_id
+				};
+				this.messages.push(msg);
+			}
 			else if (data.command === 'new_group_key' && msg.Signed) {
 				this.newKeyEvent(msg);
 
@@ -216,6 +225,7 @@ class Group extends MessageList
 		this.saveMessage(msg);
 
 		if (channels.newMessageEventDelegate != null && typeof channels.newMessageEventDelegate === "function") {
+			msg.MessageList.recipient_user_id = this.group_name.toLowerCase();
 			channels.newMessageEventDelegate(msg);
 		}
 	};
@@ -394,7 +404,7 @@ class Group extends MessageList
 		}
 
 		// send it to the server
-		const send_success = await this.sendToServer(msg.EncryptedBody, 'cmd');
+		await this.sendToServer(msg.EncryptedBody, 'cmd');
 	}
 
 	static async userJoinRequest(group_name)

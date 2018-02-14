@@ -405,9 +405,10 @@ User.prototype.provisionUser = async function()
 	Promise.all([
 		this.updatePublicKey(),
 		this.setInStorage()
-	]).then(async ()=>{
-		await this.sendWelcomeMessage();
-		channels.checkForMessages(this.username);
+	]).then(()=>{
+		this.sendWelcomeMessage();
+	}).then(()=>{
+		channels.checkForMessages(this.username, false);
 	})
 };
 
@@ -419,14 +420,14 @@ User.prototype.sendWelcomeMessage = async function()
 	let msg = new Message();
 	msg.Sender = "Mosio-Clinicoin";
 	msg.Receiver = this.username;
-	msg.Body = "Lame welcome message";
+	msg.Body = "Welcome to Clinicoin";
+	msg.MessageId = 1;
 
 	let signPrivateKeyObj = openpgp.key.readArmored(this.getPrivateKey()).keys[0];
 	signPrivateKeyObj.decrypt(this.getPassphrase());
 
 	await msg.encryptMessage(this.getPublicKey(), [signPrivateKeyObj]);
 	await msg_list.sendToServer(msg.EncryptedBody);
-	channels.checkAllMessageSources();
 };
 
 /**
@@ -855,7 +856,7 @@ User.prototype.updatePublicKey = async function()
 	}
 
 	const payload = JSON.stringify({
-		username: this.username.toLowerCase(),
+		username: this.username,
 		sub: this.awsSub,
 		publicKey: key,
 		phone: this.phone,

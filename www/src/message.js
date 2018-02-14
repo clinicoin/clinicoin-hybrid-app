@@ -123,7 +123,9 @@ Message.prototype.decryptMessage = async function(channels, private_key_obj)
 	const parts = decrypted_obj.data.split(/-----BEGIN ENVELOPE-----|-----END ENVELOPE-----|-----BEGIN PGP SIGNATURE-----|-----END PGP SIGNATURE-----/i);
 	this.readEnvelope(parts[1].trim());
 	this.Body = parts[2].trim();
-	this.SignData = '-----BEGIN PGP SIGNATURE-----'+"\n\n"+parts[3].trim()+"\n\n"+'-----END PGP SIGNATURE-----';
+	if (parts.length > 3) {
+		this.SignData = '-----BEGIN PGP SIGNATURE-----' + "\n\n" + parts[3].trim() + "\n\n" + '-----END PGP SIGNATURE-----';
+	}
 
 	logger.info("data decrypted");
 

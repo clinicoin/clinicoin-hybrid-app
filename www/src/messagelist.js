@@ -119,11 +119,11 @@ MessageList.prototype.sendToServer = async function(data, message_type)
 		logger.error(result.error.code + " - " + result.error.message);
 		this.last_error_code = result.error.code;
 		this.last_error_message = result.error.message;
-		return false;
+		return { success: false };
 	}
 	else {
 		logger.info('message send success: '+key);
-		return true;
+		return { success: true, key: key.toLowerCase() };
 	}
 };
 
@@ -133,8 +133,6 @@ MessageList.prototype.sendMessage = async function(message_data)
 	msg.Body = message_data;
 	msg.Sender = current_user.username;
 	msg.Receiver = this.recipient_user_id.toLowerCase();
-
-	this.messages.push(msg);
 
 	// get the recipient's public key if more than 24 hours old
 	if (moment(this.last_public_key_retrieval).isBefore(moment().subtract(24, 'hours'))) {
@@ -152,9 +150,11 @@ MessageList.prototype.sendMessage = async function(message_data)
 	await msg.encryptMessage(this.recipient_public_key, [ signPrivateKeyObj ]);
 
 	// send it to the server
-	const send_success = await this.sendToServer(msg.EncryptedBody);
+	const send_reply = await this.sendToServer(msg.EncryptedBody);
 
-	if (!send_success) {
+	msg.AwsKey = send_reply.key;
+
+	if (!send_reply.success) {
 		return msg;
 	}
 
@@ -162,6 +162,8 @@ MessageList.prototype.sendMessage = async function(message_data)
 	await this.saveMessage(msg);
 
 	msg.SendStatus = 'Sent';
+
+	this.messages.push(msg);
 
 	return msg;
 };
@@ -231,7 +233,7 @@ MessageList.prototype.markRead = function()
 
 MessageList.prototype.processMessage = async function(msg)
 {
-	if (_.find(this.messages, { MessageId: msg.MessageId }) !== undefined) {
+	if (_.find(this.messages, { AwsKey: msg.AwsKey }) !== undefined) {
 		return;
 	}
 

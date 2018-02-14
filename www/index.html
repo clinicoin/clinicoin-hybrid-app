@@ -617,8 +617,8 @@
 										</tr>
 										<tr>
 											<td>
-												<div class="message-time" v-if="item.Signed"><v-icon color="green darken-2">check_circle</v-icon> {{ item.Sender }} on {{ item.SentDate }}</div>
-												<div class="message-time" v-else><v-icon color="orange darken-2">warning</v-icon> {{ item.Sender }}? on {{ item.SentDate }}</div>
+												<div class="message-time" v-if="item.Signed"><v-icon color="green darken-2" small>done</v-icon> {{ item.Sender }} on {{ item.SentDate }}</div>
+												<div class="message-time" v-else>{{ item.Sender }} on {{ item.SentDate }}</div>
 											</td>
 										</tr>
 									</table>
@@ -675,6 +675,13 @@
 									</div>
 								</div>
 							</v-list-tile>
+                            <v-list-tile v-show="item.Command != null && item.Command.request == 'left'">
+                                <div style="width:100%;">
+                                    <div class="command-event">
+                                        {{ item.Sender }} has left the group
+                                    </div>
+                                </div>
+                            </v-list-tile>
 						</template>
 					</v-list>
 
@@ -1088,6 +1095,7 @@
 
 			// set the initial page
 			this.page_visible = this.PAGE_LOGIN;
+
 			if (await current_user.isLoggedIn()) {
 				// retrieve user info from storage
 				await current_user.getFromStorage();
@@ -1410,7 +1418,7 @@
 				else {
 					const msg = await current_message_list.sendMessage(this.outgoing_message);
 					if (msg.SendStatus === 'Sent') {
-						//this.showSuccessToast('Message Sent');
+						this.updateActiveMessage(msg);
 						this.refreshActiveList();
 					}
 					else {
@@ -1420,7 +1428,7 @@
 			},
 			updateActiveMessage: function(msg)
 			{
-				let list = _.reject(this.active_channel.messages, (m)=>{ return m.Message.MessageId===msg.MessageId });
+				let list = _.reject(this.active_channel.messages, (m)=>{ return m.Message.AwsKey===msg.AwsKey });
 
 				list.push({
 					Sender: msg.Sender,
@@ -1440,7 +1448,11 @@
 				const active_channel = channels.findByUsername(this.active_channel.username);
 
 				let message_list = [];
+				let last_key = '';
 				active_channel.messages.forEach(function (msg) {
+					if (last_key === msg.AwsKey) {
+						return;
+                    }
 					message_list.push({
 						Sender: msg.Sender,
 						Signed: msg.Signed,
@@ -1448,7 +1460,8 @@
 						SentDate: moment(msg.SentDate).format('YYYY-MM-DD HH:mm'),
 						Command: msg.Command,
 						Message: msg
-					})
+					});
+					last_key = msg.AwsKey;
 				});
 				this.active_channel.messages = message_list;
 
@@ -1762,9 +1775,9 @@
 		{
 			return {
 				real_name: '',
-				username: 'demo50',
+				username: 'demo60',
 				is_username_disabled: false,
-				email: 'demo50@mailsac.com',
+				email: 'demo60@mailsac.com',
 				phone: '9995551212',
 				password: 'ffDemo@1234',
 				new_password: '',
