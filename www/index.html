@@ -1003,7 +1003,62 @@
 		for(let i=1; i <= 100; i++) {
 			vm.activity_amount_list.push(i);
 		}
+
+		checkForUpdates();
 	});
+
+	async function checkForUpdates()
+	{
+		if (monaca === undefined || monaca.InAppUpdater === undefined) {
+			return;
+        }
+
+        const local = await monaca.InAppUpdater.getLocalVersion();
+		const server = await monaca.InAppUpdater.getServerVersion();
+
+		if (local === server) {
+			return;
+        }
+
+        if ( ! confirm('Newer version of the app exists. Install now?')) {
+            return;
+        }
+
+		monaca.InAppUpdater.autoUpdate( {
+			connectDelay : 10000,
+			connectTimeout : 30000,
+			readTimeout: 300000,
+			nextTask : function(res) {
+				if (res.requireRestart) {
+					monaca.InAppUpdater.updateAndRestart().then(
+						function() { },
+						function(fail) { alert( JSON.stringify(fail) ); }
+					);
+				} else {
+					alert("App is started!");
+				}
+			},
+			failTask : function(res) {
+				monaca.InAppUpdater.showAlertDialog(
+					{ title : "Error Code "+res.error.code ,
+						message : res.error.message ,
+						button : { label : "OK" , handler : function() { } }
+					} ).then(
+					function(json) {  },
+					function(fail) { }
+				);
+			},
+			dialogMessages: {
+				confirm3G : 'These updates will be downloaded with your mobile data.',
+				prepare : {
+					title : 'Preparing to Download Updates',
+					message : 'Checking the server version...'},
+				download : {
+					title : 'Downloading Updates',
+					message : 'Now downloading...'}
+			}
+		});
+	}
 
 	function interface_test()
 	{
@@ -1247,6 +1302,7 @@
 			checkQueue: async function()
 			{
 				vm.is_updating = true;
+				await Vue.nextTick();
 				await channels.checkAllMessageSources();
 				vm.is_updating = false;
 			},
@@ -1418,6 +1474,7 @@
 				else {
 					const msg = await current_message_list.sendMessage(this.outgoing_message);
 					if (msg.SendStatus === 'Sent') {
+						this.outgoing_message = '';
 						this.updateActiveMessage(msg);
 						this.refreshActiveList();
 					}

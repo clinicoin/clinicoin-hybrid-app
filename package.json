@@ -26,7 +26,8 @@
         "cordova-plugin-splashscreen": "5.0.1",
         "cordova-custom-config": "5.0.2",
         "cordova-plugin-inappbrowser": "2.0.1",
-        "cordova-plugin-network-information": "2.0.1"
+        "cordova-plugin-network-information": "2.0.1",
+        "monaca-plugin-inappupdater": "4.1.0"
     },
     "cordova": {
         "plugins": {
@@ -37,7 +38,8 @@
             "cordova-plugin-splashscreen": {},
             "cordova-custom-config": {},
             "cordova-plugin-inappbrowser": {},
-            "cordova-plugin-network-information": {}
+            "cordova-plugin-network-information": {},
+            "monaca-plugin-inappupdater": {}
         }
     }
 }
