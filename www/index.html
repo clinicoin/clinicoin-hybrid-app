@@ -739,7 +739,7 @@
 				</v-footer>
 			</v-container>
 
-			<v-container fluid id="conSettings" v-show="page_visible==PAGE_CONNECT" class="white-container">
+			<v-container fluid id="conConnect" v-show="page_visible==PAGE_CONNECT" class="white-container">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Connect With People</div>
 
 				<div style="text-align:center;">
@@ -783,7 +783,7 @@
 				</div>
 			</v-container>
 
-			<v-container fluid id="conSettings" v-show="page_visible==PAGE_ACTIVITY" class="white-container" style="background-color: #EDF2F8;">
+			<v-container fluid id="conActivity" v-show="page_visible==PAGE_ACTIVITY" class="white-container" style="background-color: #EDF2F8;">
 				<div style="text-align:center; font-size:large; margin-bottom:20px;">Activity</div>
 				<div>What did you do today?</div>
 				<v-card hover>
@@ -881,7 +881,7 @@
 						</v-list-tile-content>
 
 					</v-list-tile>
-
+<!--
 					<v-spacer class="mb-2"></v-spacer>
 					<v-divider></v-divider>
 					<v-spacer class="mb-2"></v-spacer>
@@ -895,21 +895,18 @@
 						<v-list-tile-content>
 							<v-list-tile-title>Support</v-list-tile-title>
 						</v-list-tile-content>
-
-						<!--
 						<v-list-tile-action>
 							<v-btn flat icon color="orange">
 								<v-icon>chevron_right</v-icon>
 							</v-btn>
 						</v-list-tile-action>
-						-->
 					</v-list-tile>
-
+-->
 					<v-spacer class="mb-2"></v-spacer>
 					<v-divider></v-divider>
 					<v-spacer class="mb-2"></v-spacer>
 
-					<v-list-tile @click="page_visible=PAGE_ABOUT">
+					<v-list-tile>
 						<v-list-tile-avatar>
 							<v-btn fab dark small color="blue">
 								<v-icon>info</v-icon>
@@ -927,6 +924,21 @@
 						</v-list-tile-action>
 						-->
 					</v-list-tile>
+
+                    <v-spacer class="mb-2"></v-spacer>
+                    <v-divider></v-divider>
+                    <v-spacer class="mb-2"></v-spacer>
+
+                    <v-list-tile @click="checkForUpdates">
+                        <v-list-tile-avatar>
+                            <v-btn fab dark small color="green">
+                                <v-icon>system_update</v-icon>
+                            </v-btn>
+                        </v-list-tile-avatar>
+                        <v-list-tile-content>
+                            <v-list-tile-title>Check For Updates</v-list-tile-title>
+                        </v-list-tile-content>
+                    </v-list-tile>
 				</v-list>
 
 				<div class="text-xs-center" style="margin-top: 20%; padding-left: 10%; padding-right: 10%;">
@@ -1004,61 +1016,8 @@
 			vm.activity_amount_list.push(i);
 		}
 
-		checkForUpdates();
+		vm.checkForUpdates();
 	});
-
-	async function checkForUpdates()
-	{
-		if (monaca === undefined || monaca.InAppUpdater === undefined) {
-			return;
-        }
-
-        const local = await monaca.InAppUpdater.getLocalVersion();
-		const server = await monaca.InAppUpdater.getServerVersion();
-
-		if (local === server) {
-			return;
-        }
-
-        if ( ! confirm('Newer version of the app exists. Install now?')) {
-            return;
-        }
-
-		monaca.InAppUpdater.autoUpdate( {
-			connectDelay : 10000,
-			connectTimeout : 30000,
-			readTimeout: 300000,
-			nextTask : function(res) {
-				if (res.requireRestart) {
-					monaca.InAppUpdater.updateAndRestart().then(
-						function() { },
-						function(fail) { alert( JSON.stringify(fail) ); }
-					);
-				} else {
-					alert("App is started!");
-				}
-			},
-			failTask : function(res) {
-				monaca.InAppUpdater.showAlertDialog(
-					{ title : "Error Code "+res.error.code ,
-						message : res.error.message ,
-						button : { label : "OK" , handler : function() { } }
-					} ).then(
-					function(json) {  },
-					function(fail) { }
-				);
-			},
-			dialogMessages: {
-				confirm3G : 'These updates will be downloaded with your mobile data.',
-				prepare : {
-					title : 'Preparing to Download Updates',
-					message : 'Checking the server version...'},
-				download : {
-					title : 'Downloading Updates',
-					message : 'Now downloading...'}
-			}
-		});
-	}
 
 	function interface_test()
 	{
@@ -1180,6 +1139,60 @@
 			this.show_spinner = false;
 		},
 		methods: {
+			checkForUpdates: async function()
+			{
+				if (monaca === undefined || monaca.InAppUpdater === undefined) {
+					return;
+				}
+
+				const local = await monaca.InAppUpdater.getLocalVersion();
+				const server = await monaca.InAppUpdater.getServerVersion();
+
+				if (local === server) {
+					return;
+				}
+
+				alert("Local: "+local+"             Server:"+server);
+
+				if ( ! confirm('Newer version of the app exists. Install now?')) {
+					return;
+				}
+
+				monaca.InAppUpdater.autoUpdate( {
+					connectDelay : 10000,
+					connectTimeout : 30000,
+					readTimeout: 300000,
+					nextTask : function(res) {
+						if (res.requireRestart) {
+							monaca.InAppUpdater.updateAndRestart().then(
+								function() { },
+								function(fail) { alert( JSON.stringify(fail) ); }
+							);
+						} else {
+							alert("App is started!");
+						}
+					},
+					failTask : function(res) {
+						monaca.InAppUpdater.showAlertDialog(
+							{ title : "Error Code "+res.error.code ,
+								message : res.error.message ,
+								button : { label : "OK" , handler : function() { } }
+							} ).then(
+							function(json) {  },
+							function(fail) { }
+						);
+					},
+					dialogMessages: {
+						confirm3G : 'These updates will be downloaded with your mobile data.',
+						prepare : {
+							title : 'Preparing to Download Updates',
+							message : 'Checking the server version...'},
+						download : {
+							title : 'Downloading Updates',
+							message : 'Now downloading...'}
+					}
+				});
+			},
 			showErrorToast: function (message) {
 				this.error_message = message;
 				this.show_error_toast_value = 1;
