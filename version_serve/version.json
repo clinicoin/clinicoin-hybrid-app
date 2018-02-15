@@ -1,17 +1,17 @@
 {
   "ios": {
-    "0.1.0": {
+    "0.1.1": {
       "1": {
-        "date": 20180214,
-        "url": "https://www.mosio.com/clinapp?req=ios"
+        "date": 20180215,
+        "url": "https://www.mosio.com/clinapp/ios-v0.1.1.zip"
       }
     }
   },
   "android": {
-    "0.1.0": {
+    "0.1.1": {
       "1": {
-        "date": 20180214,
-        "url": "https://www.mosio.com/clinapp?req=android"
+        "date": 20180215,
+        "url": "https://www.mosio.com/clinapp/android-v0.1.1.zip"
       }
     }
   }

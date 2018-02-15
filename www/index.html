@@ -936,9 +936,7 @@
                             </v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
-                            <v-list-tile-title>Check For Updates</v-list-tile-title>
-
-                            L: {{ local_version }} / S: {{ server_version }}
+                            <v-list-tile-title>Check For Updates v011</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
 				</v-list>
@@ -1145,35 +1143,23 @@
 			{
 				const self = this;
 				if (monaca === undefined || monaca.InAppUpdater === undefined) {
-					this.showErrorToast('Monaca not defined');
+					//this.showErrorToast('monaca is not defined');
+					logger.error('monaca is not defined');
 					return;
 				}
 
 				this.showInfoToast('Checking server version');
-				monaca.InAppUpdater.getServerVersion().then(
-					function(json) {
-						alert( JSON.stringify(json) );
-						self.server_version = json.myVersion;
-						targetUpdateNumber = json.latestUpdateNumber;
-						url = json.updateInfo.url;
-						alert( targetVersion );
-						alert( targetUpdateNumber );
-						alert( url );
-					} ,
-					function(fail) { alert( JSON.stringify(fail) ); }
-				);
-				this.showSuccessToast("Server: "+this.server_version);
+				const server_json = await monaca.InAppUpdater.getServerVersion();
+				alert(JSON.stringify(server_json));
 
-				this.showInfoToast('Checking local version');
-				this.local_version = await monaca.InAppUpdater.getLocalVersion();
-				this.showSuccessToast("Local: "+this.local_version);
+				/*
+				const server_json = await monaca.InAppUpdater.getServerVersion();
+				alert(JSON.stringify(server_json));
 
-				if (this.local_version === this.server_version) {
+				if ( ! server_json.needsUpdate) {
 					this.showSuccessToast('Already latest version');
 					return;
 				}
-
-				alert("Local: "+this.local_version+"             Server:"+this.server_version);
 
 				if ( ! confirm('Newer version of the app exists. Install now?')) {
 					return;
@@ -1184,14 +1170,12 @@
 					connectTimeout : 30000,
 					readTimeout: 300000,
 					nextTask : function(res) {
-						if (res.requireRestart) {
-							monaca.InAppUpdater.updateAndRestart().then(
-								function() { },
-								function(fail) { alert( JSON.stringify(fail) ); }
-							);
-						} else {
-							alert("App is started!");
-						}
+                        monaca.InAppUpdater.updateAndRestart().then(
+                            function() {
+                            	self.showSuccessToast('App updated');
+                            },
+                            function(fail) { alert("Download Fail: "+ JSON.stringify(fail) ); }
+                        );
 					},
 					failTask : function(res) {
 						monaca.InAppUpdater.showAlertDialog(
@@ -1213,6 +1197,7 @@
 							message : 'Now downloading...'}
 					}
 				});
+				*/
 			},
 			showErrorToast: function (message) {
 				this.error_message = message;
@@ -1949,10 +1934,7 @@
 					is_admin: false,
 					sentdate: '',
 					signed: false
-				},
-
-				local_version: '',
-                server_version: ''
+				}
 			};
 		},
 		computed: {

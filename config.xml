@@ -96,8 +96,8 @@
     <param name="CAMERA_USAGE_DESCRIPTION" value="To scan barcodes."/>
   </plugin>
   <plugin name="cordova-plugin-local-notification" spec="^0.9.0-beta.1"/>
-  <preference name="monaca:updater_CheckUpdateUrl" value="https://clinicoin-app.s3.amazonaws.com/index.html"/>
-  <preference name="monaca:updater_DownloadUrl" value="https://clinicoin-app.s3.amazonaws.com/"/>
+  <preference name="monaca:updater_CheckUpdateUrl" value="https://www.mosio.com/clinapp/index.php"/>
+  <preference name="monaca:updater_DownloadUrl" value="https://www.mosio.com/clinapp/android.zip"/>
   <preference name="ios-XCBuildConfiguration-TARGETED_DEVICE_FAMILY" value="1,2"/>
   <preference name="AutoHideSplashScreen" value="true"/>
   <preference name="FadeSplashScreen" value="true"/>
