@@ -937,6 +937,8 @@
                         </v-list-tile-avatar>
                         <v-list-tile-content>
                             <v-list-tile-title>Check For Updates</v-list-tile-title>
+
+                            L: {{ local_version }} / S: {{ server_version }}
                         </v-list-tile-content>
                     </v-list-tile>
 				</v-list>
@@ -1141,18 +1143,37 @@
 		methods: {
 			checkForUpdates: async function()
 			{
+				const self = this;
 				if (monaca === undefined || monaca.InAppUpdater === undefined) {
+					this.showErrorToast('Monaca not defined');
 					return;
 				}
 
-				const local = await monaca.InAppUpdater.getLocalVersion();
-				const server = await monaca.InAppUpdater.getServerVersion();
+				this.showInfoToast('Checking server version');
+				monaca.InAppUpdater.getServerVersion().then(
+					function(json) {
+						alert( JSON.stringify(json) );
+						self.server_version = json.myVersion;
+						targetUpdateNumber = json.latestUpdateNumber;
+						url = json.updateInfo.url;
+						alert( targetVersion );
+						alert( targetUpdateNumber );
+						alert( url );
+					} ,
+					function(fail) { alert( JSON.stringify(fail) ); }
+				);
+				this.showSuccessToast("Server: "+this.server_version);
 
-				if (local === server) {
+				this.showInfoToast('Checking local version');
+				this.local_version = await monaca.InAppUpdater.getLocalVersion();
+				this.showSuccessToast("Local: "+this.local_version);
+
+				if (this.local_version === this.server_version) {
+					this.showSuccessToast('Already latest version');
 					return;
 				}
 
-				alert("Local: "+local+"             Server:"+server);
+				alert("Local: "+this.local_version+"             Server:"+this.server_version);
 
 				if ( ! confirm('Newer version of the app exists. Install now?')) {
 					return;
@@ -1258,10 +1279,10 @@
 
 				try{
 					cordova.plugins.notification.local.schedule({
-						title: 'Clinicoin - ' + channel.friendly_name,
+						title: 'Clinicoin - ' + message.MessageList.friendly_name,
 						text: message.Body,
 						foreground: true,
-						led: {color: '#00FF00', on: 500, off: 500},
+						led: {color: '#00FF00', on: 500, off: 3000},
 						vibrate: true
 					});
 				} catch (e) {}
@@ -1928,7 +1949,10 @@
 					is_admin: false,
 					sentdate: '',
 					signed: false
-				}
+				},
+
+				local_version: '',
+                server_version: ''
 			};
 		},
 		computed: {

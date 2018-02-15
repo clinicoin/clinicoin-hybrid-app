@@ -1,0 +1,18 @@
+{
+  "ios": {
+    "0.1.0": {
+      "1": {
+        "date": 20180214,
+        "url": "https://www.mosio.com/clinapp?req=ios"
+      }
+    }
+  },
+  "android": {
+    "0.1.0": {
+      "1": {
+        "date": 20180214,
+        "url": "https://www.mosio.com/clinapp?req=android"
+      }
+    }
+  }
+}
