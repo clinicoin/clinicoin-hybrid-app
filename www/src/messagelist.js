@@ -135,7 +135,7 @@ MessageList.prototype.sendMessage = async function(message_data)
 	msg.Receiver = this.recipient_user_id.toLowerCase();
 
 	// get the recipient's public key if more than 24 hours old
-	if (moment(this.last_public_key_retrieval).isBefore(moment().subtract(24, 'hours'))) {
+	if (moment(this.last_public_key_retrieval).isAfter(moment().subtract(24, 'hours'))) {
 		let key_result = await this.getRecipientPublicKey();
 		if (!key_result) {
 			logger.info('Key retrieval failure');

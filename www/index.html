@@ -936,7 +936,7 @@
                             </v-btn>
                         </v-list-tile-avatar>
                         <v-list-tile-content>
-                            <v-list-tile-title>Check For Updates v011</v-list-tile-title>
+                            <v-list-tile-title>Check For Updates</v-list-tile-title>
                         </v-list-tile-content>
                     </v-list-tile>
 				</v-list>
@@ -1015,8 +1015,6 @@
 		for(let i=1; i <= 100; i++) {
 			vm.activity_amount_list.push(i);
 		}
-
-		vm.checkForUpdates();
 	});
 
 	function interface_test()
@@ -1150,13 +1148,9 @@
 
 				this.showInfoToast('Checking server version');
 				const server_json = await monaca.InAppUpdater.getServerVersion();
-				alert(JSON.stringify(server_json));
+				//alert(JSON.stringify(server_json));
 
-				/*
-				const server_json = await monaca.InAppUpdater.getServerVersion();
-				alert(JSON.stringify(server_json));
-
-				if ( ! server_json.needsUpdate) {
+				if ( ! server_json.needsUpdate && ! server_json.updatable) {
 					this.showSuccessToast('Already latest version');
 					return;
 				}
@@ -1197,7 +1191,6 @@
 							message : 'Now downloading...'}
 					}
 				});
-				*/
 			},
 			showErrorToast: function (message) {
 				this.error_message = message;
