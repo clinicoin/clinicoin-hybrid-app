@@ -1,7 +1,7 @@
 {
     "name": "clinicoin-hybrid-app",
     "version": "1.0.0",
-    "main": "\/src\/index.html",
+    "main": "/src/index.html",
     "directories": {
         "test": "test"
     },
@@ -10,24 +10,24 @@
         "babel-polyfill": "^6.3.14",
         "babel-preset-es2015": "^6.3.13",
         "babel-preset-stage-0": "^6.3.13",
-        "minilog": "^3.1.0",
-        "lodash": "^4.17.4"
+        "lodash": "^4.17.5",
+        "minilog": "^3.1.0"
     },
     "repository": {
         "type": "git",
-        "url": "https:\/\/github.com\/clinicoin\/clinicoin-hybrid-app"
+        "url": "https://github.com/clinicoin/clinicoin-hybrid-app"
     },
     "dependencies": {
-        "cordova-plugin-local-notification": "file:plugins\/cordova-plugin-local-notification",
-        "mdi": "^2.1.19",
-        "phonegap-plugin-barcodescanner": "file:plugins\/phonegap-plugin-barcodescanner",
-        "monaca-plugin-monaca-core": "3.2.0",
-        "cordova-plugin-whitelist": "1.3.3",
-        "cordova-plugin-splashscreen": "5.0.1",
         "cordova-custom-config": "5.0.2",
         "cordova-plugin-inappbrowser": "2.0.1",
+        "cordova-plugin-local-notification": "^0.9.0-beta.2",
         "cordova-plugin-network-information": "2.0.1",
-        "monaca-plugin-inappupdater": "4.1.0"
+        "cordova-plugin-splashscreen": "5.0.1",
+        "cordova-plugin-whitelist": "1.3.3",
+        "mdi": "^2.1.99",
+        "monaca-plugin-inappupdater": "4.1.0",
+        "monaca-plugin-monaca-core": "3.2.0",
+        "phonegap-plugin-barcodescanner": "file:plugins/phonegap-plugin-barcodescanner"
     },
     "cordova": {
         "plugins": {
