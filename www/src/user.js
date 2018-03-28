@@ -9,6 +9,7 @@ function User() {
 	this.email_verified = false;
 	this.phone = '';
 	this.phone_verified = false;
+	this.country_code = { country: "United States", code: 1 };
 	this.name = '';
 	this.last_error_code = '';
 	this.last_error_message = '';
@@ -80,7 +81,8 @@ function User() {
 			name: this.name,
 			private_key: this.getPrivateKey(),
 			public_key: this.getPublicKey(),
-			jwt_token: this.jwtToken
+			jwt_token: this.jwtToken,
+			country_code: this.country_code
 		});
 	};
 
@@ -100,6 +102,7 @@ function User() {
 		this.setPrivateKey(data.private_key);
 		this.setPublicKey(data.public_key);
 		this.jwtToken = data.jwt_token;
+		this.country_code = data.country_code;
 	};
 }
 
@@ -933,21 +936,8 @@ User.prototype.setDefaultUser = function()
 
 User.prototype.getActivities = async function()
 {
-	logger.info('loading activities');
-
-	const self = this;
-	let activities = [];
-	const exp = new RegExp('^act_'+this.username+'_[a-f0-9]+', 'i');
-	const key_list = await store.getFilteredData(exp);
-	key_list.forEach(async function(json) {
-		const act = new Activity();
-		act.fromJSONString(json);
-		activities.push(act);
-	});
-
-	activities = _.sortBy(activities, ['ActivityDate']);
-
-	return activities;
+	const act = new Activity();
+	return act.getActivites();
 };
 
 User.prototype.addActivity = async function(activity_type, amount, units)
@@ -956,7 +946,7 @@ User.prototype.addActivity = async function(activity_type, amount, units)
 	act.ActivityType = activity_type;
 	act.Amount = amount;
 	act.Units = units;
-	await store.setItem('act_'+this.username+'_'+act.Id, act.toJSON());
+	await act.save();
 	return act;
 };
 
